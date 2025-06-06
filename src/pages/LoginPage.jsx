@@ -94,7 +94,7 @@ const LoginPage = () => {
             playsInline
             className="bg-video"
         >
-          <source src="/videologin.mp4" type="video/mp4" />
+          <source src={`${process.env.PUBLIC_URL}/videologin.mp4`} type="video/mp4" />
             Trình duyệt của bạn không hỗ trợ video nền.
         </video>
         <div className="d-flex justify-content-center align-items-center flex-column vh-100">
