@@ -176,7 +176,7 @@ const LoginPage = () => {
                 <hr />
 
                 <div className="text-center">
-                    <span style={{color:'white'}}>Chưa có tài khoản? </span>
+                    <span style={{color:'white'}}>Chưa có tài khoản ? </span>
                     <a href="/create-user" className="text-primary text-decoration-none fw-bold">Đăng Ký</a>
                 </div>
                 <div className="text-center mt-3">
