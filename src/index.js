@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 import App from "./App";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthProvider, useAuth } from "./context/AuthContext"; // Import AuthContext
@@ -8,9 +8,9 @@ import { AuthProvider, useAuth } from "./context/AuthContext"; // Import AuthCon
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <BrowserRouter>
     <AuthProvider>
-      <App />
-    </AuthProvider>
-  </BrowserRouter>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </AuthProvider>
 );
