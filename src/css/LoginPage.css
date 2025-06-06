@@ -1,0 +1,238 @@
+body {
+    background-image: url('../image/yourname.jpg'); /* Đường dẫn đến ảnh nền */
+    background-size: cover; /* Tự động điều chỉnh kích thước ảnh để phủ toàn bộ trang */
+    background-position: center; /* Đặt ảnh nền ở giữa */
+    background-repeat: no-repeat; /* Không lặp lại ảnh nền */
+}
+
+.d-flex {
+    background-color: rgba(240, 248, 255, 0.3); 
+}
+
+
+/* Container for the login page */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #8fc5f0;
+    font-family: Arial, sans-serif;
+}
+
+/* Box for the login form */
+.login-box {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 50px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 350px;
+}
+
+/* Title and subtitle */
+.login-box h2 {
+    font-size: 24px;
+    color: #0068ff;
+    margin-bottom: 10px;
+}
+
+.login-box p {
+    font-size: 14px;
+    color: #4a4a4a;
+    margin-bottom: 20px;
+}
+
+/* Đảm bảo nền tab active và hover đúng */
+.nav-pills .nav-item .nav-link {
+    position: relative;
+    z-index: 1; /* Đảm bảo rằng nền không bị che mất */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-pills .nav-item .nav-link:hover {
+    background-color: #0051cc; /* Đổi màu khi hover */
+    color: #ffffff; /* Đổi màu chữ khi hover */
+}
+
+.nav-pills .nav-item .nav-link.active {
+    background-color: #0051cc; /* Màu nền khi active */
+    color: white; /* Màu chữ khi active */
+    z-index: 2; /* Đảm bảo rằng tab active có độ ưu tiên hiển thị */
+}
+
+/* Input group styling */
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #dcdcdc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+/* Button styling */
+.btn-login {
+    width: 100%;
+    background-color: #0068ff;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-login:hover {
+    background-color: #0051cc;
+}
+
+/* Error message styling */
+.error-message {
+    color: red;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+/* Extra options below login */
+.extra-options {
+    margin-top: 15px;
+}
+
+.extra-options a {
+    font-size: 12px;
+    color: #0068ff;
+    text-decoration: none;
+    margin: 0 5px;
+}
+
+.extra-options a:hover {
+    text-decoration: underline;
+}
+
+/* Hiệu ứng loading khi hành động */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.error-message {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Biểu tượng bánh răng xoay */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 6px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Văn bản "Đang đăng nhập..." và "Đang đăng xuất..." */
+.loading-text {
+    color: white;
+    font-size: 20px;
+    margin-top: 10px;
+}
+
+/* Keyframes cho hiệu ứng xoay */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.login-bg-video {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.bg-video {
+   position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;     /* hoặc giá trị bạn muốn */
+    height: 100%;   /* hoặc giá trị bạn muốn */
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: cover;
+    z-index: 0;
+    filter: brightness(0.6) blur(2px);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.login-content {
+    position: relative;
+    z-index: 2;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.card {
+    background: rgba(255,255,255,0.15) !important;
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-radius: 20px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+.sound-toggle {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 10;
+}
+.sound-toggle button {
+    background: rgba(21, 124, 243, 0.7);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: background 0.2s;
+}
+.sound-toggle button:hover {
+    background: #e0e7ff;
+}
