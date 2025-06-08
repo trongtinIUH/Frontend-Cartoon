@@ -88,9 +88,9 @@ const RegistePage = () => {
         }
 
         const user = {
-            id: new Date().getTime().toString(),
+            userId: new Date().getTime().toString(),
             dob: dob,
-            name: name,
+            userName: name,
             phoneNumber: phoneNumber,
         };
 
@@ -117,15 +117,21 @@ const RegistePage = () => {
     };
 
     return (
-        <div className="d-flex justify-content-center align-items-center flex-column vh-100">
-            <div className="text-center mb-4">
-                <h1 className="text-primary fw-bold">Zolo</h1>
-                <p>
-                    Đăng ký tài khoản Zolo <br /> để kết nối với ứng dụng Zolo Web
-                </p>
-            </div>
+        <div className="d-flex justify-content-center align-items-center flex-column vh-100" 
+         style={{    backgroundImage: `url(${require('../image/yourname.jpg')})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'}}>
+           
             <div className="card p-4" style={{ width: "500px", borderRadius: "20px" }}>
-                <h1>{isOtpSent ? "Xác minh OTP" : "Đăng ký Tài khoản"}</h1>
+                  <h1 className="text-primary fw-bold">CartoonToo</h1>
+                <p className="text-center text-white mb-4">
+                    Tạo tài khoản để xem và lưu trữ những bộ phim hoạt hình yêu thích của bạn!
+                </p>
+                <h2 
+                style={{color:'white', textShadow: '0 2px 8px #000, 0 1px 1px '}}>
+                    {isOtpSent ? "Xác minh OTP" : ""}
+                </h2>
+                
                 {errorMessage && <div className="error-message">{errorMessage}</div>}
                 {successMessage && <div className="success-message">{successMessage}</div>}
                 {!isOtpSent ? (

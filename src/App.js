@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import MainPage from './pages/MainPage';    
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import { useAuth } from './context/AuthContext';
 import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer và toast
@@ -37,6 +38,7 @@ function App() {
             <>
                 <Routes>
                     <Route path="/" element={<LoginPage />} />
+                    <Route path="/main" element={<MainPage />} />
                     <Route path="/create-user" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 

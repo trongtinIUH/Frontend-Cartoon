@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import ApiService from '../services/AuthService';
 import { useAuth } from '../context/AuthContext';
 import "../css/LoginPage.css";
@@ -177,7 +177,7 @@ const LoginPage = () => {
 
                 <div className="text-center">
                     <span style={{color:'white'}}>Chưa có tài khoản ? </span>
-                    <a href="/create-user" className="text-primary text-decoration-none fw-bold">Đăng Ký</a>
+                    <Link to="/create-user" className="text-primary text-decoration-none fw-bold">Đăng Ký</Link>
                 </div>
                 <div className="text-center mt-3">
                     <small style={{color: "#bbb",fontSize:'15px'}}>© Bản quyền thuộc về Tran Trong Tin (IUH)</small>

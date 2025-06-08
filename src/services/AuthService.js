@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://deploybe-cnm-production.up.railway.app/auth';
+const API_BASE_URL = 'http://localhost:8080/auth';
 
 const AuthService = {
     post: async (url, data) => {
