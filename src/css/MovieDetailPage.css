@@ -1,0 +1,47 @@
+.movie-detail-page {
+  background: linear-gradient(to right, #1f1c2c, #928dab);
+  min-height: 100vh;
+  color: #f1f1f1;
+}
+
+.movie-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #ffcc70;
+}
+
+.movie-poster {
+  max-height: 450px;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.movie-poster:hover {
+  transform: scale(1.05);
+}
+
+.episode-card {
+  background-color: #2a2a40;
+  border-left: 4px solid #ffcc70;
+  transition: background-color 0.3s ease;
+}
+
+.episode-card:hover {
+  background-color: #3a3a5f;
+}
+
+.btn-watch {
+  background-color: #ffcc70;
+  color: #000;
+  font-weight: bold;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-watch:hover {
+  background-color: #ffc107;
+  color: #000;
+}

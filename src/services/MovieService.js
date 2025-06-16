@@ -25,9 +25,9 @@ const MovieService = {
     },
 
     //add new movie
-    addMovie: async (movieData) => {
+    createMovie: async (movieData) => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/upload-video`, movieData,
+            const response = await axios.post(`${API_BASE_URL}/create`, movieData,
                 {
                     headers: {
                         'Content-Type': 'multipart/form-data'

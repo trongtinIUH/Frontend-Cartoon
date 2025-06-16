@@ -23,7 +23,7 @@ const Header = ({ fetchMovies }) => {
   return (
     <header className="main-header">
       <div className="header-left">
-        <Link to="/">
+        <Link to="/main">
          <img
             src={process.env.PUBLIC_URL + "/image/cartoonToo.png"}
             alt="Logo"

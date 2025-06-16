@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MainPage from './pages/MainPage';    
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import MovieDetailPage from './pages/MovieDetailPage';
 import { useAuth } from './context/AuthContext';
 import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer và toast
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,21 +17,17 @@ function App() {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
 
-   useEffect(() => {
-        const idToken = localStorage.getItem('idToken');
+useEffect(() => {
+  const idToken = localStorage.getItem('idToken');
 
-        console.log('MyUser:', MyUser);
-        console.log('idToken:', idToken);
-        if (!MyUser && !idToken && location.pathname !== '/create-user' && location.pathname !== '/forgot-password') {
-            setTimeout(() => {
-                navigate('/'); // Chuyển về trang login nếu chưa đăng nhập
-            }, 2000);
-        } else if (MyUser && idToken) {
-            navigate('/main'); // Nếu đã đăng nhập, vào MainPage
-        }
+  if (!MyUser && !idToken && !['/create-user', '/forgot-password'].includes(location.pathname)) {
+    setTimeout(() => {
+      navigate('/'); // Chỉ chuyển về login nếu chưa đăng nhập
+    }, 2000);
+  }
 
-        setIsLoading(false);
-    }, [MyUser, navigate, location.pathname]);
+  setIsLoading(false);
+}, [MyUser, navigate, location.pathname]);
 
 
     return (
@@ -41,6 +38,7 @@ function App() {
                     <Route path="/main" element={<MainPage />} />
                     <Route path="/create-user" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/movie/:id" element={<MovieDetailPage />} />
                  
                     {/* Thêm các route khác nếu cần */}
 

@@ -45,6 +45,7 @@ const MainPage = () => {
       <div className="row mt-4">
         {currentMovies.map((movie) => (
           <div className="col-md-2 mb-4" key={movie.movieId}>
+            <Link to={`/movie/${movie.movieId}`}>
             <div className="card h-100 bg-light">
               <img
                 src={movie.thumbnailUrl || "https://th.bing.com/th/id/OIP.044hbqIQlG5Al-y5ADrlHQHaEK?rs=1&pid=ImgDetMain"}
@@ -55,6 +56,7 @@ const MainPage = () => {
                 <h5 className="card-title" style={{fontSize:"18px"}}>{movie.title}</h5>
               </div>
             </div>
+            </Link>
           </div>
         ))}
       </div>

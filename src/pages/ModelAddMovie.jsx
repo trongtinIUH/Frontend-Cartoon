@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import MovieService from "../services/MovieService";
+import EpisodeService from "../services/EpisodeService";
 import "../css/ModelAddMovie.css";
 import { toast } from "react-toastify";
 
@@ -65,32 +66,43 @@ const ModelAddMovie = ({ onSuccess }) => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.title || !form.video) {
-      alert("Vui lòng nhập tiêu đề và chọn video!");
-      return;
-    }
-    setLoading(true);
-    const formData = new FormData();
-    formData.append("title", form.title);
-    formData.append("description", form.description);
-    formData.append("userId", MyUser.my_user.userId);
-    formData.append("role", "ADMIN");
-    form.genres.forEach((g) => formData.append("genres", g));
-    formData.append("video", form.video);
-    if (form.thumbnail) formData.append("thumbnail", form.thumbnail);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!form.title || !form.video) {
+    toast.error("Vui lòng nhập tiêu đề và chọn video!");
+    return;
+  }
 
-    try {
-      await MovieService.addMovie(formData);
-      toast.success("Thêm phim thành công!");
-      onSuccess?.(); // đóng modal
-    } catch (err) {
-      toast.error("Lỗi: " + (err.message || "Không thể thêm phim."));
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    // Bước 1: Tạo Movie (chỉ metadata)
+    const movieData = new FormData();
+    movieData.append("title", form.title);
+    movieData.append("description", form.description);
+    movieData.append("userId", MyUser.my_user.userId);
+    movieData.append("role", "ADMIN");
+    form.genres.forEach((g) => movieData.append("genres", g));
+    if (form.thumbnail) movieData.append("thumbnail", form.thumbnail);
+
+    const newMovie = await MovieService.createMovie(movieData); // Trả về movieId
+
+    // Bước 2: Gửi video thành tập đầu tiên
+    const episodeData = new FormData();
+    episodeData.append("movieId", newMovie.movieId);
+    episodeData.append("title", `${form.title} - Tập 1`);
+    episodeData.append("video", form.video);
+    episodeData.append("episodeNumber", 1);
+
+    await EpisodeService.addEpisode(episodeData);
+
+    toast.success("Tạo phim và tập đầu tiên thành công!");
+    onSuccess?.();
+  } catch (err) {
+    toast.error("Lỗi: " + (err.message || "Không thể thêm phim."));
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="modal-overlay">
