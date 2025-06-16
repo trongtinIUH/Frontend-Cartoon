@@ -41,6 +41,8 @@ function App() {
                     <Route path="/main" element={<MainPage />} />
                     <Route path="/create-user" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                 
+                    {/* Thêm các route khác nếu cần */}
 
                 </Routes>
 

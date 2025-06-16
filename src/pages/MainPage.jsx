@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useCallback } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../css/MainPage.css";
+import { Link } from "react-router-dom";
+import MovieService from "../services/MovieService";
 
 const MOVIES_PER_PAGE = 8;
 
@@ -9,14 +11,23 @@ const MainPage = () => {
   const [movies, setMovies] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    const demoMovies = Array.from({ length: 30 }, (_, i) => ({
-      id: i + 1,
-      title: `Phim hoạt hình Conan tập ${i + 1}`,
-      image: `https://imgur-com.cdn.ampproject.org/i/imgur.com/NA2h4BE.jpg/150x220?text=Movie+${i + 1}`,
-    }));
-    setMovies(demoMovies);
-  }, []);
+    
+  const fetchMovies = useCallback(async () => {
+          try {
+            const data = await MovieService.getAllMovies();
+            if (Array.isArray(data)) {
+              setMovies(data);
+            } else {
+              setMovies([]); // Nếu không phải mảng (null, undefined, object), set rỗng
+            }
+          } catch (error) {
+            setMovies([]);
+          }
+      }, []);
+      //load movies from server
+    useEffect(() => {
+      fetchMovies();
+    },  [fetchMovies]);
 
   const totalPages = Math.ceil(movies.length / MOVIES_PER_PAGE);
   const startIdx = (currentPage - 1) * MOVIES_PER_PAGE;
@@ -29,19 +40,19 @@ const MainPage = () => {
 
     <div className="main-page container"   >
         
-      <Header />
+      <Header  fetchMovies={fetchMovies}/>
 
       <div className="row mt-4">
         {currentMovies.map((movie) => (
-          <div className="col-md-3 mb-4" key={movie.id}>
-            <div className="card h-100">
+          <div className="col-md-2 mb-4" key={movie.movieId}>
+            <div className="card h-100 bg-light">
               <img
-                src={movie.image}
-                className="card-img-top"
+                src={movie.thumbnailUrl || "https://th.bing.com/th/id/OIP.044hbqIQlG5Al-y5ADrlHQHaEK?rs=1&pid=ImgDetMain"}
+                className="card-img-top thumbnail-img"
                 alt={movie.title}
               />
-              <div className="card-body">
-                <h5 className="card-title">{movie.title}</h5>
+              <div className="card-body text-center">
+                <h5 className="card-title" style={{fontSize:"18px"}}>{movie.title}</h5>
               </div>
             </div>
           </div>
