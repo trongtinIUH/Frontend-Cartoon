@@ -56,7 +56,18 @@ const EpisodeService = {
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
+    },
+
+    //số tập của một bộ phim
+    countEpisodesByMovieId: async (movieId) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/count/${movieId}`);
+            return response.data.count; // Giả sử API trả về { count: số_tập }
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
     }
+
 
 };
 

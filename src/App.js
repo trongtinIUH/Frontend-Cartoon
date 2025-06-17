@@ -5,6 +5,8 @@ import RegisterPage from './pages/RegisterPage';
 import MainPage from './pages/MainPage';    
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import MovieDetailPage from './pages/MovieDetailPage';
+import ControlPanelPage from './pages/ControlPanelPage';
+import ManageMoviePage from './pages/ManageMoviePage';
 import { useAuth } from './context/AuthContext';
 import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer và toast
 import 'react-toastify/dist/ReactToastify.css';
@@ -39,6 +41,8 @@ useEffect(() => {
                     <Route path="/create-user" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/movie/:id" element={<MovieDetailPage />} />
+                    <Route path="/control-panel" element={<ControlPanelPage />} />
+                    <Route path="/manage-movie" element={<ManageMoviePage />} />
                  
                     {/* Thêm các route khác nếu cần */}
 

@@ -54,7 +54,9 @@ const Header = ({ fetchMovies }) => {
              {isAdmin && (
              <li onClick={() => setShowAddMovie(true)} style={{color:"green"}}>Thêm phim</li>
               )}
+               {isAdmin && (
              <li><Link to="/control-panel">Bảng điều khiển</Link></li>
+              )}
              <li><Link to="/profile">Thông tin cá nhân</Link></li>
             <li onClick={handleLogout} style={{color:"red"}}>Đăng xuất</li>
           </ul>
