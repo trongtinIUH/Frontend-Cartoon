@@ -5,7 +5,7 @@ import "../css/MainPage.css";
 import { Link } from "react-router-dom";
 import MovieService from "../services/MovieService";
 
-const MOVIES_PER_PAGE = 8;
+const MOVIES_PER_PAGE = 20;
 
 const MainPage = () => {
   const [movies, setMovies] = useState([]);
@@ -44,7 +44,7 @@ const MainPage = () => {
 
       <div className="row mt-4">
         {currentMovies.map((movie) => (
-          <div className="col-md-2 mb-4" key={movie.movieId}>
+          <div className="col-md-2  mb-4" key={movie.movieId}>
             <Link to={`/movie/${movie.movieId}`}>
             <div className="card h-100 bg-light">
               <img

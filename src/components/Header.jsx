@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../css/Header.css";
 import showToast from "../utils/AppUtils";
-import ModelAddMovie from "../pages/ModelAddMovie"; 
+import ModelAddMovie from "../models/ModelAddMovie"; 
 
 
 const Header = ({ fetchMovies }) => {
@@ -64,9 +64,9 @@ const Header = ({ fetchMovies }) => {
       </div>
   {/* Hiển thị modal khi showAddMovie = true */}
     {showAddMovie && (
-      <div className="modal-backdrop-custom"
+      <div className="modaladd-backdrop-custom"
          onClick={() => setShowAddMovie(false)}>
-          <div className="modal-content-custom"
+          <div className="modaladd-content-custom"
             onClick={e => e.stopPropagation()}>
      
           <ModelAddMovie

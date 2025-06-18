@@ -43,7 +43,23 @@ const MovieService = {
     //xóa nhìu movie
     deleteMovies: async (ids) => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/delete`, { ids });
+            const response = await axios.delete(`${API_BASE_URL}/delete`, { data: ids });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
+    //update movie
+    updateMovie: async (movieId,movieData) => {
+        try {
+            const response = await axios.put(`${API_BASE_URL}/${movieId}/update`, movieData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            );
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
