@@ -7,6 +7,9 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import ControlPanelPage from './pages/ControlPanelPage';
 import ManageMoviePage from './pages/ManageMoviePage';
+import GenreMoviesPage from './pages/GenreMoviesPage';
+import SearchResultPage from './pages/SearchResultPage';  
+import ProfilePage from './pages/ProfilePage';
 import { useAuth } from './context/AuthContext';
 import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer và toast
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,11 +25,14 @@ function App() {
 useEffect(() => {
   const idToken = localStorage.getItem('idToken');
 
-  if (!MyUser && !idToken && !['/create-user', '/forgot-password'].includes(location.pathname)) {
-    setTimeout(() => {
-      navigate('/'); // Chỉ chuyển về login nếu chưa đăng nhập
-    }, 2000);
-  }
+const protectedRoutes = ['/control-panel', '/manage-movie']; // các route yêu cầu đăng nhập
+
+if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
+  setTimeout(() => {
+    navigate('/'); // quay về login
+  }, 2000);
+}
+
 
   setIsLoading(false);
 }, [MyUser, navigate, location.pathname]);
@@ -43,6 +49,10 @@ useEffect(() => {
                     <Route path="/movie/:id" element={<MovieDetailPage />} />
                     <Route path="/control-panel" element={<ControlPanelPage />} />
                     <Route path="/manage-movie" element={<ManageMoviePage />} />
+                    <Route path="/the-loai/:genre" element={<GenreMoviesPage />} />
+                    <Route path="/tim-kiem/:title" element={<SearchResultPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+
                  
                     {/* Thêm các route khác nếu cần */}
 

@@ -4,30 +4,31 @@ import Footer from "../components/Footer";
 import "../css/MainPage.css";
 import { Link } from "react-router-dom";
 import MovieService from "../services/MovieService";
+import { useParams } from "react-router-dom";
 
 const MOVIES_PER_PAGE = 20;
 
-const MainPage = () => {
-  const [movies, setMovies] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+const GenreMoviesPage = () => {
+    
+    const [movies, setMovies] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const { genre } = useParams(); // lấy từ URL
 
     
-  const fetchMovies = useCallback(async () => {
+  const fetchMoviesByGenre  = useCallback(async () => {
           try {
-            const data = await MovieService.getAllMovies();
-            if (Array.isArray(data)) {
-              setMovies(data);
-            } else {
-              setMovies([]); // Nếu không phải mảng (null, undefined, object), set rỗng
-            }
+            const data = await MovieService.getMoviesByGenre(genre);
+            console.log("Movies by genre:", data);
+           setMovies(data || []);
           } catch (error) {
             setMovies([]);
           }
-      }, []);
+      }, [genre]);
+
       //load movies from server
     useEffect(() => {
-      fetchMovies();
-    },  [fetchMovies]);
+      fetchMoviesByGenre();
+    },  [fetchMoviesByGenre]);
 
   const totalPages = Math.ceil(movies.length / MOVIES_PER_PAGE);
   const startIdx = (currentPage - 1) * MOVIES_PER_PAGE;
@@ -40,12 +41,12 @@ const MainPage = () => {
 
     <div className="main-page container"   >
         
-      <Header  fetchMovies={fetchMovies}/>
-
+    <Header  fetchMovies={fetchMoviesByGenre}/>
+    <h3 className="text-black mt-4">Thể loại: {genre}</h3>
       <div className="row mt-4">
         {currentMovies.map((movie) => (
           <div className="col-md-2  mb-4" key={movie.movieId}>
-            <Link to={`/movie/${movie.movieId}`} style={{textDecoration: "none"}}>
+            <Link to={`/movie/${movie.movieId}`}>
             <div className="card h-100 bg-light">
               <img
                 src={movie.thumbnailUrl || "https://th.bing.com/th/id/OIP.044hbqIQlG5Al-y5ADrlHQHaEK?rs=1&pid=ImgDetMain"}
@@ -53,7 +54,7 @@ const MainPage = () => {
                 alt={movie.title}
               />
               <div className="card-body text-center">
-                <h5 className="card-title" style={{fontSize:"18px", textDecoration:"none"}}>{movie.title}</h5>
+                <h5 className="card-title" style={{fontSize:"18px"}}>{movie.title}</h5>
               </div>
             </div>
             </Link>
@@ -106,4 +107,4 @@ const MainPage = () => {
   );
 };
 
-export default MainPage;
+export default GenreMoviesPage;

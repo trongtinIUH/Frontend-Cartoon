@@ -4,17 +4,19 @@ import Footer from "../components/Footer";
 import "../css/MainPage.css";
 import { Link } from "react-router-dom";
 import MovieService from "../services/MovieService";
+import { useParams } from "react-router-dom";
 
 const MOVIES_PER_PAGE = 20;
 
-const MainPage = () => {
-  const [movies, setMovies] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+const SearchResultPage = () => {
+    const [movies, setMovies] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const { title } = useParams();
 
     
-  const fetchMovies = useCallback(async () => {
+  const fetchSearchResults  = useCallback(async () => {
           try {
-            const data = await MovieService.getAllMovies();
+            const data = await MovieService.searchMovies(title);
             if (Array.isArray(data)) {
               setMovies(data);
             } else {
@@ -26,8 +28,8 @@ const MainPage = () => {
       }, []);
       //load movies from server
     useEffect(() => {
-      fetchMovies();
-    },  [fetchMovies]);
+      fetchSearchResults ();
+    },  [fetchSearchResults ]);
 
   const totalPages = Math.ceil(movies.length / MOVIES_PER_PAGE);
   const startIdx = (currentPage - 1) * MOVIES_PER_PAGE;
@@ -40,8 +42,8 @@ const MainPage = () => {
 
     <div className="main-page container"   >
         
-      <Header  fetchMovies={fetchMovies}/>
-
+      <Header  fetchMovies={fetchSearchResults }/>
+        <h3 className="text-black mt-4">Kết quả tìm kiếm cho: {title}</h3>
       <div className="row mt-4">
         {currentMovies.map((movie) => (
           <div className="col-md-2  mb-4" key={movie.movieId}>
@@ -106,4 +108,4 @@ const MainPage = () => {
   );
 };
 
-export default MainPage;
+export default SearchResultPage;

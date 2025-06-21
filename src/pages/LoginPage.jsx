@@ -101,7 +101,10 @@ const LoginPage = () => {
           
             <div className="card p-4 " style={{ width: "500px", borderRadius: "20px"  }}>
                   <div className="text-center mb-4">
+                <Link to="/main">
                 <h1 className="text-primary fw-bold" style={{fontSize:'50px'}}>CartoonToo</h1>
+                </Link>
+                
                 <p style={{ fontSize: '16px', color: 'white' }}>
                      Đăng nhập tài khoản CartoonToo <br /> để khám phá kho phim hoạt hình đặc sắc!
                 </p>

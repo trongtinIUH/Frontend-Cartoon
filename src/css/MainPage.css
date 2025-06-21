@@ -25,5 +25,12 @@
   object-fit: cover;  /* hoặc 'contain' nếu muốn ảnh không bị crop */
   display: block;
 }
-
-
+.card-title {
+  font-size: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;  /* Giới hạn 2 dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 48px; /* Căn theo số dòng và line-height */
+}

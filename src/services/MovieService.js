@@ -65,6 +65,27 @@ const MovieService = {
             throw error.response ? error.response.data : error;
         }
     },
+
+    //tìm phim theo genres
+    getMoviesByGenre: async (genre) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/genre/${genre}`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
+    //tìm phim theo title gần đúng
+    searchMovies: async (title) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/search`, { params: { title } });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
+    
 }
 
 export default MovieService;

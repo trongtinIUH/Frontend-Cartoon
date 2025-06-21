@@ -21,8 +21,15 @@
   height: 40px;
 }
 
+.nav-links {
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: 20px;
+}
+
 .nav-links a {
-  color: #ccc;
+  color: #e6e6e6;
   text-decoration: none;
   margin-right: 16px;
   font-weight: 500;
@@ -30,7 +37,7 @@
 }
 
 .nav-links a:hover {
-  color: #a0ff00;
+  color: #000000;
 }
 
 .header-right {
@@ -112,4 +119,114 @@
   background: none;
   font-size: 22px;
   cursor: pointer;
+}
+
+
+
+.genre-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.genres-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px 0;
+  list-style: none;
+  min-width: 100px;
+  max-height: 300px;
+  overflow-y: auto;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+.genres-dropdown ul {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px 16px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  
+}
+
+.genres-dropdown li {
+  padding: 8px 16px;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.genres-dropdown li:hover {
+  background-color: #f0f0f0;
+}
+.genres-dropdown a {
+  color: #000 !important;      /* Đảm bảo màu đen */
+  text-decoration: none;
+  font-weight: 500;
+  display: block;
+}
+
+
+
+
+.search-container {
+  position: relative;
+  margin-right: 20px;
+}
+
+.search-input {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 300px;
+}
+
+.search-suggestions {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 300px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  z-index: 1000;
+  list-style: none;
+  padding: 0;
+  margin: 4px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.suggestion-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: black;
+  width: 100%;
+}
+
+.suggestion-img {
+  width: 50px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.suggestion-title {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
