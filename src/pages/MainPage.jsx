@@ -1,6 +1,7 @@
 import React, { useEffect, useState,useCallback } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ChatBox from "../components/ChatBox";
 import "../css/MainPage.css";
 import { Link } from "react-router-dom";
 import MovieService from "../services/MovieService";
@@ -10,18 +11,22 @@ const MOVIES_PER_PAGE = 20;
 const MainPage = () => {
   const [movies, setMovies] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-
-    
+  const [filteredMovies, setFilteredMovies] = useState([]); // kết quả lọc
+  const [increaseViewCount, setIncreaseViewCount] = useState(false);
+  
   const fetchMovies = useCallback(async () => {
           try {
             const data = await MovieService.getAllMovies();
             if (Array.isArray(data)) {
               setMovies(data);
+               setFilteredMovies(data); // mặc định là full danh sách
             } else {
               setMovies([]); // Nếu không phải mảng (null, undefined, object), set rỗng
+                setFilteredMovies([]);
             }
           } catch (error) {
             setMovies([]);
+              setFilteredMovies([]);
           }
       }, []);
       //load movies from server
@@ -40,12 +45,16 @@ const MainPage = () => {
 
     <div className="main-page container"   >
         
-      <Header  fetchMovies={fetchMovies}/>
-
+      <Header fetchMovies={fetchMovies} setFilteredMovies={setMovies} />
+ <ChatBox />
       <div className="row mt-4">
         {currentMovies.map((movie) => (
           <div className="col-md-2  mb-4" key={movie.movieId}>
-            <Link to={`/movie/${movie.movieId}`} style={{textDecoration: "none"}}>
+            <Link to={`/movie/${movie.movieId}`}
+              onClick={async () => {
+                  MovieService.incrementViewCount(movie.movieId);
+              }}
+            style={{textDecoration: "none"}}>
             <div className="card h-100 bg-light">
               <img
                 src={movie.thumbnailUrl || "https://th.bing.com/th/id/OIP.044hbqIQlG5Al-y5ADrlHQHaEK?rs=1&pid=ImgDetMain"}

@@ -230,3 +230,73 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+.filter-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.filter-box {
+  flex-direction: column;
+  align-items: center;
+  background: white;
+  padding: 10px;
+  border-radius: 12px;
+  width: 270px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.filter-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.btn-filter{
+  background-color: #4CAF50;
+  color: white;
+  width: 30%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 30px;
+}
+.filter-fields {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.select-group {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.select-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.select-item label {
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+.select-item select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 120px;
+}

@@ -84,8 +84,28 @@ const MovieService = {
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
-    }
+    },
     
+    //lọc phim theo năm va tháng
+    filterMoviesByYearAndMonth: async (year, month) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/filter`, { params: { year, month } });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
+    //tăng view count
+    incrementViewCount: async (movieId) => {
+        try {
+            const response = await axios.put(`${API_BASE_URL}/${movieId}/increment-view`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
+
 }
 
 export default MovieService;
