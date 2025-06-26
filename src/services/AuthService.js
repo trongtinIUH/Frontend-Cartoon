@@ -12,6 +12,11 @@ const AuthService = {
             throw error.response ? error.response.data : error;
         }
     },
+
+    //change password
+    changePassword: async ({username,currentPassword,newPassword }) => {
+        return await AuthService.post('/change-password', {username,currentPassword,newPassword });
+    },
 };
 
 export default AuthService;

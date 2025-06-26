@@ -16,9 +16,12 @@ const ModelAddMovie = ({ onSuccess }) => {
     genres: [],
     video: null,
     thumbnail: null,
+    videoLink: "",
   });
 
   const [loading, setLoading] = useState(false);
+  //nếu chọn thì chuyển upload video lên server thành đưa link lưu vào
+  const [uploadVideo, setUploadVideo] = useState(false);
 
    const GENRES = [
   "Âm nhạc", "Anime", "Bí ẩn", "Bi kịch", "CN Animation", "[CNA] Hài hước", "[CNA] Ngôn tình",
@@ -68,7 +71,7 @@ const ModelAddMovie = ({ onSuccess }) => {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
-  if (!form.title || !form.video) {
+  if (!form.title || (!form.video && !form.videoLink)) {
     toast.error("Vui lòng nhập tiêu đề và chọn video!");
     return;
   }
@@ -90,8 +93,12 @@ const handleSubmit = async (e) => {
     const episodeData = new FormData();
     episodeData.append("movieId", newMovie.movieId);
     episodeData.append("title", `${form.title} - Tập 1`);
-    episodeData.append("video", form.video);
     episodeData.append("episodeNumber", 1);
+    if (uploadVideo) {
+      episodeData.append("videoLink", form.videoLink); // chỉ gửi link
+    } else {
+      episodeData.append("video", form.video); // chỉ gửi file
+    }
 
     await EpisodeService.addEpisode(episodeData);
 
@@ -150,8 +157,30 @@ const handleSubmit = async (e) => {
               ))}
             </div>
           </div>
-          <div className="mb-3">
-            <label className="form-label">Video</label>
+          <div className="mb-3" >
+            <div className="video-label-wrapper">
+              <label htmlFor="video">Video</label>
+              <div className="video-toggle">
+                <input
+                  type="checkbox"
+                  checked={uploadVideo}
+                  onChange={() => setUploadVideo((prev) => !prev)}
+                  id="uploadLinkCheckbox"
+                />
+                <span style={{ whiteSpace: "nowrap" }}>Upload Link</span>
+              </div>
+            </div>
+            {uploadVideo ? (
+              <input
+                type="text"
+                className="form-control"
+                name="videoLink"
+                value={form.videoLink || ""}
+                onChange={handleChange}
+                placeholder="Nhập link video (ví dụ: https://example.com/video.mp4)"
+                required
+              />
+           ) : (
             <input
               type="file"
               className="form-control"
@@ -160,6 +189,7 @@ const handleSubmit = async (e) => {
               onChange={handleChange}
               required
             />
+           )}
           </div>
           <div className="mb-3">
             <label className="form-label">Thumbnail (ảnh đại diện)</label>

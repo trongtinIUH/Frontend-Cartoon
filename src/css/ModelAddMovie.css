@@ -68,3 +68,22 @@
 }
 
 
+.model-add-movie .video-label-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  margin-bottom: 8px;
+}
+
+.model-add-movie .video-label-wrapper label {
+  font-weight: 500;
+  margin-right: 12px;
+}
+
+.model-add-movie .video-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+

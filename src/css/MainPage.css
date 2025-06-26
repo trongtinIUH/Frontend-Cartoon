@@ -34,3 +34,20 @@
   text-overflow: ellipsis;
   height: 48px; /* Căn theo số dòng và line-height */
 }
+
+.card.h-100.bg-light {
+ transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.card.h-100.bg-light:hover {
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 8px 24px rgba(40, 80, 180, 0.18);
+  background: #f0f6ff;
+}
+.card.h-100.bg-light .card-title {
+   transition: color 0.18s;
+}
+.card.h-100.bg-light:hover .card-title {
+  color: #2563eb; 
+}

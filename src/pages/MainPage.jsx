@@ -47,6 +47,7 @@ const MainPage = () => {
         
       <Header fetchMovies={fetchMovies} setFilteredMovies={setMovies} />
  <ChatBox />
+  <h3 className="text-black mt-3">Trang chủ</h3>
       <div className="row mt-4">
         {currentMovies.map((movie) => (
           <div className="col-md-2  mb-4" key={movie.movieId}>

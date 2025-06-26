@@ -6,6 +6,7 @@ import {User,Mail  } from 'lucide-react';
 import UserService from "../services/UserService";
 import { toast } from "react-toastify";
 import Header from "../components/Header";
+import AuthService from "../services/AuthService";
 
 const ProfilePage = () => {
   const { MyUser, updateUserInfo } = useAuth();
@@ -14,6 +15,14 @@ const ProfilePage = () => {
   const user = MyUser?.my_user || {};
 
   const [isEditing, setIsEditing] = useState(false);
+
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const [changePasswordForm, setChangePasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   const [form, setForm] = useState({
     userName: user.userName || "",
@@ -114,9 +123,84 @@ const ProfilePage = () => {
           <button className="edit-button" style={{ backgroundColor: "#8fce00", color: "white" }} onClick={() => setIsEditing(true)}>
             Chỉnh sửa
           </button>
+          <button className="change-password-button" style={{ backgroundColor: "#8fce00", color: "white",fontSize:"14px" }} onClick={() => setIsChangingPassword((prev)=> !prev)}>
+            Đổi mật khẩu
+          </button>
         </div>
+
+        {isChangingPassword && (
+          <form
+            className="change-password-form"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const { currentPassword, newPassword, confirmPassword } = changePasswordForm;
+
+              if (newPassword !== confirmPassword) {
+                toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+                return;
+              }
+
+              try {
+                await AuthService.changePassword({
+                  username: user.phoneNumber,
+                  currentPassword,
+                  newPassword,
+                });
+                toast.success("Đổi mật khẩu thành công!");
+                setChangePasswordForm({
+                  currentPassword: "",
+                  newPassword: "",
+                  confirmPassword: ""
+                });
+                setIsChangingPassword(false);
+              } catch (error) {
+                console.error("Error changing password:", error);
+                toast.error("Đổi mật khẩu thất bại. Vui lòng thử lại sau.");
+              }
+            }}
+          >
+            <h3>Đổi mật khẩu</h3>
+            <div>
+              <label>Hiện tại:</label>
+              <input
+                type="password"
+                name="currentPassword"
+                value={changePasswordForm.currentPassword}
+                onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label>Mật khẩu mới:</label>
+              <input
+                type="password"
+                name="newPassword"
+                value={changePasswordForm.newPassword}
+                onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label>Xác nhận mật khẩu mới:</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={changePasswordForm.confirmPassword}
+                onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
+                required
+              />
+            </div>
+            <div style={{flexDirection:"row", display:"flex", justifyContent:"space-between"}}>
+              <button type="submit">Lưu</button>
+              <button type="button" onClick={() => setIsChangingPassword(false)} style={{ marginLeft: 8, backgroundColor: "#636e72", color: "white" }}>
+                Hủy
+              </button>
+            </div>
+          </form>
+        )}
       </>
     )}
+
         <div className="profile-footer">
           <p>© 2025 - Bản quyền thuộc về trongtinIUH</p>
         </div>
