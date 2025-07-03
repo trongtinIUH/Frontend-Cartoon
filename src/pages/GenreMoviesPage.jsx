@@ -1,6 +1,4 @@
 import React, { useEffect, useState,useCallback } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import "../css/MainPage.css";
 import { Link } from "react-router-dom";
 import MovieService from "../services/MovieService";
@@ -41,8 +39,8 @@ const GenreMoviesPage = () => {
 
     <div className="main-page container"   >
         
-    <Header  fetchMovies={fetchMoviesByGenre}/>
-    <h3 className="text-black mt-4">Thể loại: {genre}</h3>
+   
+    <h3 className="text-black pt-3">Thể loại: {genre}</h3>
       <div className="row mt-4">
         {currentMovies.map((movie) => (
           <div className="col-md-2  mb-4" key={movie.movieId}>
@@ -101,7 +99,7 @@ const GenreMoviesPage = () => {
         </ul>
       </nav>
 
-      <Footer />
+      
     </div>
     </div>
   );

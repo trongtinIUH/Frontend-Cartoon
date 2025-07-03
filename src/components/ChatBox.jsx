@@ -4,14 +4,52 @@ import "../css/ChatBox.css";
 import ReactMarkdown from "react-markdown";
 
 
+
 const ChatBox = () => {
   const [message, setMessage] = useState("");
   const [chatLog, setChatLog] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // mở rộng chatbox
+if (!isOpen) {
+  return (
+    <div
+      onClick={() => setIsOpen(true)}
+      style={{
+        position: "fixed",
+        bottom: 20,
+        right: 20,
+        width: 60,
+        height: 60,
+        borderRadius: "50%",
+        backgroundColor: "#007bff",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 28,
+        cursor: "pointer",
+        zIndex: 9999,
+      }}
+    >
+      💬
+    </div>
+  );
+}
 
-  if (isHidden) return null; // Ẩn hoàn toàn chatbox
+
+      if (isHidden) {
+        return (
+          <div
+            className="chatbox-toggle-ball"
+            onClick={() => setIsHidden(false)}
+            title="Mở chat"
+          >
+            💬
+          </div>
+        );
+      }
 
 
   const handleSend = async () => {
@@ -37,7 +75,7 @@ const ChatBox = () => {
             {!isFullScreen ? (
               <button
                 className="chatbox-zoom-btn"
-                onClick={() => setIsFullScreen(true)}
+                 onClick={() => setIsOpen(false)}
                 title="Phóng to"
               >⛶</button>
             ) : (

@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import MovieService from "../services/MovieService";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import "../css/MovieDetailPage.css";
 
 const MovieDetailPage = () => {
@@ -28,7 +26,7 @@ const MovieDetailPage = () => {
 
   return (
     <div className="movie-detail-page">
-      <Header />
+      
       <div className="container py-5 text-white">
         <div className="row">
           <div className="col-md-4 mb-4 text-center">
@@ -65,7 +63,7 @@ const MovieDetailPage = () => {
           </div>
         )}
       </div>
-      <Footer />
+     
     </div>
   );
 };

@@ -16,6 +16,7 @@ const Footer = () => {
         padding: "40px 20px",
         textAlign: "center",
         fontSize: "14px",
+        height:"320px"
       }}
     >
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>

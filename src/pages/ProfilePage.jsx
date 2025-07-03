@@ -5,7 +5,6 @@ import "../css/ProfilePage.css";
 import {User,Mail  } from 'lucide-react';
 import UserService from "../services/UserService";
 import { toast } from "react-toastify";
-import Header from "../components/Header";
 import AuthService from "../services/AuthService";
 
 const ProfilePage = () => {
@@ -34,7 +33,7 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-page">
-      <Header />
+      
       <div className="profile-card">
         <img
           className="profile-avatar"

@@ -11,6 +11,7 @@ import GenreMoviesPage from './pages/GenreMoviesPage';
 import SearchResultPage from './pages/SearchResultPage';  
 import ProfilePage from './pages/ProfilePage';
 import { useAuth } from './context/AuthContext';
+import Layout from "./layout/Layout";
 import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer và toast
 import 'react-toastify/dist/ReactToastify.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -42,20 +43,20 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
         !isLoading && (
             <>
                 <Routes>
-                    <Route path="/" element={<LoginPage />} />
+                  <Route path="/" element={<LoginPage />} />
+                  <Route path="/create-user" element={<RegisterPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+                  {/* Các route cần dùng Layout */}
+                  <Route element={<Layout />}>
                     <Route path="/main" element={<MainPage />} />
-                    <Route path="/create-user" element={<RegisterPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/movie/:id" element={<MovieDetailPage />} />
                     <Route path="/control-panel" element={<ControlPanelPage />} />
                     <Route path="/manage-movie" element={<ManageMoviePage />} />
                     <Route path="/the-loai/:genre" element={<GenreMoviesPage />} />
                     <Route path="/tim-kiem/:title" element={<SearchResultPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
-
-                 
-                    {/* Thêm các route khác nếu cần */}
-
+                  </Route>
                 </Routes>
 
                 {/* Thêm ToastContainer để hiển thị thông báo toast */}

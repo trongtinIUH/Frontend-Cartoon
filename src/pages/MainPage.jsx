@@ -1,15 +1,12 @@
 import React, { useEffect, useState,useCallback } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import ChatBox from "../components/ChatBox";
 import "../css/MainPage.css";
-import { Link } from "react-router-dom";
+import { Link, useOutletContext  } from "react-router-dom";
 import MovieService from "../services/MovieService";
 
 const MOVIES_PER_PAGE = 20;
 
 const MainPage = () => {
-  const [movies, setMovies] = useState([]);
+ const { movies, setMovies } = useOutletContext();
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredMovies, setFilteredMovies] = useState([]); // kết quả lọc
   const [increaseViewCount, setIncreaseViewCount] = useState(false);
@@ -45,9 +42,8 @@ const MainPage = () => {
 
     <div className="main-page container"   >
         
-      <Header fetchMovies={fetchMovies} setFilteredMovies={setMovies} />
- <ChatBox />
-  <h3 className="text-black mt-3">Trang chủ</h3>
+      
+  <h3 className="text-black pt-3">Trang chủ</h3>
       <div className="row mt-4">
         {currentMovies.map((movie) => (
           <div className="col-md-2  mb-4" key={movie.movieId}>
@@ -109,8 +105,8 @@ const MainPage = () => {
           </li>
         </ul>
       </nav>
-
-      <Footer />
+            
+      
     </div>
     </div>
   );

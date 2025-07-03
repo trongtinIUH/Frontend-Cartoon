@@ -1,6 +1,4 @@
 import React, { useEffect, useState,useCallback } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import "../css/MainPage.css";
 import { Link } from "react-router-dom";
 import MovieService from "../services/MovieService";
@@ -42,7 +40,7 @@ const SearchResultPage = () => {
 
     <div className="main-page container"   >
         
-      <Header  fetchMovies={fetchSearchResults }/>
+      
         <h3 className="text-black mt-4">Kết quả tìm kiếm cho: {title}</h3>
       <div className="row mt-4">
         {currentMovies.map((movie) => (
@@ -102,7 +100,7 @@ const SearchResultPage = () => {
         </ul>
       </nav>
 
-      <Footer />
+     
     </div>
     </div>
   );

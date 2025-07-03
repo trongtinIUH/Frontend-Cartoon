@@ -4,8 +4,7 @@ import MovieService from '../services/MovieService';
 import EpisodeService from '../services/EpisodeService';
 import showToast from '../utils/AppUtils';
 import '../css/ManageMoviePage.css';
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+
 import ModelAddMovie from '../models/ModelAddMovie';
 import ModelAddNewEpisode from '../models/ModelAddNewEpisode';
 import ModelUpdateMovie from '../models/ModelUpdateMovie';
@@ -120,7 +119,7 @@ const toggleMovieSelection = (id) => {
         backgroundPosition: 'center',
       }}
     >
-      <Header />
+    
 
       <div className="container mt-4">
         <h1 className="manage-movie-title" style={{width:"100%",justifyContent:"center"}}>🎬 Quản lý phim</h1>
