@@ -12,7 +12,6 @@ import { Plus, Pencil, Trash2, Film ,CirclePlus} from "lucide-react";
 import { Link } from "react-router-dom";
 
 
-
 const ManageMoviePage = () => {
   const [movies, setMovies] = useState([]);
   
