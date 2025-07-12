@@ -12,10 +12,9 @@ import SearchResultPage from './pages/SearchResultPage';
 import ProfilePage from './pages/ProfilePage';
 import { useAuth } from './context/AuthContext';
 import Layout from "./layout/Layout";
-import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer và toast
-import 'react-toastify/dist/ReactToastify.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const navigate = useNavigate();
