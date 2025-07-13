@@ -99,7 +99,7 @@ const LoginPage = () => {
         </video>
         <div className="d-flex justify-content-center align-items-center flex-column vh-100">
           
-            <div className="card p-4 " style={{ width: "500px", borderRadius: "20px"  }}>
+            <div className="card p-4" style={{ width: "500px", borderRadius: "20px", maxWidth: "400px"  }}>
                   <div className="text-center mb-4">
                 <Link to="/main">
                 <h1 className="text-primary fw-bold" style={{fontSize:'50px'}}>CartoonToo</h1>

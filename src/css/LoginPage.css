@@ -28,7 +28,8 @@ body {
     border-radius: 50px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    width: 350px;
+    width: 90%;
+    max-width: 400px; /* Giới hạn tối đa */
 }
 
 /* Title and subtitle */
@@ -235,4 +236,26 @@ body {
 }
 .sound-toggle button:hover {
     background: #e0e7ff;
+}
+@media (max-width: 576px) {
+  .login-box {
+    padding: 20px 25px;
+    border-radius: 30px;
+  }
+
+  .login-box h2 {
+    font-size: 20px;
+  }
+
+  .btn-login {
+    font-size: 14px;
+  }
+
+  .loading-text {
+    font-size: 16px;
+  }
+
+  .card {
+    margin: 0 10px; /* Giảm khoảng cách 2 bên */
+  }
 }

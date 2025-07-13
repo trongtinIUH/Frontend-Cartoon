@@ -10,6 +10,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Funnel } from "lucide-react"; // Assuming you have lucide-react installed for icons
 
+
 const Header = ({ fetchMovies, setFilteredMovies }) => {
   const [searchText, setSearchText] = useState("");
   const [suggestions, setSuggestions] = useState([]);

@@ -1,6 +1,6 @@
 import axios from "axios";
 const API_BASE_URL = 'http://localhost:8080/movies';
-
+const token = localStorage.getItem("idToken");
 const MovieService = {
 
     //get all movies
@@ -30,7 +30,8 @@ const MovieService = {
             const response = await axios.post(`${API_BASE_URL}/create`, movieData,
                 {
                     headers: {
-                        'Content-Type': 'multipart/form-data'
+                        'Content-Type': 'multipart/form-data',
+                //        "Authorization": `Bearer ${token}`
                     }
                 }
             );
@@ -104,7 +105,19 @@ const MovieService = {
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
-    }
+    },
+
+    //top 10 phim nổi bật
+    getPopularMovies: async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/popular`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+    //top nhưng phim mới nhất ... chưa làm BE FE
+
 
 }
 
