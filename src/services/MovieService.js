@@ -30,8 +30,8 @@ const MovieService = {
             const response = await axios.post(`${API_BASE_URL}/create`, movieData,
                 {
                     headers: {
-                        'Content-Type': 'multipart/form-data'
-                        
+                        'Content-Type': 'multipart/form-data',
+                //        "Authorization": `Bearer ${token}`
                     }
                 }
             );
