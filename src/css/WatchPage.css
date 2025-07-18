@@ -1,0 +1,59 @@
+/* Tổng thể */
+.watch-page {
+  background-color: #141414;
+  min-height: 100vh;
+  padding: 2rem;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Tiêu đề tập phim */
+.watch-page h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #e50914; /* đỏ đặc trưng Netflix */
+}
+
+/* Mô tả tập */
+.watch-page p {
+  font-size: 1rem;
+  color: #ccc;
+  margin-top: 1.5rem;
+  line-height: 1.6;
+}
+
+/* Video */
+.watch-page video {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  background-color: #000;
+}
+
+/* Responsive nhỏ */
+@media (max-width: 768px) {
+  .watch-page {
+    padding: 1rem;
+  }
+
+  .watch-page h2 {
+    font-size: 1.5rem;
+  }
+
+  .watch-page p {
+    font-size: 0.95rem;
+  }
+}
+.video-player {
+  transition: filter 0.2s ease;
+}
+.video-js {
+  width: 100%;
+  max-height: 70vh;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  background-color: #000;
+}

@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import MovieService from "../services/MovieService";
+import { useNavigate, Link } from 'react-router-dom';
 import "../css/MovieDetailPage.css";
 
 const MovieDetailPage = () => {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
+  const navigate = useNavigate();
 
+  const handleWatch = (episode) => {
+    navigate("/watch", {
+      state: { episode }
+    });
+  };
   useEffect(() => {
     const fetchMovie = async () => {
       try {
@@ -51,9 +58,9 @@ const MovieDetailPage = () => {
             <div className="row">
               {movie.episodes.map((ep) => (
                 <div key={ep.episodeId} className="col-md-4 mb-4">
-                  <div className="episode-card p-3 shadow-sm rounded">
+                  <div className="episode-card p-3 shadow-sm rounded" >
                     <h6 className="mb-2">Tập {ep.episodeNumber}: {ep.title}</h6>
-                    <a href={ep.videoUrl} target="_blank" rel="noreferrer" className="btn btn-watch">
+                    <a onClick={() => handleWatch(ep)} className="btn btn-watch">
                       Xem
                     </a>
                   </div>

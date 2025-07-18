@@ -1,6 +1,9 @@
 import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 const API_BASE_URL = 'http://localhost:8080/movies';
-const token = localStorage.getItem("idToken");
+
+
+
 const MovieService = {
 
     //get all movies
@@ -25,31 +28,39 @@ const MovieService = {
     },
 
     //add new movie
-    createMovie: async (movieData) => {
-        try {
-            const response = await axios.post(`${API_BASE_URL}/create`, movieData,
-                {
+        createMovie: async (movieData) => {
+            try {
+                const token = localStorage.getItem("idToken");
+                const response = await axios.post(`${API_BASE_URL}/create`, movieData,{
                     headers: {
                         'Content-Type': 'multipart/form-data',
-                //        "Authorization": `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`
                     }
-                }
-            );
-            return response.data;
-        } catch (error) {
-            throw error.response ? error.response.data : error;
-        }
-    },
+                });
+                return response.data;
+            } catch (error) {
+                throw error.response ? error.response.data : error;
+            }
+        },
+
 
     //xóa nhìu movie
-    deleteMovies: async (ids) => {
-        try {
-            const response = await axios.delete(`${API_BASE_URL}/delete`, { data: ids });
-            return response.data;
-        } catch (error) {
-            throw error.response ? error.response.data : error;
-        }
-    },
+        deleteMovies: async (ids) => {
+            try {
+                const token = localStorage.getItem("idToken");
+                const response = await axios.post(`${API_BASE_URL}/delete`, ids, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                return response.data;
+            } catch (error) {
+                throw error.response ? error.response.data : error;
+            }
+        },
+
+
 
     //update movie
     updateMovie: async (movieId,movieData) => {

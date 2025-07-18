@@ -1,4 +1,5 @@
 import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 
 const API_BASE_URL = 'http://localhost:8080/episodes';
 
