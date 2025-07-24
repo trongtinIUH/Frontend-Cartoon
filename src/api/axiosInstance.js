@@ -5,10 +5,16 @@ const axiosInstance = axios.create();
 
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem("idToken");
+
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  // ❗ Chỉ set Content-Type nếu KHÔNG phải FormData
+  if (!(config.data instanceof FormData)) {
     config.headers["Content-Type"] = "application/json";
   }
+
   return config;
 });
 

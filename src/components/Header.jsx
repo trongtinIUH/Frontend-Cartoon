@@ -21,6 +21,8 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
 
   const navigate = useNavigate();
   const { MyUser } = useAuth();
+  const user = MyUser?.my_user || {};
+  const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl || "");
   const [showAddMovie, setShowAddMovie] = useState(false);
   const isAdmin = MyUser?.my_user?.role === "ADMIN";
   const isUser = MyUser?.my_user?.role === "USER";
@@ -139,7 +141,7 @@ const reloadMainPage = () => {
         <div className="header-right">
           <div className="user-menu">
             <img
-              src="https://i.pinimg.com/736x/6a/bc/f8/6abcf84ac150893bfaad32730c3a99a8.jpg"
+              src={avatarPreview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
               alt="avatar"
               className="user-avatar"
             />

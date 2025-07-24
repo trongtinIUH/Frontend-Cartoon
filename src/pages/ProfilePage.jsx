@@ -23,6 +23,10 @@ const ProfilePage = () => {
     confirmPassword: "",
   });
 
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl || "");
+
+
   const [form, setForm] = useState({
     userName: user.userName || "",
     email: user.email || "",
@@ -30,16 +34,66 @@ const ProfilePage = () => {
   });
 
 
+  // Preview avatar before upload hình trực tiếp
+const [previewUrl, setPreviewUrl] = useState(null);
+
+const handleAvatarChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  setPreviewUrl(URL.createObjectURL(file)); // Preview trước ảnh
+  setAvatarFile(file);
+  const formData = new FormData();
+  formData.append("user", new Blob([JSON.stringify(user)], { type: "application/json" }));
+  formData.append("file", file);
+
+  try {
+   await UserService.updateUserById(user.userId, form, file);
+
+    toast.success("Cập nhật avatar thành công!");
+
+    // Tải lại thông tin user mới từ backend
+    const updatedUser = await UserService.getUserById(user.userId);
+    updateUserInfo({ my_user: updatedUser }); // (hàm trong context hoặc props)
+  } catch (error) {
+    console.error("Lỗi cập nhật avatar:", error);
+    toast.error("Không thể cập nhật avatar!");
+  }
+};
+  useEffect(() => {
+    if (user.avatarUrl) {
+      setAvatarPreview(user.avatarUrl);
+    }
+    setForm({
+      userName: user.userName || "",
+      email: user.email || "",
+      dob: user.dob || "",
+    });
+  }, [user]);
 
   return (
     <div className="profile-page">
       
       <div className="profile-card">
-        <img
-          className="profile-avatar"
-          src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-          alt="Avatar"
-        />
+        <div className="avatar-wrapper">
+          <img
+            className="profile-avatar"
+            src={avatarPreview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+            alt="Avatar"
+          />
+      <label htmlFor="avatarUpload" className="avatar-overlay">
+        📷
+      </label>
+      <input
+        id="avatarUpload"
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          handleAvatarChange(e);
+        }}
+        style={{ display: "none" }}
+      />
+    </div>
 
         {isEditing ? (
       <form
@@ -47,7 +101,7 @@ const ProfilePage = () => {
           e.preventDefault();
           try {
              // Gửi thông tin cập nhật lên server
-            await UserService.updateUserById(user.userId, form);
+            await UserService.updateUserById(user.userId, form, avatarFile);
 
             // Gọi lại API lấy thông tin mới nhất
             const updatedUser = await UserService.getUserById(user.userId);
@@ -56,6 +110,7 @@ const ProfilePage = () => {
             updateUserInfo({ my_user: updatedUser });
 
             toast.success("Cập nhật thành công!");
+            setAvatarFile(null); // clear file đã chọn
           } catch (error) {
             console.error("Cập nhật thất bại:", error);
             toast.error("Cập nhật thất bại. Vui lòng thử lại sau.");
