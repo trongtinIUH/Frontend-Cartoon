@@ -16,6 +16,8 @@ import Layout from "./layout/Layout";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import DashboardPage from './pages/admin/DashboardPage';
+import MovieManagementPage from './pages/admin/MovieManagementPage';
 
 function App() {
   const navigate = useNavigate();
@@ -58,6 +60,8 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/watch" element={<WatchPage />} />
                   </Route>
+                    <Route path="/admin-dashboard" element={<DashboardPage />} />
+                    <Route path="/admin-movie" element={<MovieManagementPage />} />
                 </Routes>
 
                 {/* Thêm ToastContainer để hiển thị thông báo toast */}

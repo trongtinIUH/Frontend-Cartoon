@@ -4,6 +4,8 @@ import { HashRouter } from "react-router-dom";
 import App from "./App";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AuthProvider, useAuth } from "./context/AuthContext"; // Import AuthContext
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min';
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
