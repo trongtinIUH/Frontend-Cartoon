@@ -29,6 +29,7 @@
     "react-scripts": "5.0.1",
     "react-toastify": "^11.0.5",
     "react-window": "^1.8.11",
+    "swiper": "^11.2.10",
     "video.js": "^8.23.3",
     "videojs-contrib-quality-levels": "^4.1.0",
     "videojs-hls-quality-selector": "^2.0.0",

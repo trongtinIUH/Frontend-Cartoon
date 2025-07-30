@@ -8,8 +8,7 @@ import {
   PackageSearch,
   LayoutDashboard,
 } from "lucide-react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+
 
 const ControlPanelPage = () => {
   const navigate = useNavigate();
@@ -59,7 +58,7 @@ const ControlPanelPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
+      
       <main className="flex-1 container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center drop-shadow">
           Bảng Điều Khiển Quản Trị
@@ -82,7 +81,7 @@ const ControlPanelPage = () => {
           ))}
         </div>
       </main>
-      <Footer />
+    
     </div>
   );
 };

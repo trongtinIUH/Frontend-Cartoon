@@ -1,53 +1,90 @@
-.main-page {
-  padding: 0; /* hoặc padding: 20px 0 nếu vẫn muốn khoảng cách dọc */
-  background: #dbe8fc;
+.main-page-wrapper {
+  background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
   min-height: 100vh;
-  width: 100%;
+  padding-top: 16px;
 }
 
-.card-img-top {
-    height: 220px;
-    object-fit: cover;
+.main-page {
+  padding: 20px 0;
 }
-.user-info {
+
+.section-title {
+  color: #fff;
+  margin-bottom: 24px;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.movie-card-link {
+  text-decoration: none;
+}
+
+.movie-card {
+  background-color: #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  background-color: #f8f9fa;
-  padding: 8px 16px;
-  border-radius: 50px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  flex-direction: column;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.15) 100%), radial-gradient(at top center, rgba(255,255,255,0.40) 0%, rgba(0,0,0,0.40) 120%) #989898;
+ background-blend-mode: multiply,multiply;
 }
 
-.thumbnail-img {
-  width: 100%;
-  height: 235px;
-  object-fit: cover;  /* hoặc 'contain' nếu muốn ảnh không bị crop */
-  display: block;
+.movie-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 10px 30px rgba(0, 200, 255, 0.25);
 }
-.card-title {
-  font-size: 18px;
+
+.movie-thumbnail {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+
+.movie-info {
+  padding: 10px;
+  text-align: center;
+  
+}
+
+.movie-title {
+  font-size: 1rem;
+  color: #e2e8f0;
+  font-weight: 500;
   display: -webkit-box;
-  -webkit-line-clamp: 2;  /* Giới hạn 2 dòng */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  height: 48px; /* Căn theo số dòng và line-height */
+  min-height: 42px;
 }
 
-.card.h-100.bg-light {
- transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+.pagination .page-link {
+  color: #0dcaf0;
+  background-color: #fff;
+  border: none;
+  margin: 0 4px;
+  border-radius: 8px;
+  padding: 6px 12px;
+  transition: all 0.2s ease-in-out;
 }
-.card.h-100.bg-light:hover {
-  transform: translateY(-8px) scale(1.04);
-  box-shadow: 0 8px 24px rgba(40, 80, 180, 0.18);
-  background: #f0f6ff;
+
+.pagination .page-link:hover {
+  background-color: #0dcaf0;
+  color: #fff;
 }
-.card.h-100.bg-light .card-title {
-   transition: color 0.18s;
+
+.pagination .active .page-link {
+  background-color: #0dcaf0;
+  color: #fff;
+  font-weight: bold;
 }
-.card.h-100.bg-light:hover .card-title {
-  color: #2563eb; 
+.movie-poster-wrap {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
 }
+

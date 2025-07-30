@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../css/Header.css";
@@ -27,6 +27,10 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
   const isAdmin = MyUser?.my_user?.role === "ADMIN";
   const isUser = MyUser?.my_user?.role === "USER";
   const [showGenres, setShowGenres] = useState(false);
+
+  //set cho mobie 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
 
   const GENRES = ["Âm nhạc", "Anime", "Bí ẩn", "Bi kịch", "CN Animation", "[CNA] Hài hước", "[CNA] Ngôn tình", "Đam mỹ", "Demon", "Dị giới", "Đời thường", "Drama", "Ecchi", "Gia Đình", "Giả tưởng", "Hài hước", "Hành động", "Harem", "Hệ Thống", "HH2D", "HH3D", "Học đường", "Huyền ảo", "Khoa huyễn", "Kiếm hiệp", "Kinh dị", "Lịch sử", "Live Action", "Luyện Cấp", "Ma cà rồng", "Mecha", "Ngôn tình", "OVA", "Phiêu lưu", "Psychological", "Quân đội", "Samurai", "Sắp chiếu", "Seinen", "Shoujo", "Shoujo AI", "Shounen", "Shounen AI", "Siêu năng lực", "Siêu nhiên", "Thám tử", "Thể thao", "Thriller", "Tiên hiệp", "Tình cảm", "Tokusatsu", "Trò chơi", "Trùng sinh", "Tu Tiên", "Viễn tưởng", "Võ hiệp", "Võ thuật", "Xuyên không"];
 
@@ -57,11 +61,30 @@ const reloadMainPage = () => {
   }
 };
 
+//ẩn header khi cuộn xuống
+const [showHeader, setShowHeader] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
+  const controlHeader = () => {
+    const currentScrollY = window.scrollY;
+
+    if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      setShowHeader(false); // cuộn xuống → ẩn header
+    } else {
+      setShowHeader(true);  // cuộn lên → hiện header
+    }
+
+    setLastScrollY(currentScrollY);
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", controlHeader);
+    return () => window.removeEventListener("scroll", controlHeader);
+  }, [lastScrollY]);
 
   return (
     <>
-      <header className="main-header">
+      <header className={`main-header ${showHeader ? "" : "hidden-header"}`}>
         <div className="header-left">
           <Link to="/main" onClick={reloadMainPage}>
             <img
@@ -71,10 +94,17 @@ const reloadMainPage = () => {
               style={{ borderRadius: "20px", height: "50px", width: "80px" }}
             />
           </Link>
-          <nav className="nav-links">
+            <div
+            className="mobile-menu-toggle"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            ☰
+          </div>
+          <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
+
             <Link to="/main" onClick={reloadMainPage}>Trang chủ</Link>
-            <Link to="/main" onClick={reloadMainPage}>Anime</Link>
-            <Link to="/main" onClick={reloadMainPage}>Top</Link>
+            <Link to="/main" onClick={reloadMainPage}>Chủ đề</Link>
+            <Link to="/main" onClick={reloadMainPage}>Phim bộ</Link>
             <div
               className="genre-menu-wrapper"
               onMouseEnter={() => setShowGenres(true)}
