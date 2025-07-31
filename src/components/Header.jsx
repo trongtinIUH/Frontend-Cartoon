@@ -9,6 +9,9 @@ import { debounce } from "lodash";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Funnel } from "lucide-react"; // Assuming you have lucide-react installed for icons
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCrown, faMedal ,faWallet} from "@fortawesome/free-solid-svg-icons"; // Import specific icon
+
 
 
 const Header = ({ fetchMovies, setFilteredMovies }) => {
@@ -123,7 +126,7 @@ const [showHeader, setShowHeader] = useState(true);
                 </div>
               )}
             </div>
-            <Link to="https://trongtiniuh.github.io/deploy-my-cv/">Liên hệ</Link>
+            
           </nav>
 
           <div className="search-container">        
@@ -169,8 +172,28 @@ const [showHeader, setShowHeader] = useState(true);
 
         </div>
         <div className="header-right">
+          <div className="buy-button">
+            <Link to="/buy-package" className="buy-package-btn">
+              <FontAwesomeIcon icon={faWallet} style={{ marginRight: "5px" }} />
+              Mua Gói
+            </Link>
+          </div>
           <div className="user-menu">
-            <img
+          {(MyUser?.my_user?.vipLevel === "GOLD" || MyUser?.my_user?.vipLevel === "SILVER") && (
+            <FontAwesomeIcon 
+              icon={faCrown} 
+              style={{
+                color: MyUser?.my_user?.vipLevel === "GOLD" ? "#FFD43B" : "#C0C0C0",
+                height: "20px", width: "40px",
+                
+                position: "absolute",
+                bottom: "30px",
+                
+              }} 
+              title={`VIP ${MyUser?.my_user?.vipLevel}`}
+            />
+          )}
+             <img
               src={avatarPreview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
               alt="avatar"
               className="user-avatar"

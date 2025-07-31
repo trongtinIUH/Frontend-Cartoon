@@ -55,6 +55,28 @@
 
 .header-right {
   position: relative;
+  flex-direction: row;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+}
+.buy-package-btn {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(to right, #ff5f6d, #ff7f50);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: bold;
+  text-decoration: none;
+  margin-right: 10px;
+  transition: background 0.3s ease;
+}
+
+.buy-package-btn:hover {
+  background: linear-gradient(to right, #ff7f50, #ff5f6d);
+  color: #fff;
 }
 
 .user-menu {
@@ -374,9 +396,59 @@
     grid-template-columns: repeat(2, 1fr); /* Giảm số cột trên mobile */
   }
 
-  .user-menu {
-    display: none; /* hoặc bạn có thể toggle nó bằng menu */
-  }
+.user-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  margin-right: 8px;
+  transition: 0.3s;
+}
+
+.username {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 10px;
+}
+
+.user-menu:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  background-color: #222;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 8px 0;
+  display: none;
+  min-width: 160px;
+  z-index: 999;
+}
+
+.dropdown-menu li {
+  list-style: none;
+  padding: 10px 16px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-menu li:hover {
+  background-color: #444;
+}
 }
 
 @media (min-width: 769px) {

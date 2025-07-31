@@ -11,6 +11,7 @@ import GenreMoviesPage from './pages/GenreMoviesPage';
 import SearchResultPage from './pages/SearchResultPage';  
 import ProfilePage from './pages/ProfilePage';
 import WatchPage from "./pages/WatchPage";
+import BuyPackagePage from './pages/BuyPackagePage';
 import { useAuth } from './context/AuthContext';
 import Layout from "./layout/Layout";
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -57,6 +58,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/tim-kiem/:title" element={<SearchResultPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/watch" element={<WatchPage />} />
+                    <Route path="/buy-package" element={<BuyPackagePage />} />
                   </Route>
                 </Routes>
 
