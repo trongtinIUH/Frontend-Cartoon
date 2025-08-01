@@ -1,93 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+const featureTitles = [
+  "Phim bộ châu Á mới nhất, chiếu song song",
+  "Phim lẻ, anime, thiếu nhi, show đặc sắc",
+  "Xem Full HD",
+  "Không quảng cáo",
+  "Tải xuống"
+];
 
 const BuyPackagePage = () => {
   const navigate = useNavigate();
   const { MyUser } = useAuth();
+  const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('momo');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const packages = [
-    {
-      id: 'silver',
-      name: 'VIP Silver',
-      price: 99000,
-      duration: '1 tháng',
-      features: [
-        'Xem phim không quảng cáo',
-        'Chất lượng HD',
-        'Tải xuống offline',
-        'Hỗ trợ 24/7'
-      ],
-      color: 'secondary',
-      popular: false
-    },
-    {
-      id: 'gold',
-      name: 'VIP Gold',
-      price: 199000,
-      duration: '3 tháng',
-      features: [
-        'Tất cả tính năng Silver',
-        'Chất lượng 4K Ultra HD',
-        'Xem trên 4 thiết bị',
-        'Phim độc quyền',
-        'Ưu tiên hỗ trợ'
-      ],
-      color: 'warning',
-      popular: true
-    },
-    {
-      id: 'platinum',
-      name: 'VIP Platinum',
-      price: 499000,
-      duration: '1 năm',
-      features: [
-        'Tất cả tính năng Gold',
-        'Xem không giới hạn',
-        'Phim ra mắt sớm',
-        'Tặng kèm merchandise',
-        'Hỗ trợ VIP 24/7'
-      ],
-      color: 'light',
-      popular: false
-    }
-  ];
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/subscription-packages/all');
+        const data = await res.json();
+        const filtered = data.filter(pkg => pkg.durationInDays === 30);
+        setPackages(filtered);
+      } catch (error) {
+        console.error('Lỗi khi lấy gói:', error);
+      }
+    };
 
-  const paymentMethods = [
-    { id: 'momo', name: 'MoMo', icon: '💳', color: 'danger' },
-    { id: 'banking', name: 'Internet Banking', icon: '🏦', color: 'primary' },
-    { id: 'visa', name: 'Visa/Mastercard', icon: '💳', color: 'info' },
-    { id: 'zalopay', name: 'ZaloPay', icon: '📱', color: 'success' }
-  ];
+    fetchPackages();
+  }, []);
 
-  const handlePackageSelect = (pkg) => {
+  const handleSelectPackage = (pkg) => {
     setSelectedPackage(pkg);
-  };
-
-  const handlePayment = async () => {
-    if (!selectedPackage) {
-      alert('Vui lòng chọn gói VIP!');
-      return;
-    }
-
-    setIsLoading(true);
-    
-    // Simulate payment process
-    setTimeout(() => {
-      alert(`Thanh toán thành công gói ${selectedPackage.name}!`);
-      setIsLoading(false);
-      navigate('/main');
-    }, 2000);
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
+    navigate('/payment', { state: { selectedPackage: pkg } });
   };
 
   return (
@@ -96,7 +42,7 @@ const BuyPackagePage = () => {
         {/* Page Header */}
         <div className="text-center mb-5">
           <h1 className="display-4 fw-bold mb-3">
-            <span className="text-warning">Nâng cấp</span> 
+            <span className="text-warning">Nâng cấp</span>
             <span className="text-info"> VIP</span>
           </h1>
           <p className="lead text-light">Trải nghiệm xem phim tuyệt vời nhất với các gói VIP của chúng tôi</p>
@@ -104,68 +50,69 @@ const BuyPackagePage = () => {
 
         {/* Package Selection */}
         <div className="mb-5">
-          <h2 className="text-center mb-4">Chọn gói VIP</h2>
-          <div className="row g-4">
-            {packages.map((pkg) => (
-              <div key={pkg.id} className="col-lg-4 col-md-6">
-                <div 
-                  className={`card h-100 text-white position-relative cursor-pointer ${
-                    selectedPackage?.id === pkg.id ? 'border-warning border-3 shadow-lg' : 'border-secondary'
-                  } ${pkg.popular ? 'border-danger border-3' : ''}`}
-                  style={{ 
-                    backgroundColor: 'rgba(255,255,255,0.1)', 
-                    cursor: 'pointer',
-                    transform: pkg.popular ? 'scale(1.05)' : 'scale(1)',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onClick={() => handlePackageSelect(pkg)}
-                >
-                  {pkg.popular && (
-                    <div className="position-absolute top-0 start-50 translate-middle">
-                      <span className="badge bg-danger px-3 py-2 rounded-pill">
-                        🔥 Phổ biến nhất
+          <div className="table-responsive mt-5">
+            <table className="table table-striped text-center table-dark align-middle">
+              <thead>
+                <tr>
+                  <th className="text-start"><h2>Mua gói</h2></th>
+                  {packages.map((pkg) => (
+                    <th key={pkg.id}>
+                      <div className="fw-bold fs-5">{pkg.applicableVipLevel}</div>
+                      <div>{pkg.amount.toLocaleString()}vnđ / tháng</div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {featureTitles.map((title, index) => (
+                  <tr key={index}>
+                    <td className="text-start">{title}</td>
+                    {packages.map((pkg) => {
+                      const hasFeature = pkg.features.includes(title);
+                      return (
+                        <td key={pkg.packageId}>
+                          <div
+                            style={{
+                              display: 'inline-block',
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              backgroundColor: hasFeature ? '#ff4b0aff' : 'gray',
+                              color: hasFeature ? 'white' : 'black',
+                              fontWeight: 'bold',
+                              fontSize: '0.75rem',
+                              lineHeight: '18px',
+                              textAlign: 'center',
+                            }}
+                          >
+                            {hasFeature ? '✓' : '✕'}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                <tr>
+                  <td></td>
+                  {packages.map((pkg) => (
+                    <td key={pkg.packageId}>
+                      <span
+                        type="button"
+                        className="btn btn-outline-secondary px-3 text-white"
+                        onClick={() => handleSelectPackage(pkg)}
+                      >
+                        Chọn gói này
                       </span>
-                    </div>
-                  )}
-                  
-                  <div className="card-body text-center d-flex flex-column">
-                    <div className="mb-3">
-                      <div className={`text-${pkg.color}`} style={{ fontSize: '3rem' }}>
-                        👑
-                      </div>
-                      <h3 className="card-title h4 fw-bold">{pkg.name}</h3>
-                      <div className="d-flex align-items-baseline justify-content-center mb-3">
-                        <span className={`h2 fw-bold text-${pkg.color} me-2`}>
-                          {formatPrice(pkg.price)}
-                        </span>
-                        <span className="text-muted">/{pkg.duration}</span>
-                      </div>
-                    </div>
-
-                    <ul className="list-unstyled text-start flex-grow-1">
-                      {pkg.features.map((feature, index) => (
-                        <li key={index} className="mb-2 d-flex align-items-center">
-                          <span className="text-success me-2 fw-bold">✓</span>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <button 
-                      className={`btn ${selectedPackage?.id === pkg.id ? 'btn-warning' : `btn-outline-${pkg.color}`} btn-lg w-100 mt-3`}
-                      onClick={() => handlePackageSelect(pkg)}
-                    >
-                      {selectedPackage?.id === pkg.id ? '✓ Đã chọn' : 'Chọn gói'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
         {/* Payment Method */}
-        {selectedPackage && (
+        {/* {selectedPackage && (
           <div className="mb-5">
             <h2 className="mb-4">Phương thức thanh toán</h2>
             <div className="row g-3">
@@ -196,10 +143,10 @@ const BuyPackagePage = () => {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Order Summary */}
-        {selectedPackage && (
+        {/* {selectedPackage && (
           <div className="mb-5">
             <h2 className="mb-4">Tóm tắt đơn hàng</h2>
             <div className="row justify-content-center">
@@ -232,10 +179,10 @@ const BuyPackagePage = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Action Buttons */}
-        <div className="d-flex flex-column flex-md-row gap-3 justify-content-center">
+        {/* <div className="d-flex flex-column flex-md-row gap-3 justify-content-center">
           <button 
             className="btn btn-outline-light btn-lg px-4"
             onClick={() => navigate('/main')}
@@ -259,7 +206,7 @@ const BuyPackagePage = () => {
               )}
             </button>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   );

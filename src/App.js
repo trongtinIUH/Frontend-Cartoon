@@ -19,6 +19,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DashboardPage from './pages/admin/DashboardPage';
 import MovieManagementPage from './pages/admin/MovieManagementPage';
+import PaymentPage from './pages/PaymentPage';
 
 function App() {
   const navigate = useNavigate();
@@ -61,6 +62,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/watch" element={<WatchPage />} />
                     <Route path="/buy-package" element={<BuyPackagePage />} />
+                    <Route path="/payment" element={<PaymentPage />} />
                   </Route>
                     <Route path="/admin-dashboard" element={<DashboardPage />} />
                     <Route path="/admin-movie" element={<MovieManagementPage />} />
