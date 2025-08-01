@@ -12,6 +12,7 @@ import SearchResultPage from './pages/SearchResultPage';
 import ProfilePage from './pages/ProfilePage';
 import WatchPage from "./pages/WatchPage";
 import BuyPackagePage from './pages/BuyPackagePage';
+import AllTopicsPage from './pages/AllTopicsPage';
 import { useAuth } from './context/AuthContext';
 import Layout from "./layout/Layout";
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -61,6 +62,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/watch" element={<WatchPage />} />
                     <Route path="/buy-package" element={<BuyPackagePage />} />
+                    <Route path="/all-topics" element={<AllTopicsPage />} />
                   </Route>
                     <Route path="/admin-dashboard" element={<DashboardPage />} />
                     <Route path="/admin-movie" element={<MovieManagementPage />} />
