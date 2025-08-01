@@ -3,6 +3,7 @@ import "../css/MainPage.css";
 import { Link, useOutletContext } from "react-router-dom";
 import MovieService from "../services/MovieService";
 import MovieSlider from "../components/MovieSlider";
+import TopicSection from "../components/TopicSection";
 
 const MOVIES_PER_PAGE = 20;
 
@@ -38,6 +39,7 @@ const MainPage = () => {
   return (
     <div className="main-page-wrapper">
       <MovieSlider />
+      <TopicSection />
       <div className="main-page container">
         <h2 className="section-title">🎬 Danh sách phim mới</h2>
         <div className="row">
