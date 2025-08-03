@@ -2,6 +2,8 @@ import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SubscriptionPackageService from "../services/SubscriptionPackageService"; // nhớ chỉnh lại path import
 import { useAuth } from "../context/AuthContext";
+import PaymentQRCodeModal from "../models/PaymentQRCodeModal ";
+import axios from "axios";
 
 const PaymentPage = () => {
   const location = useLocation();
@@ -10,6 +12,9 @@ const PaymentPage = () => {
 
   const [packagesByVip, setPackagesByVip] = useState([]);
   const [selectedDurationPackage, setSelectedDurationPackage] = useState(null);
+
+  const [qrData, setQrData] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchSameVipPackages = async () => {
@@ -31,6 +36,17 @@ const PaymentPage = () => {
   if (!selectedPackage) {
     return <div className="text-white text-center mt-5">Không có gói nào được chọn.</div>;
   }
+
+  const handleCreatePayment = async () => {
+    const res = await axios.post('http://localhost:8080/payment/create', {
+      userId: MyUser.my_user.userId,
+      packageId: selectedDurationPackage.packageId,
+      returnUrl: "http://localhost:3000/main",
+      cancelUrl: "http://localhost:3000/payment"
+    });
+    setQrData(res.data);
+    setShowModal(true);
+  };
 
   return (
     <div className="container-fluid bg-dark text-white min-vh-100 py-5">
@@ -123,18 +139,22 @@ const PaymentPage = () => {
 
                   <div className="d-flex justify-content-between bg-black">
                     <p>Tổng thanh toán</p>
-                    <h4 style={{ color: "#ff4b0aff" }}>
+                    <h3 style={{ color: "#ff4b0aff" }} className="fw-bold">
                       {selectedDurationPackage?.amount.toLocaleString()} VND
-                    </h4>
+                    </h3>
                   </div>
-                  <button className="btn w-100 mt-3 text-white" style={{ backgroundColor: "#ff4b0aff", borderRadius: "999px" }}>
-                    Thanh toán
-                  </button>
+                  <div className="text-center mt-3">
+                    <button className="btn w-100 mt-3 text-white" style={{ backgroundColor: "#ff4b0aff", borderRadius: "999px" }}
+                      onClick={handleCreatePayment}>
+                      Thanh toán
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        <PaymentQRCodeModal show={showModal} onClose={() => setShowModal(false)} qrData={qrData} />
       </div>
     </div>
   );
