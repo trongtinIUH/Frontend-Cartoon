@@ -54,7 +54,7 @@ const PaymentQRCodeModal = ({ show, onClose, qrData }) => {
                             })
                             .finally(() => {
                                 onClose(); // Đóng modal
-                                window.location.href = "http://localhost:3000/main"; // Chuyển hướng về trang chính
+                                window.location.href = "/main#/main"; // Chuyển hướng về trang chính
                                 toast.success("Thanh toán thành công!");
                             });
                     }

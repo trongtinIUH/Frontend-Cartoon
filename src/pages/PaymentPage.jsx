@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SubscriptionPackageService from "../services/SubscriptionPackageService"; // nhớ chỉnh lại path import
 import { useAuth } from "../context/AuthContext";
-import PaymentQRCodeModal from "../models/PaymentQRCodeModal ";
+import PaymentQRCodeModal from "../models/PaymentQRCodeModal";
 import axios from "axios";
 
 const PaymentPage = () => {
@@ -37,16 +37,37 @@ const PaymentPage = () => {
     return <div className="text-white text-center mt-5">Không có gói nào được chọn.</div>;
   }
 
-  const handleCreatePayment = async () => {
-    const res = await axios.post('http://localhost:8080/payment/create', {
-      userId: MyUser.my_user.userId,
-      packageId: selectedDurationPackage.packageId,
-      returnUrl: "http://localhost:3000/main",
-      cancelUrl: "http://localhost:3000/payment"
-    });
+const handleCreatePayment = async () => {
+  try {
+    const token = localStorage.getItem("idToken"); // token bạn lưu khi login
+    if (!token) {
+      alert("Vui lòng đăng nhập trước khi thanh toán!");
+      return;
+    }
+
+    const res = await axios.post(
+      'http://localhost:8080/payment/create',
+      {
+        userId: MyUser.my_user.userId,
+        packageId: selectedDurationPackage.packageId,
+        returnUrl: "/main#/main",
+        cancelUrl: "/payment"
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
     setQrData(res.data);
     setShowModal(true);
-  };
+  } catch (err) {
+    console.error("Lỗi khi tạo thanh toán:", err.response?.data || err.message);
+  }
+};
+
 
   return (
     <div className="container-fluid bg-dark text-white min-vh-100 py-5">
