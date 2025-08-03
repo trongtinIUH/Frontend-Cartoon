@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SubscriptionPackageService from '../services/SubscriptionPackageService';
 
 const featureTitles = [
   "Phim bộ châu Á mới nhất, chiếu song song",
@@ -12,17 +13,30 @@ const featureTitles = [
 
 const BuyPackagePage = () => {
   const navigate = useNavigate();
-  const { MyUser } = useAuth();
   const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
 
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const res = await fetch('http://localhost:8080/subscription-packages/all');
-        const data = await res.json();
-        const filtered = data.filter(pkg => pkg.durationInDays === 30);
-        setPackages(filtered);
+        const data = await SubscriptionPackageService.getAllPackages();
+
+        // Nhóm theo loại VIP, chọn gói có thời hạn ngắn nhất cho mỗi loại
+        const grouped = {};
+        data.forEach(pkg => {
+          const level = pkg.applicableVipLevel;
+          if (!grouped[level] || pkg.durationInDays < grouped[level].durationInDays) {
+            grouped[level] = pkg;
+          }
+        });
+
+        // Sắp xếp SILVER trước GOLD
+        const sorted = Object.values(grouped).sort((a, b) => {
+          const order = { 'SILVER': 0, 'GOLD': 1 };
+          return order[a.applicableVipLevel] - order[b.applicableVipLevel];
+        });
+
+        setPackages(sorted);
       } catch (error) {
         console.error('Lỗi khi lấy gói:', error);
       }
@@ -31,10 +45,12 @@ const BuyPackagePage = () => {
     fetchPackages();
   }, []);
 
+
   const handleSelectPackage = (pkg) => {
     setSelectedPackage(pkg);
     navigate('/payment', { state: { selectedPackage: pkg } });
   };
+
 
   return (
     <div className="min-vh-100 bg-dark text-white" style={{ paddingTop: '100px', paddingBottom: '50px' }}>
@@ -110,103 +126,6 @@ const BuyPackagePage = () => {
             </table>
           </div>
         </div>
-
-        {/* Payment Method */}
-        {/* {selectedPackage && (
-          <div className="mb-5">
-            <h2 className="mb-4">Phương thức thanh toán</h2>
-            <div className="row g-3">
-              {paymentMethods.map((method) => (
-                <div key={method.id} className="col-lg-3 col-md-6">
-                  <div 
-                    className={`card text-white cursor-pointer ${
-                      paymentMethod === method.id ? 'border-warning border-3 bg-warning bg-opacity-25' : 'border-secondary'
-                    }`}
-                    style={{ 
-                      backgroundColor: paymentMethod === method.id ? 'rgba(255,193,7,0.2)' : 'rgba(255,255,255,0.1)', 
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onClick={() => setPaymentMethod(method.id)}
-                  >
-                    <div className="card-body d-flex align-items-center">
-                      <span className="me-3" style={{ fontSize: '2rem' }}>{method.icon}</span>
-                      <div className="flex-grow-1">
-                        <h6 className="card-title mb-0">{method.name}</h6>
-                      </div>
-                      <div className={`text-${paymentMethod === method.id ? 'warning' : 'muted'}`} style={{ fontSize: '1.5rem' }}>
-                        {paymentMethod === method.id ? '●' : '○'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )} */}
-
-        {/* Order Summary */}
-        {/* {selectedPackage && (
-          <div className="mb-5">
-            <h2 className="mb-4">Tóm tắt đơn hàng</h2>
-            <div className="row justify-content-center">
-              <div className="col-lg-6">
-                <div className="card text-white" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                  <div className="card-body">
-                    <div className="d-flex justify-content-between mb-3">
-                      <span>Gói VIP:</span>
-                      <span className="fw-bold">{selectedPackage.name}</span>
-                    </div>
-                    <div className="d-flex justify-content-between mb-3">
-                      <span>Thời hạn:</span>
-                      <span className="fw-bold">{selectedPackage.duration}</span>
-                    </div>
-                    <div className="d-flex justify-content-between mb-3">
-                      <span>Phương thức:</span>
-                      <span className="fw-bold">
-                        {paymentMethods.find(m => m.id === paymentMethod)?.name}
-                      </span>
-                    </div>
-                    <hr className="text-secondary" />
-                    <div className="d-flex justify-content-between">
-                      <span className="h5">Tổng cộng:</span>
-                      <span className="h4 fw-bold text-warning">
-                        {formatPrice(selectedPackage.price)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )} */}
-
-        {/* Action Buttons */}
-        {/* <div className="d-flex flex-column flex-md-row gap-3 justify-content-center">
-          <button 
-            className="btn btn-outline-light btn-lg px-4"
-            onClick={() => navigate('/main')}
-          >
-            ← Quay lại
-          </button>
-          
-          {selectedPackage && (
-            <button 
-              className="btn btn-success btn-lg px-4"
-              onClick={handlePayment}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Đang xử lý...
-                </>
-              ) : (
-                `💳 Thanh toán ${formatPrice(selectedPackage.price)}`
-              )}
-            </button>
-          )}
-        </div> */}
       </div>
     </div>
   );
