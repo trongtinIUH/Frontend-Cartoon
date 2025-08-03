@@ -130,6 +130,17 @@ const MovieService = {
     //top nhưng phim mới nhất ... chưa làm BE FE
 
 
+    //tìm phim theo quốc gia
+    getMoviesByCountry: async (country) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/country/${encodeURIComponent(country)}`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
+
 }
 
 export default MovieService;

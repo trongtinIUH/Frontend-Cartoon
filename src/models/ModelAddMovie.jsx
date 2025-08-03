@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import MovieService from "../services/MovieService";
 import EpisodeService from "../services/EpisodeService";
 import { getCountries } from "../api/countryApi";
+import Select from "react-select";
 import { toast } from "react-toastify";
 import { FaVideo, FaImage, FaClock, FaGlobe, FaTags, FaLink } from "react-icons/fa";
 import "../css/ModelAddMovie.css";
@@ -15,12 +16,11 @@ const ModelAddMovie = ({ onSuccess }) => {
   const { MyUser } = useAuth();
 
   const [countries, setCountries] = useState([]);
-  const [newAuthor, setNewAuthor] = useState({
-  name: "",
-  authorRole: "DIRECTOR", // hoặc PERFORMER
-});
+  const [newAuthor, setNewAuthor] = useState([
+   { name: "", authorRole: "DIRECTOR" }
+]);
 const [isNewAuthor, setIsNewAuthor] = useState(false);
-
+// State để lưu danh sách tác giả đã có
   const [authors, setAuthors] = useState([]);
   useEffect(() => {
     const fetchCountries = async () => {
@@ -37,6 +37,21 @@ const [isNewAuthor, setIsNewAuthor] = useState(false);
     };
     fetchAuthors();
   }, []);
+//thêm tác giả mới vào form
+const addNewAuthorField = () => {
+  setAuthors([...authors, { name: "", authorRole: "DIRECTOR" }]);
+};
+// Chuyển authors thành format { value, label }
+const authorOptions = authors.map(a => ({
+  value: a.authorId,
+  label: `${a.name} (${a.authorRole})`
+}));
+
+const updateNewAuthor = (index, field, value) => {
+  const updated = [...authors];
+  updated[index][field] = value;
+  setAuthors(updated);
+};
 
 
   const [form, setForm] = useState({
@@ -109,18 +124,7 @@ const [isNewAuthor, setIsNewAuthor] = useState(false);
     }
     setLoading(true);
     try {
-      let authorId = form.authorId;
-
-  // Nếu tạo mới tác giả
-  if (isNewAuthor) {
-    const authorData = {
-      name: newAuthor.name,
-      authorRole: newAuthor.authorRole,
-      movieId: [] // tạo mới thì chưa có movie nào
-    };
-    const createdAuthor = await AuthorService.createAuthor(authorData);
-    authorId = createdAuthor.authorId;
-  }
+      // 1. Tạo phim mới
       const movieData = new FormData();
       Object.entries(form).forEach(([key, value]) => {
       if (Array.isArray(value)) {
@@ -137,9 +141,28 @@ const [isNewAuthor, setIsNewAuthor] = useState(false);
 
       const newMovie = await MovieService.createMovie(movieData);
 
-        // Gán movieId cho author
-      if (authorId) {
-        await AuthorService.addMovieToAuthor(authorId, newMovie.movieId);
+     // 2. Tạo tác giả mới nếu có
+      let allAuthorIds = form.authorIds ? [...form.authorIds] : [];
+
+      for (const author of newAuthor) {
+        if (author.name.trim()) {
+          const createdAuthor = await AuthorService.createAuthor({
+            name: author.name,
+            authorRole: author.authorRole,
+            movieId: []
+          });
+         // Backend có thể return object với authorId field
+        if (createdAuthor.authorId) {
+          allAuthorIds.push(createdAuthor.authorId);
+        } else if (createdAuthor.id) {
+          allAuthorIds.push(createdAuthor.id);
+        }
+      }
+    }
+
+      // 3. Gán movieId cho tất cả tác giả
+      if (allAuthorIds.length > 0) {
+        await AuthorService.addMovieToMultipleAuthors(allAuthorIds, newMovie.movieId);
       }
 
       const episodeData = new FormData();
@@ -227,8 +250,10 @@ const [isNewAuthor, setIsNewAuthor] = useState(false);
               <option value="SERIES">Phim bộ</option>
             </select>
           </div>
-         <div className="col-md-6">
-            <label>Tác giả</label>
+          <div className="col-md-6">
+            <label className="form-label fw-bold">Tác giả</label>
+
+            {/* Radio chọn chế độ */}
             <div className="form-check">
               <input
                 className="form-check-input"
@@ -239,7 +264,7 @@ const [isNewAuthor, setIsNewAuthor] = useState(false);
               />
               <label className="form-check-label">Chọn tác giả có sẵn</label>
             </div>
-            <div className="form-check">
+            <div className="form-check mb-2">
               <input
                 className="form-check-input"
                 type="radio"
@@ -250,46 +275,56 @@ const [isNewAuthor, setIsNewAuthor] = useState(false);
               <label className="form-check-label">Tạo tác giả mới</label>
             </div>
 
-            {!isNewAuthor ? (
-              <select
-                name="authorId"
-                className="form-select mt-2"
-                value={form.authorId || ""}
-                onChange={handleChange}
+            {/* Chế độ: Chọn tác giả có sẵn */}
+           {!isNewAuthor ? (
+            <Select
+              isMulti
+              options={authorOptions}
+              value={authorOptions.filter(opt => form.authorIds?.includes(opt.value))}
+              onChange={(selected) =>
+                setForm({
+                  ...form,
+                  authorIds: selected.map(opt => opt.value)
+                })
+              }
+              placeholder="Chọn tác giả..."
+              className="basic-multi-select"
+              classNamePrefix="select"
+            />
+          ) : (
+            /* Form thêm tác giả mới giữ nguyên như trước */
+            <div>
+              {newAuthor.map((author, idx) => (
+                <div key={idx} className="d-flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Tên tác giả"
+                    value={author.name}
+                    onChange={(e) => updateNewAuthor(idx, "name", e.target.value)}
+                  />
+                  <select
+                    className="form-select"
+                    value={author.authorRole}
+                    onChange={(e) => updateNewAuthor(idx, "authorRole", e.target.value)}
+                  >
+                    <option value="DIRECTOR">Đạo diễn</option>
+                    <option value="PERFORMER">Diễn viên</option>
+                  </select>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                onClick={addNewAuthorField}
               >
-                <option value="">-- Chọn tác giả --</option>
-                {authors.map((author) => (
-                  <option key={author.authorId} value={author.authorId}>
-                    {author.name} ({author.authorRole})
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <div className="mt-2">
-                <input
-                  type="text"
-                  className="form-control mb-2"
-                  placeholder="Tên tác giả"
-                  value={newAuthor.name}
-                  onChange={(e) =>
-                    setNewAuthor({ ...newAuthor, name: e.target.value })
-                  }
-                />
-                <select
-                  className="form-select"
-                  value={newAuthor.authorRole}
-                  onChange={(e) =>
-                    setNewAuthor({ ...newAuthor, authorRole: e.target.value })
-                  }
-                >
-                  <option value="DIRECTOR">Đạo diễn</option>
-                  <option value="PERFORMER">Diễn viên</option>
-                </select>
-              </div>
-            )}
-          </div>
+                + Thêm tác giả
+              </button>
+            </div>
+          )}
 
-
+          
+        </div>
           {/* Video */}
           <div className="col-12">
             <label className="form-label"><FaVideo /> Video</label>

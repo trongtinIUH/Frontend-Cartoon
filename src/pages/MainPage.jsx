@@ -4,6 +4,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import MovieService from "../services/MovieService";
 import MovieSlider from "../components/MovieSlider";
 import TopicSection from "../components/TopicSection";
+import CountryMoviesSection from "../components/CountryMoviesSection";
 
 const MOVIES_PER_PAGE = 20;
 
@@ -40,6 +41,27 @@ const MainPage = () => {
     <div className="main-page-wrapper">
       <MovieSlider />
       <TopicSection />
+
+      <CountryMoviesSection
+        title="Phim Hàn Quốc mới"
+        country="South Korea"
+        gradient="linear-gradient(235deg, #fff 30%, rgb(103, 65, 150) 130%)"
+        link="/quoc-gia/han-quoc"
+      />
+
+      <CountryMoviesSection
+        title="Phim Việt Nam mới"
+        country="Vietnam"
+        gradient="linear-gradient(235deg, #fff 30%, rgb(247, 161, 11) 130%)"
+        link="/quoc-gia/viet-nam"
+      />
+
+      <CountryMoviesSection
+        title="Phim US-UK mới"
+        country="United Kingdom"
+        gradient="linear-gradient(235deg, #fff 30%, rgb(255, 0, 153) 130%)"
+        link="/quoc-gia/us-uk"
+      />
       <div className="main-page container">
         <h2 className="section-title">🎬 Danh sách phim mới</h2>
         <div className="row">
