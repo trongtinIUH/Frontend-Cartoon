@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import PaymentService from '../services/PaymentService';
 
 const PaymentQRCodeModal = ({ show, onClose, qrData }) => {
     const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 phút = 900 giây
@@ -31,37 +32,26 @@ const PaymentQRCodeModal = ({ show, onClose, qrData }) => {
     useEffect(() => {
         if (!show || !qrData?.orderCode) return;
 
-        const interval = setInterval(() => {
-            axios.get(`http://localhost:8080/payment/${qrData.orderCode}`)
-                .then((res) => {
-                    const status = res.data.status;
-                    console.log("Fetched payment status:", status);
-                    setPaymentStatus(status);
+        const interval = setInterval(async () => {
+            try {
+                const res = await PaymentService.getPaymentStatus(qrData.orderCode);
+                const status = res.status;
+                setPaymentStatus(status);  
 
-                    if (status === "PAID") {
-                        clearInterval(interval); // Dừng polling khi thành công
+                if (status === "PAID") {
+                    clearInterval(interval); // Dừng polling khi thành công
 
-                        // Gọi webhook 1 lần cuối (nếu cần)
-                        axios.post("http://localhost:8080/payment/webhook", {
-                            orderCode: qrData.orderCode,
-                            status: "PAID"
-                        })
-                            .then((res) => {
-                                console.log("Webhook called after payment:", res.data);
-                            })
-                            .catch((err) => {
-                                console.error("Webhook error:", err);
-                            })
-                            .finally(() => {
-                                onClose(); // Đóng modal
-                                window.location.href = "/main#/main"; // Chuyển hướng về trang chính
-                                toast.success("Thanh toán thành công!");
-                            });
-                    }
-                })
-                .catch((err) => {
-                    console.error("Error fetching payment status:", err);
-                });
+                    // Gọi webhook 1 lần cuối (nếu cần)
+                    await PaymentService.handleWebhook({
+                        orderCode: qrData.orderCode,
+                        status: "PAID"
+                    });
+                    window.location.href = "/main#/main"; // Chuyển hướng về trang chính
+                    toast.success("Thanh toán thành công!");
+                }
+            } catch (err) {
+                console.error("Error fetching payment status:", err);
+            }
         }, 5000); // Polling mỗi 5 giây
 
         return () => clearInterval(interval); // Dọn dẹp
