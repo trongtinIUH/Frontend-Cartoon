@@ -173,7 +173,7 @@ const [showHeader, setShowHeader] = useState(true);
         </div>
         <div className="header-right">
           <div className="buy-button">
-            <Link to="/buy-package" className="buy-package-btn">
+            <Link to="/buy-package" className="btn btn-warning text-black fw-bold me-2">
               <FontAwesomeIcon icon={faWallet} style={{ marginRight: "5px" }} />
               Mua Gói
             </Link>
@@ -201,13 +201,15 @@ const [showHeader, setShowHeader] = useState(true);
             <span className="username">
               Xin chào, <strong>{MyUser?.my_user?.userName || "Người dùng"}</strong>
             </span>
-            <ul className="dropdown-menu">
-              {isAdmin && <li onClick={() => setShowAddMovie(true)} style={{ color: "green" }}>Thêm phim</li>}
+            <ul className="dropdown-menu bg-dark text-white">
+              {/* {isAdmin && <li onClick={() => setShowAddMovie(true)} style={{ color: "green" }}>Thêm phim</li>}
               {isAdmin && <li><Link to="/control-panel">Bảng điều khiển</Link></li>}
-              {(isUser || isAdmin) && <li><Link to="/profile">Thông tin cá nhân</Link></li>}
+              {(isUser || isAdmin) && <li><Link to="/profile">Thông tin cá nhân</Link></li>} */}
+              <li><Link to="/profile"><i className="fa-solid fa-heart me-2"></i>Yêu thích</Link></li>
+              <li><Link to="/profile"><i className="fa-solid fa-user me-2"></i>Tài khoản</Link></li> <hr/>
               {(isUser || isAdmin)
-                ? <li onClick={handleLogout} style={{ color: "red" }}>Đăng xuất</li>
-                : <li onClick={handleLogin} style={{ color: "green" }}>Đăng nhập</li>}
+                ? <li onClick={handleLogout} style={{ color: "red" }}><i className="fa-solid fa-sign-out-alt me-2"></i>Đăng xuất</li>
+                : <li onClick={handleLogin} style={{ color: "green" }}><i className="fa-solid fa-sign-in-alt me-2"></i>Đăng nhập</li>}
             </ul>
           </div>
         </div>

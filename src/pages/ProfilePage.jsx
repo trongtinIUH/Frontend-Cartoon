@@ -1,267 +1,126 @@
-import React,{useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import SidebarUserManagement from "../components/SidebarUserManagement";
 import "../css/ProfilePage.css";
-import {User,Mail  } from 'lucide-react';
 import UserService from "../services/UserService";
 import { toast } from "react-toastify";
-import AuthService from "../services/AuthService";
 
 const ProfilePage = () => {
   const { MyUser, updateUserInfo } = useAuth();
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [gender, setGender] = useState("unspecified");
+  const [avatar, setAvatar] = useState("");
 
-  const user = MyUser?.my_user || {};
-
-  const [isEditing, setIsEditing] = useState(false);
-
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-
-  const [changePasswordForm, setChangePasswordForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl || "");
-
-
-  const [form, setForm] = useState({
-    userName: user.userName || "",
-    email: user.email || "",
-    dob: user.dob || "",
-  });
-
-
-  // Preview avatar before upload hình trực tiếp
-const [previewUrl, setPreviewUrl] = useState(null);
-
-const handleAvatarChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  setPreviewUrl(URL.createObjectURL(file)); // Preview trước ảnh
-  setAvatarFile(file);
-  const formData = new FormData();
-  formData.append("user", new Blob([JSON.stringify(user)], { type: "application/json" }));
-  formData.append("file", file);
-
-  try {
-   await UserService.updateUserById(user.userId, form, file);
-
-    toast.success("Cập nhật avatar thành công!");
-
-    // Tải lại thông tin user mới từ backend
-    const updatedUser = await UserService.getUserById(user.userId);
-    updateUserInfo({ my_user: updatedUser }); // (hàm trong context hoặc props)
-  } catch (error) {
-    console.error("Lỗi cập nhật avatar:", error);
-    toast.error("Không thể cập nhật avatar!");
-  }
-};
   useEffect(() => {
-    if (user.avatarUrl) {
-      setAvatarPreview(user.avatarUrl);
+    if (MyUser?.my_user) {
+      setEmail(MyUser.my_user.email);
+      setDisplayName(MyUser.my_user.userName);
+      setGender(MyUser.my_user.gender || "unspecified");
+      setAvatar(MyUser.my_user.avatarUrl);
     }
-    setForm({
-      userName: user.userName || "",
-      email: user.email || "",
-      dob: user.dob || "",
-    });
-  }, [user]);
+  }, [MyUser]);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setAvatar(url);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateUserInfo({ email, displayName, gender, avatar });
+      toast.success("Cập nhật thành công!");
+    } catch (err) {
+      toast.error("Cập nhật thất bại.");
+    }
+  };
 
   return (
-    <div className="profile-page">
-      
-      <div className="profile-card">
-        <div className="avatar-wrapper">
-          <img
-            className="profile-avatar"
-            src={avatarPreview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-            alt="Avatar"
-          />
-      <label htmlFor="avatarUpload" className="avatar-overlay">
-        📷
-      </label>
-      <input
-        id="avatarUpload"
-        type="file"
-        accept="image/*"
-        onChange={(e) => {
-          handleAvatarChange(e);
-        }}
-        style={{ display: "none" }}
-      />
-    </div>
+    <div className="d-flex bg-dark text-white min-vh-100 py-5 px-5">
+      <SidebarUserManagement />
 
-        {isEditing ? (
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          try {
-             // Gửi thông tin cập nhật lên server
-            await UserService.updateUserById(user.userId, form, avatarFile);
+      <div className="flex-grow-1 p-4" style={{ marginLeft: '50px', marginTop: '100px' }}>
+        <h5 className="mb-4 fw-bold">Tài khoản</h5>
+        <p className="mb-4">Cập nhật thông tin tài khoản</p>
+        <form onSubmit={handleSubmit} className="row g-4">
+          <div className="col-md-6">
+            <label className="form-label text-white">Email</label>
+            <input
+              type="email"
+              className="form-control bg-secondary text-white border-0"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled
+            />
+          </div>
 
-            // Gọi lại API lấy thông tin mới nhất
-            const updatedUser = await UserService.getUserById(user.userId);
-
-            // Cập nhật lại vào context + localStorage
-            updateUserInfo({ my_user: updatedUser });
-
-            toast.success("Cập nhật thành công!");
-            setAvatarFile(null); // clear file đã chọn
-          } catch (error) {
-            console.error("Cập nhật thất bại:", error);
-            toast.error("Cập nhật thất bại. Vui lòng thử lại sau.");
-          }
-          setIsEditing(false);
-          // Có thể reload lại thông tin user nếu cần
-        }}
-      >
-        <div>
-          <h2>Chỉnh sửa thông tin cá nhân</h2>
-          <label>Họ tên:</label>
-          <input
-            name="userName"
-            value={form.userName}
-            onChange={e => setForm({ ...form, userName: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label>Email:</label>
-          <input
-            name="email"
-            value={form.email}
-            onChange={e => setForm({ ...form, email: e.target.value })}
-          />
-        </div>
-        <div>
-          <label>Ngày sinh:</label>
-          <input
-            name="dob"
-            type="date"
-            value={form.dob}
-            onChange={e => setForm({ ...form, dob: e.target.value })}
-          />
-        </div>
-        <div style={{ marginTop: 12 , display: 'flex', justifyContent: 'flex-end'}}>
-          <button type="submit">Lưu</button>
-          <button type="button" onClick={() => setIsEditing(false)} style={{ marginLeft: 8, backgroundColor: "#636e72", color: "white" }}>
-            Hủy
-          </button>
-        </div>
-      </form>
-    ) : (
-      <>
-        <div className="info-group">
-          <strong><User />Họ tên:</strong> <span>{user.userName}</span>
-        </div>
-        <div className="info-group">
-          <strong><Mail /> Email:</strong> <span>{user.email || "Chưa cập nhật"}</span>
-        </div>
-        <div className="info-group">
-          <strong>🔐 Vai trò:</strong> <span>{user.role}</span>
-        </div>
-        <div className="info-group">
-          <strong>🆔 ID:</strong> <span>{user.userId}</span>
-        </div>
-        <div className="info-group">
-          <strong>📅 Ngày tạo:</strong> <span>{user.createdAt || "N/A"}</span>
-        </div>
-        <div className="button-group">
-          <button className="back-button" onClick={() => navigate("/main")}>
-            Quay lại
-          </button>
-          <button className="edit-button" style={{ backgroundColor: "#8fce00", color: "white" }} onClick={() => setIsEditing(true)}>
-            Chỉnh sửa
-          </button>
-          <button className="change-password-button" style={{ backgroundColor: "#8fce00", color: "white",fontSize:"14px" }} onClick={() => setIsChangingPassword((prev)=> !prev)}>
-            Đổi mật khẩu
-          </button>
-        </div>
-
-        {isChangingPassword && (
-          <form
-            className="change-password-form"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const { currentPassword, newPassword, confirmPassword } = changePasswordForm;
-
-              if (newPassword !== confirmPassword) {
-                toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp.");
-                return;
-              }
-
-              try {
-                await AuthService.changePassword({
-                  username: user.phoneNumber,
-                  currentPassword,
-                  newPassword,
-                });
-                toast.success("Đổi mật khẩu thành công!");
-                setChangePasswordForm({
-                  currentPassword: "",
-                  newPassword: "",
-                  confirmPassword: ""
-                });
-                setIsChangingPassword(false);
-              } catch (error) {
-                console.error("Error changing password:", error);
-                toast.error("Đổi mật khẩu thất bại. Vui lòng thử lại sau.");
-              }
-            }}
-          >
-            <h3>Đổi mật khẩu</h3>
-            <div>
-              <label>Hiện tại:</label>
-              <input
-                type="password"
-                name="currentPassword"
-                value={changePasswordForm.currentPassword}
-                onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
-                required
+          <div className="col-md-3 text-center">
+            <div className="position-relative d-inline-block mb-2">
+              <img
+                src={avatar || "https://via.placeholder.com/150"}
+                alt="avatar"
+                className="rounded-circle border border-2"
+                style={{ width: 120, height: 120 }}
               />
+              <label className="position-absolute bottom-0 end-0 bg-secondary p-2 rounded-circle" style={{ cursor: 'pointer' }}>
+                <input type="file" accept="image/*" hidden onChange={handleAvatarChange} />
+                <i className="fas fa-camera"></i>
+              </label>
             </div>
-            <div>
-              <label>Mật khẩu mới:</label>
-              <input
-                type="password"
-                name="newPassword"
-                value={changePasswordForm.newPassword}
-                onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label>Xác nhận mật khẩu mới:</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={changePasswordForm.confirmPassword}
-                onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
-                required
-              />
-            </div>
-            <div style={{flexDirection:"row", display:"flex", justifyContent:"space-between"}}>
-              <button type="submit">Lưu</button>
-              <button type="button" onClick={() => setIsChangingPassword(false)} style={{ marginLeft: 8, backgroundColor: "#636e72", color: "white" }}>
-                Hủy
-              </button>
-            </div>
-          </form>
-        )}
-      </>
-    )}
+            <div>Đổi ảnh đại diện</div>
+          </div>
 
-        <div className="profile-footer">
-          <p>© 2025 - Bản quyền thuộc về trongtinIUH</p>
-        </div>
+          <div className="col-md-6">
+            <label className="form-label text-white">Tên hiển thị</label>
+            <input
+              type="text"
+              className="form-control bg-secondary text-white border-0"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label text-white">Giới tính</label>
+            <div>
+              {['male', 'female', 'unspecified'].map((g) => (
+                <div className="form-check form-check-inline" key={g}>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="gender"
+                    id={g}
+                    value={g}
+                    checked={gender === g}
+                    onChange={() => setGender(g)}
+                  />
+                  <label className="form-check-label text-white" htmlFor={g}>
+                    {g === 'male' ? 'Nam' : g === 'female' ? 'Nữ' : 'Không xác định'}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="col-12">
+            <span type="submit" className="btn btn-warning px-4 py-2 fw-bold text-black">
+              Cập nhật
+            </span>
+          </div>
+
+          <div className="col-12 text-white">
+            Đổi mật khẩu, nhấn vào <a href="/change-password" className="text-warning">đây</a>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
-
 
 export default ProfilePage;

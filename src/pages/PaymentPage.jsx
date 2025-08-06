@@ -164,12 +164,12 @@ const PaymentPage = () => {
 
                   <div className="d-flex justify-content-between bg-black">
                     <p>Tổng thanh toán</p>
-                    <h3 style={{ color: "#ff4b0aff" }} className="fw-bold">
+                    <h3 className="fw-bold text-warning">
                       {selectedDurationPackage?.amount.toLocaleString()} VND
                     </h3>
                   </div>
                   <div className="text-center mt-3">
-                    <button className="btn w-100 mt-3 text-white" style={{ backgroundColor: "#ff4b0aff", borderRadius: "999px" }}
+                    <button className="btn btn-warning w-100 mt-3 text-black fw-bold"
                       onClick={handleCreatePayment}>
                       Thanh toán
                     </button>
