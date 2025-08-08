@@ -10,6 +10,7 @@
 
 .top-slide-main {
   height: 500px;
+  
 }
 
 .top-slide-small {
@@ -210,4 +211,17 @@
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
+}
+/* Chỉ hiển thị slide active khi dùng effect fade */
+.top-slide-main .swiper-slide {
+  opacity: 0 !important;
+  pointer-events: none;
+  transition: opacity 0.5s;
+  z-index: 1;
+}
+
+.top-slide-main .swiper-slide.swiper-slide-active {
+  opacity: 1 !important;
+  pointer-events: auto;
+  z-index: 2;
 }

@@ -86,202 +86,194 @@ const [showHeader, setShowHeader] = useState(true);
   }, [lastScrollY]);
 
   return (
-    <>
-      <header className={`main-header ${showHeader ? "" : "hidden-header"}`}>
-        <div className="header-left">
-          <Link to="/main" onClick={reloadMainPage}>
-            <img
-              src={process.env.PUBLIC_URL + "/image/cartoonToo.png"}
-              alt="Logo"
-              className="logo"
-              style={{ borderRadius: "20px", height: "50px", width: "80px" }}
-            />
-          </Link>
-            <div
-            className="mobile-menu-toggle"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+ <>
+  <header className={`main-header ${showHeader ? "" : "hidden-header"}`}>
+    <div className="header-container">
+      {/* --- LEFT: Logo + Menu --- */}
+      <div className="header-left">
+        <Link to="/main" className="logo-wrap" onClick={reloadMainPage}>
+          <img
+            src={process.env.PUBLIC_URL + "/image/cartoonToo.png"}
+            alt="Logo"
+            className="logo"
+          />
+        </Link>
+        {/* Hamburger only on mobile */}
+        <button
+          className="mobile-menu-toggle"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          ☰
+        </button>
+
+        <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
+          <Link to="/main" onClick={reloadMainPage}>Trang chủ</Link>
+          <Link to="/main" onClick={reloadMainPage}>Chủ đề</Link>
+          <Link to="/main" onClick={reloadMainPage}>Phim bộ</Link>
+          {/* Thể loại dropdown (PC hover, mobile click) */}
+          <div
+            className="genre-menu-wrapper"
+            onMouseEnter={() => !isMobileMenuOpen && setShowGenres(true)}
+            onMouseLeave={() => !isMobileMenuOpen && setShowGenres(false)}
+            onClick={() => isMobileMenuOpen && setShowGenres(!showGenres)}
           >
-            ☰
-          </div>
-          <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
-
-            <Link to="/main" onClick={reloadMainPage}>Trang chủ</Link>
-            <Link to="/main" onClick={reloadMainPage}>Chủ đề</Link>
-            <Link to="/main" onClick={reloadMainPage}>Phim bộ</Link>
-            <div
-              className="genre-menu-wrapper"
-              onMouseEnter={() => setShowGenres(true)}
-              onMouseLeave={() => setShowGenres(false)}
-            >
-              <span className="nav-links" style={{ fontWeight: "500" }}>Thể loại</span>
-              {showGenres && (
-                <div className="genres-dropdown">
-                  <ul>
-                    {GENRES.map((genre, index) => (
-                      <li key={index}>
-                        <Link to={`/the-loai/${genre}`}>{genre}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-            
-          </nav>
-
-          <div className="search-container">        
-            <input
-              type="text"
-              placeholder="Tìm phim..."
-              value={searchText}
-              onChange={async (e) => {
-                const value = e.target.value;
-                setSearchText(value);
-                debouncedSearch(value);
-                if (value.trim() === "") {
-                  setSuggestions([]);
-                  setShowSuggestions(false);
-                  return;
-                }
-              }}
-              onFocus={() => {
-                if (suggestions.length > 0) setShowSuggestions(true);
-              }}
-              onBlur={() => {
-                setTimeout(() => setShowSuggestions(false), 150);
-              }}
-              className="search-input"
-            />
-            {showSuggestions && suggestions.length > 0 && (
-              <ul className="search-suggestions">
-                {suggestions.slice(0, 6).map((movie) => (
-                  <li key={movie.movieId} className="suggestion-item">
-                    <Link to={`/movie/${movie.movieId}`} className="suggestion-link">
-                      <img src={movie.thumbnailUrl} alt={movie.title} className="suggestion-img" />
-                      <span className="suggestion-title">{movie.title}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            <span style={{ fontWeight: "500", cursor: "pointer" }}>Thể loại</span>
+            {showGenres && (
+              <div className="genres-dropdown" onClick={e => e.stopPropagation()}>
+                <ul>
+                  {GENRES.map((genre, index) => (
+                    <li key={index}>
+                      <Link to={`/the-loai/${genre}`}>{genre}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
-
-          <div className="filter-toggle" onClick={() => setShowFilter(true)} title="Lọc phim">
-              <Funnel size={22} color="#fff" style={{ cursor: "pointer", marginLeft: "10px" }} />
-            </div>
-
+        </nav>
+      </div>
+      {/* --- RIGHT: Search + Filter + Mua Gói + User --- */}
+      <div className="header-right">
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Tìm phim..."
+            value={searchText}
+            onChange={async (e) => {
+              const value = e.target.value;
+              setSearchText(value);
+              debouncedSearch(value);
+              if (value.trim() === "") {
+                setSuggestions([]);
+                setShowSuggestions(false);
+                return;
+              }
+            }}
+            onFocus={() => {
+              if (suggestions.length > 0) setShowSuggestions(true);
+            }}
+            onBlur={() => {
+              setTimeout(() => setShowSuggestions(false), 150);
+            }}
+            className="search-input"
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="search-suggestions">
+              {suggestions.slice(0, 6).map((movie) => (
+                <li key={movie.movieId} className="suggestion-item">
+                  <Link to={`/movie/${movie.movieId}`} className="suggestion-link">
+                    <img src={movie.thumbnailUrl} alt={movie.title} className="suggestion-img" />
+                    <span className="suggestion-title">{movie.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        <div className="header-right">
-          <div className="buy-button">
-            <Link to="/buy-package" className="buy-package-btn">
-              <FontAwesomeIcon icon={faWallet} style={{ marginRight: "5px" }} />
-              Mua Gói
-            </Link>
-          </div>
-          <div className="user-menu">
+        <div className="filter-toggle" onClick={() => setShowFilter(true)} title="Lọc phim">
+          <Funnel size={22} color="#fff" style={{ cursor: "pointer", marginLeft: "10px" }} />
+        </div>
+        <Link to="/buy-package" className="buy-package-btn">
+          <FontAwesomeIcon icon={faWallet} style={{ marginRight: "5px" }} />
+          Mua Gói
+        </Link>
+        <div className="user-menu">
           {(MyUser?.my_user?.vipLevel === "GOLD" || MyUser?.my_user?.vipLevel === "SILVER") && (
-            <FontAwesomeIcon 
-              icon={faCrown} 
+            <FontAwesomeIcon
+              icon={faCrown}
               style={{
                 color: MyUser?.my_user?.vipLevel === "GOLD" ? "#FFD43B" : "#C0C0C0",
                 height: "20px", width: "40px",
-                
-                position: "absolute",
-                bottom: "30px",
-                
-              }} 
+                position: "absolute", bottom: "30px",
+              }}
               title={`VIP ${MyUser?.my_user?.vipLevel}`}
             />
           )}
-             <img
-              src={avatarPreview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-              alt="avatar"
-              className="user-avatar"
-            />
-            <span className="username">
-              Xin chào, <strong>{MyUser?.my_user?.userName || "Người dùng"}</strong>
-            </span>
-            <ul className="dropdown-menu">
-              {isAdmin && <li onClick={() => setShowAddMovie(true)} style={{ color: "green" }}>Thêm phim</li>}
-              {isAdmin && <li><Link to="/control-panel">Bảng điều khiển</Link></li>}
-              {(isUser || isAdmin) && <li><Link to="/profile">Thông tin cá nhân</Link></li>}
-              {(isUser || isAdmin)
-                ? <li onClick={handleLogout} style={{ color: "red" }}>Đăng xuất</li>
-                : <li onClick={handleLogin} style={{ color: "green" }}>Đăng nhập</li>}
-            </ul>
-          </div>
+          <img
+            src={avatarPreview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+            alt="avatar"
+            className="user-avatar"
+          />
+          <span className="username">
+            Xin chào, <strong>{MyUser?.my_user?.userName || "Người dùng"}</strong>
+          </span>
+          <ul className="dropdown-menu">
+            {isAdmin && <li onClick={() => setShowAddMovie(true)} style={{ color: "green" }}>Thêm phim</li>}
+            {isAdmin && <li><Link to="/control-panel">Bảng điều khiển</Link></li>}
+            {(isUser || isAdmin) && <li><Link to="/profile">Thông tin cá nhân</Link></li>}
+            {(isUser || isAdmin)
+              ? <li onClick={handleLogout} style={{ color: "red" }}>Đăng xuất</li>
+              : <li onClick={handleLogin} style={{ color: "green" }}>Đăng nhập</li>}
+          </ul>
         </div>
-      </header>
-
-     {setFilteredMovies && showFilter && (
-        <div className="filter-overlay" onClick={() => setShowFilter(false)}>
-          <div className="filter-box" onClick={(e) => e.stopPropagation()}>
-            <h5>Lọc Phim</h5>
-           <div className="filter-fields">
-            <div className="select-group">
-              <div className="select-item">
-                <label>Tháng:</label>
-                <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))}>
-                  <option value={0}>-- trống --</option>
-                  {[...Array(12)].map((_, i) => (
-                    <option key={i + 1} value={i + 1}>{i + 1}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="select-item">
-                <label>Năm:</label>
-                <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))}>
-                  <option value={0}>-- trống --</option>
-                  {Array.from({ length: 50 }, (_, i) => {
-                    const year = 2000 + i;
-                    return <option key={year} value={year}>{year}</option>;
-                  })}
-                </select>
-              </div>
+      </div>
+    </div>
+  </header>
+  {/* Filter Modal */}
+  {setFilteredMovies && showFilter && (
+    <div className="filter-overlay" onClick={() => setShowFilter(false)}>
+      <div className="filter-box" onClick={(e) => e.stopPropagation()}>
+        <h5>Lọc Phim</h5>
+        <div className="filter-fields">
+          <div className="select-group">
+            <div className="select-item">
+              <label>Tháng:</label>
+              <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))}>
+                <option value={0}>-- trống --</option>
+                {[...Array(12)].map((_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                ))}
+              </select>
             </div>
-          </div>
-            <div className="filter-actions">
-              <button
-                className="btn-filter"
-                onClick={async () => {
-                  const result = await MovieService.filterMoviesByYearAndMonth(
-                    filterYear || 0,
-                    filterMonth || 0
-                  );
-
-                  console.log("Kết quả lọc:", result);
-                  if (Array.isArray(result) && result.length > 0) {
-                    setFilteredMovies(result);
-                    showToast("Đã lọc phim!", "success");
-                  } else {
-                    setFilteredMovies([]); // cập nhật về mảng rỗng để hiển thị thông báo
-                    showToast("Không tìm thấy phim phù hợp", "error");
-                  }
-                }}
-              >
-                  Lọc
-                </button>
-
+            <div className="select-item">
+              <label>Năm:</label>
+              <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))}>
+                <option value={0}>-- trống --</option>
+                {Array.from({ length: 50 }, (_, i) => {
+                  const year = 2000 + i;
+                  return <option key={year} value={year}>{year}</option>;
+                })}
+              </select>
             </div>
           </div>
         </div>
-      )}
-
-      {showAddMovie && (
-        <div className="modaladd-backdrop-custom" onClick={() => setShowAddMovie(false)}>
-          <div className="modaladd-content-custom" onClick={e => e.stopPropagation()}>
-            <ModelAddMovie
-              onSuccess={() => {
-                setShowAddMovie(false);
-                fetchMovies();
-              }}
-            />
-          </div>
+        <div className="filter-actions">
+          <button
+            className="btn-filter"
+            onClick={async () => {
+              const result = await MovieService.filterMoviesByYearAndMonth(
+                filterYear || 0,
+                filterMonth || 0
+              );
+              if (Array.isArray(result) && result.length > 0) {
+                setFilteredMovies(result);
+                showToast("Đã lọc phim!", "success");
+              } else {
+                setFilteredMovies([]);
+                showToast("Không tìm thấy phim phù hợp", "error");
+              }
+            }}
+          >
+            Lọc
+          </button>
         </div>
-      )}
-    </>
+      </div>
+    </div>
+  )}
+  {/* Add Movie Modal */}
+  {showAddMovie && (
+    <div className="modaladd-backdrop-custom" onClick={() => setShowAddMovie(false)}>
+      <div className="modaladd-content-custom" onClick={e => e.stopPropagation()}>
+        <ModelAddMovie
+          onSuccess={() => {
+            setShowAddMovie(false);
+            fetchMovies();
+          }}
+        />
+      </div>
+    </div>
+  )}
+</>
   );
-};
-
+}
 export default Header;
