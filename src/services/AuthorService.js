@@ -57,7 +57,15 @@ const AuthorService = {
       throw error.response ? error.response.data : error;
     }
   },
-
+  //thông tin các author có trong một bộ phim
+  getAuthorsByMovieId: async (movieId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/movie/${movieId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  }
 
 };
 

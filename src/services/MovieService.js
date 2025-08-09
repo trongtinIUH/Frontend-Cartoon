@@ -139,7 +139,31 @@ const MovieService = {
             throw error.response ? error.response.data : error;
         }
     },
-
+    // lưu rating của bộ phim
+    saveMovieRating: async (movieId, rating, userId) => {
+    try {
+        const response = await axios.post(
+        `${API_BASE_URL}/${movieId}/rate`,
+        null, // body rỗng, vì BE nhận @RequestParam
+        {
+            params: { rating },           // ✅ truyền ?rating=5
+            headers: { userId },          // ✅ truyền userId đúng header name
+        }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error;
+    }
+    },
+    //getall đánh giá của 1 bộ phim
+    getAllMovieRatings: async (movieId) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/${movieId}/ratings`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
 
 }
 

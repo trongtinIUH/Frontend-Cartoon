@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../css/Header.css";
 import showToast from "../utils/AppUtils";
+import GENRES from "../constants/genres";
 import ModelAddMovie from "../models/ModelAddMovie";
 import MovieService from "../services/MovieService";
 import { debounce } from "lodash";
@@ -34,8 +35,6 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
   //set cho mobie 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-
-  const GENRES = ["Âm nhạc", "Anime", "Bí ẩn", "Bi kịch", "CN Animation", "[CNA] Hài hước", "[CNA] Ngôn tình", "Đam mỹ", "Demon", "Dị giới", "Đời thường", "Drama", "Ecchi", "Gia Đình", "Giả tưởng", "Hài hước", "Hành động", "Harem", "Hệ Thống", "HH2D", "HH3D", "Học đường", "Huyền ảo", "Khoa huyễn", "Kiếm hiệp", "Kinh dị", "Lịch sử", "Live Action", "Luyện Cấp", "Ma cà rồng", "Mecha", "Ngôn tình", "OVA", "Phiêu lưu", "Psychological", "Quân đội", "Samurai", "Sắp chiếu", "Seinen", "Shoujo", "Shoujo AI", "Shounen", "Shounen AI", "Siêu năng lực", "Siêu nhiên", "Thám tử", "Thể thao", "Thriller", "Tiên hiệp", "Tình cảm", "Tokusatsu", "Trò chơi", "Trùng sinh", "Tu Tiên", "Viễn tưởng", "Võ hiệp", "Võ thuật", "Xuyên không"];
 
   const debouncedSearch = debounce(async (value) => {
     if (!value.trim()) return;

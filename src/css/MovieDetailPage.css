@@ -1,48 +1,277 @@
 .movie-detail-page {
-  background: linear-gradient(to right, #1f1c2c, #928dab);
+  background: linear-gradient(120deg, #232526, #414345 80%);
   min-height: 100vh;
   color: #f1f1f1;
-  padding-top: 30px;
 }
 
 .movie-title {
-  font-size: 32px;
-  font-weight: bold;
+  font-size: 2.2rem;
+  font-weight: 700;
   color: #ffcc70;
+  text-shadow: 0 2px 16px #2228;
+  
+}
+
+.genre-badge {
+  background: rgba(255, 204, 112, 0.18);
+  color: #ffcc70;
+  border: 1px solid #ffcc70;
+  font-size: 0.95em;
+  padding: 4px 12px;
+  border-radius: 24px;
+  font-weight: 500;
 }
 
 .movie-poster {
-  max-height: 450px;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  aspect-ratio: 2/3;
   object-fit: cover;
+  border: 3px solid #ffcc70;
   transition: transform 0.3s;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  box-shadow: 0 8px 32px 0 #2229;
 }
-
 .movie-poster:hover {
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 
-.episode-card {
-  background-color: #2a2a40;
-  border-left: 4px solid #ffcc70;
-  transition: background-color 0.3s ease;
+.glassmorphism {
+  background: rgba(34, 36, 52, 0.7);
+  backdrop-filter: blur(7px);
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
-.episode-card:hover {
-  background-color: #3a3a5f;
+.glassmorphism-ep {
+  background: rgba(42, 42, 64, 0.6);
+  border-left: 3px solid #ffcc70;
+  transition: background 0.2s;
+}
+
+.glassmorphism-ep:hover {
+  background: rgba(60, 60, 100, 0.8);
 }
 
 .btn-watch {
-  background-color: #ffcc70;
-  color: #ffffff;
+  background: linear-gradient(90deg,#ffcc70,#ff8c00 60%);
+  color: #232526;
   font-weight: bold;
   border: none;
   padding: 6px 16px;
-  border-radius: 4px;
-  text-decoration: none;
-  transition: background-color 0.3s ease;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px #ffcc7044;
+  text-shadow: none;
+  transition: background 0.3s;
+  width: 100%;
+}
+.btn-watch:hover {
+  background: #ffcc70;
+  color: #000;
 }
 
-.btn-watch:hover {
-  background-color: #ffc107;
-  color: #000;
+.top-movies-week {
+  background: rgba(34, 36, 52, 0.84);
+  min-height: 320px;
+  border-left: 5px solid #ffcc70;
+}
+
+.top-movie-thumb {
+  width: 40px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 0 8px #2224;
+  flex-shrink: 0;
+}
+
+.top-rank {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(145deg,#ffcc70 60%,#ff8c00);
+  color: #232526;
+  font-weight: bold;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  box-shadow: 0 2px 10px #ffcc7040;
+}
+
+@media (max-width: 991px) {
+  .movie-detail-page .container .row {
+    flex-direction: column;
+  }
+  .top-movies-week {
+    margin-top: 2.5rem;
+    border-left: none;
+    border-top: 5px solid #ffcc70;
+  }
+}
+
+@media (max-width: 600px) {
+  .movie-info-card {
+    padding: 1rem !important;
+  }
+  .movie-title {
+    font-size: 1.3rem;
+  }
+  .movie-poster {
+    max-width: 210px;
+    aspect-ratio: 2/3;
+    height: auto;
+    border-width: 2px;
+  }
+  .top-movie-thumb {
+    width: 32px;
+    height: 44px;
+  }
+  .top-rank {
+    width: 22px;
+    height: 22px;
+    font-size: 1em;
+  }
+}
+.glassmorphism-action {
+  background: rgba(38, 38, 48, 0.88);
+  border-radius: 2rem;
+  box-shadow: 0 2px 24px #19182636;
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(5px);
+}
+
+.btn-xem-ngay {
+  background: linear-gradient(90deg, #ffecb4, #ffcc70 70%);
+  color: #3c2c08;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 2rem;
+  transition: background 0.3s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px #ffcc7042;
+  outline: none;
+}
+.btn-xem-ngay:hover {
+  background: linear-gradient(90deg, #ffe082 10%, #ffc107 100%);
+  color: #262628;
+  box-shadow: 0 2px 18px #ffcc7066;
+}
+.play-icon {
+  display: flex;
+  align-items: center;
+}
+
+.action-icons .action-item {
+  min-width: 54px;
+  color: #eee;
+  opacity: 0.86;
+  cursor: pointer;
+  transition: color 0.15s, opacity 0.15s;
+}
+.action-icons .action-item:hover {
+  color: #ffcc70;
+  opacity: 1;
+}
+.action-icons i {
+  font-size: 1.2rem;
+}
+
+.movie-score {
+  background: #262938;
+  border-radius: 1.5rem;
+  color: #4bc1fa;
+  font-weight: bold;
+  box-shadow: 0 1px 8px #23243440;
+}
+.movie-score .score-icon {
+  display: inline-flex;
+  align-items: center;
+}
+.bg-outline-primary {
+  background: transparent;
+  border: 1px solid #4bc1fa;
+  color: #4bc1fa;
+}
+
+/*CSS của đạo diễn và diễn viên*/
+.movie-metadata .info-item {
+  transition: all 0.3s ease;
+}
+
+.movie-metadata .info-item:hover {
+  transform: translateY(-1px);
+}
+
+.cast-crew-info .badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.crew-section, .cast-section {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.crew-section:hover, .cast-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 991px) {
+  .movie-action-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 18px !important;
+    padding: 1rem 0.7rem !important;
+    border-radius: 1.3rem;
+  }
+  .action-icons {
+    gap: 2rem !important;
+    justify-content: start !important;
+    margin-top: 0.6rem;
+  }
+  .movie-score {
+    justify-content: start !important;
+    margin-left: 0 !important;
+    margin-top: 0.8rem;
+    width: fit-content;
+  }
+}
+@media (max-width: 600px) {
+  .btn-xem-ngay {
+    font-size: 1rem;
+    padding: 0.6rem 1.6rem;
+  }
+  .action-icons .action-item {
+    min-width: 40px;
+  }
+}
+@media (max-width: 600px) {
+  /* Cho phép các icon xuống dòng nếu thiếu chỗ */
+  .action-icons {
+    flex-wrap: wrap;
+    gap: 1rem !important; /* giảm gap để tránh tràn */
+    justify-content: space-between !important; /* icon trải đều */
+    width: 100%;
+  }
+
+  /* Mỗi icon chiếm khoảng đều nhau */
+  .action-icons .action-item {
+    flex: 1 1 25%; /* 4 icon chia đều một hàng */
+    min-width: 0;
+    text-align: center;
+  }
+
+  /* Nút Xem Ngay full width */
+  .btn-xem-ngay {
+    width: 100%;
+  }
+
+  /* Đưa thanh điểm xuống dưới */
+  .movie-score {
+    width: 100%;
+    justify-content: center !important;
+  }
 }

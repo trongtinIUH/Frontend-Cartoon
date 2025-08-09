@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import MovieService from "../services/MovieService";
+import {Link} from "react-router-dom";
 import "swiper/css";
 import "swiper/css/navigation";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -67,7 +68,7 @@ const CountryMoviesSection = ({ title, country, link, gradient }) => {
             {movies.map((movie) => (
               <SwiperSlide key={movie.movieId}>
                 <div className="movie-card">
-                  <a href={`/phim/${movie.slug}`} className="movie-link">
+                  <Link to={`/movie/${movie.movieId}`} className="movie-link">
                     <div className="movie-poster-container">
                       <img
                         src={movie.thumbnailUrl}
@@ -102,7 +103,7 @@ const CountryMoviesSection = ({ title, country, link, gradient }) => {
                         {movie.originalTitle || movie.description?.substring(0, 30) + "..."}
                       </p>
                     </div>
-                  </a>
+                  </Link>
                 </div>
               </SwiperSlide>
             ))}
