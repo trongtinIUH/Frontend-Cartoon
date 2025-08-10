@@ -22,6 +22,12 @@ import DashboardPage from './pages/admin/DashboardPage';
 import MovieManagementPage from './pages/admin/MovieManagementPage';
 import PaymentPage from './pages/PaymentPage';
 
+
+import "react-toastify/dist/ReactToastify.css";
+import "./css/toastCSS/toast.css";
+import CustomToastCloseButton from "./utils/CustomToastCloseButton";
+
+
 function App() {
   const navigate = useNavigate();
   const {MyUser} = useAuth();
@@ -71,7 +77,19 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                 </Routes>
 
                 {/* Thêm ToastContainer để hiển thị thông báo toast */}
-                <ToastContainer />
+                <ToastContainer
+                position="top-right"
+                autoClose={2200}
+                hideProgressBar={false}
+                closeButton={<CustomToastCloseButton />}
+                newestOnTop
+                limit={3}
+                draggable
+                pauseOnHover
+                toastClassName="ct-toast"
+                bodyClassName="ct-toast__body"
+                progressClassName="ct-toast__progress"
+                />
             </>
         )
     );

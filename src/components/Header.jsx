@@ -12,6 +12,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Funnel } from "lucide-react"; // Assuming you have lucide-react installed for icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCrown, faMedal ,faWallet} from "@fortawesome/free-solid-svg-icons"; // Import specific icon
+import Logo from "./Logo";
 
 
 
@@ -91,11 +92,7 @@ const [showHeader, setShowHeader] = useState(true);
       {/* --- LEFT: Logo + Menu --- */}
       <div className="header-left">
         <Link to="/main" className="logo-wrap" onClick={reloadMainPage}>
-          <img
-            src={process.env.PUBLIC_URL + "/image/cartoonToo.png"}
-            alt="Logo"
-            className="logo"
-          />
+          <Logo type="icon" size={40} />
         </Link>
         {/* Hamburger only on mobile */}
         <button

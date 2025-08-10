@@ -1,0 +1,34 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00B2FF"></stop>
+      <stop offset="60%" stop-color="#2DD4BF"></stop>
+      <stop offset="100%" stop-color="#0077FF"></stop>
+    </linearGradient>
+    <radialGradient id="gloss" cx="32%" cy="22%" r="70%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".65"></stop>
+      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0"></stop>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="blur"></feGaussianBlur>
+      <feOffset dx="0" dy="6" result="offset"></feOffset>
+      <feComposite in="offset" in2="blur" operator="out" result="shadow"></feComposite>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0.3  0 0 0 0 0.8  0 0 0 .25 0"></feColorMatrix>
+      <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+    </filter>
+  </defs>
+
+  <!-- rounded square -->
+  <rect x="16" y="16" rx="56" ry="56" width="224" height="224" fill="url(#g1)" filter="url(#soft)"></rect>
+  <!-- subtle gloss -->
+  <ellipse cx="96" cy="64" rx="88" ry="54" fill="url(#gloss)"></ellipse>
+
+  <!-- playful “CT” monogram -->
+  <g fill="#ffffff">
+    <!-- C -->
+    <path d="M150 92c-28 0-50 22-50 50s22 50 50 50c11 0 21-3 29-9v-20c-9 8-19 12-29 12-19 0-35-16-35-33 0-18 16-34 35-34 10 0 20 4 29 12V101c-8-6-18-9-29-9z" opacity=".98"></path>
+    <!-- T -->
+    <rect x="162" y="108" width="60" height="18" rx="9" ry="9"></rect>
+    <rect x="188" y="126" width="18" height="66" rx="9" ry="9"></rect>
+  </g>
+</svg>

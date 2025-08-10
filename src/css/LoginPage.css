@@ -97,6 +97,38 @@
     cursor: pointer;
     margin-top: 10px;
 }
+/* Xóa CSS cũ bị lỗi và thay bằng: */
+
+.btn-watch {
+  background: linear-gradient(to right, #2BC0E4 0%, #EAECC6 51%, #2BC0E4 100%) !important;
+  background-size: 200% auto !important;
+  padding: 12px 20px !important;
+  border: none !important;
+  border-radius: 25px !important;
+  color: white !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(43, 192, 228, 0.4) !important;
+  outline: none !important;
+}
+
+.btn-watch:hover {
+  background-position: right center !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(43, 192, 228, 0.6) !important;
+  color: white !important;
+}
+
+.btn-watch:active {
+  transform: translateY(0px) !important;
+}
+
+.btn-watch:focus {
+  outline: none !important;
+  box-shadow: 0 4px 15px rgba(43, 192, 228, 0.4) !important;
+}
 
 .btn-login:hover {
     background-color: #0051cc;
@@ -219,7 +251,7 @@
 }
 .sound-toggle {
     position: fixed;
-    top: 18px;
+    top: 100px;
     left: 18px;
     z-index: 10;
 }
@@ -258,4 +290,80 @@
   .card {
     margin: 0 10px; /* Giảm khoảng cách 2 bên */
   }
+}
+/* ===== Topbar ===== */
+.auth-topbar{
+  position: fixed; top: 16px; left: 0; right: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+}
+
+/* Logo tinh tế */
+.brand{ display:flex; align-items:center; gap:10px; color:#fff; text-decoration:none; }
+.brand-logo{ width:36px; height:36px; border-radius:10px;
+  background: radial-gradient(60% 60% at 30% 30%, #28e0b9 0%, #1171ff 100%);
+  box-shadow: 0 6px 14px rgba(17,113,255,.28);
+}
+.brand-name{ font-size:22px; font-weight:800; letter-spacing:.2px; }
+
+/* ===== Button Xem ngay (gradient từ cssgradient.io) ===== */
+.btn-grad{
+  background-image: linear-gradient(90deg, #16A085 0%, #F4D03F 51%, #16A085 100%);
+  background-size: 200% auto; color:#0a0a0a; font-weight:800; letter-spacing:.2px;
+  border:0; border-radius:999px; padding:10px 18px; cursor:pointer;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  transition: background-position .35s ease, transform .15s ease;
+}
+.btn-grad:hover{ background-position: right center; transform: translateY(-1px); }
+.play-icon{ margin-right:8px; font-size:14px; }
+
+/* ===== Card nâng cấp ===== */
+.auth-card{
+  width:100%; max-width:420px;
+  background: rgba(17, 18, 23, 0.55) !important;
+  border:1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border-radius:24px !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+}
+.auth-heading{ color:#e9f0ff; font-weight:900; font-size:38px; margin:0; }
+.auth-subtitle{ color:#b9c3d6; font-size:14px; margin-top:6px; }
+.auth-sep{ border-color: rgba(255,255,255,.08); }
+
+/* Links + text */
+.text-link{ color:#a9c6ff; text-decoration:none; }
+.text-link:hover{ text-decoration:underline; }
+.muted{ color:#aab3c2; }
+.auth-footer{ text-align:center; color:#b8c0d0; font-size:13px; }
+
+/* Tabs tinh chỉnh */
+.nav-pills .nav-link{
+  background: rgba(255,255,255,.06);
+  color:#e7ecf5; border-radius:999px; border:1px solid rgba(255,255,255,.08);
+}
+.nav-pills .nav-link.active{
+  background: linear-gradient(90deg, #2BC0E4 0%, #EAECC6 100%);
+  color:#0a0a0a; font-weight:700; border:0;
+}
+
+/* Inputs focus đẹp hơn */
+.form-control{
+  background: rgba(255,255,255,.08) !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+  color:#eef3ff !important; height:44px; border-radius:12px !important;
+}
+.form-control::placeholder{ color:#cfd7ea !important; opacity:.85; }
+.form-control:focus{
+  box-shadow:0 0 0 3px rgba(43,192,228,.25) !important;
+  border-color:#6bd6ff !important;
+}
+
+/* Subtitle fade-in nhẹ */
+@keyframes popIn{ from{ transform: translateY(6px); opacity:0;} to{ transform: translateY(0); opacity:1;} }
+.auth-card{ animation: popIn .28s ease-out both; }
+
+/* Responsive */
+@media (max-width:576px){
+  .auth-card{ border-radius:18px !important; }
+  .auth-heading{ font-size:30px; }
 }

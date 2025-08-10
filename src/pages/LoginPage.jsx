@@ -4,6 +4,11 @@ import ApiService from '../services/AuthService';
 import { useAuth } from '../context/AuthContext';
 import "../css/LoginPage.css";
 import { formatPhoneNumber } from '../utils/formatPhoneNumber';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay } from '@fortawesome/free-solid-svg-icons';
+import Logo from '../components/Logo';
+
+
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -72,130 +77,146 @@ const LoginPage = () => {
 
     return (
     <div className="login-bg-video">
-        <div className="sound-toggle">
-                <button
-                    onClick={() => {
-                        setIsSoundOn(!isSoundOn);
-                        if (videoRef.current) {
-                            videoRef.current.muted = isSoundOn; // Đảo ngược vì muted nhận true/false
-                            if (!isSoundOn) videoRef.current.play();
-                        }
-                    }}
-                    className={isSoundOn ? "sound-on" : "sound-off"}
-                >
-                    {isSoundOn ? "🔊" : "🔈"}
-                </button>
-        </div>
-        <video
-            autoPlay
-            loop
-            muted={!isSoundOn}
-            preload="auto"
-            playsInline
-            className="bg-video"
+      {/* BG video */}
+      <video
+        ref={videoRef}
+        autoPlay
+        loop
+        muted={!isSoundOn}
+        preload="auto"
+        playsInline
+        className="bg-video"
+      >
+        <source src={`${process.env.PUBLIC_URL}/videologin.mp4`} type="video/mp4" />
+        Trình duyệt của bạn không hỗ trợ video nền.
+      </video>
+
+      {/* Nút âm lượng */}
+      <div className="sound-toggle">
+        <button
+          onClick={() => {
+            const next = !isSoundOn;
+            setIsSoundOn(next);
+            if (videoRef.current) {
+              videoRef.current.muted = !next;
+              if (next) videoRef.current.play();
+            }
+          }}
+          className={isSoundOn ? "sound-on" : "sound-off"}
         >
-          <source src={`${process.env.PUBLIC_URL}/videologin.mp4`} type="video/mp4" />
-            Trình duyệt của bạn không hỗ trợ video nền.
-        </video>
-        <div className="d-flex justify-content-center align-items-center flex-column vh-100">
-          
-            <div className="card p-4" style={{ width: "500px", borderRadius: "20px", maxWidth: "400px"  }}>
-                  <div className="text-center mb-4">
-                <Link to="/main">
-                <h1 className="text-primary fw-bold" style={{fontSize:'50px'}}>CartoonToo</h1>
-                </Link>
-                
-                <p style={{ fontSize: '16px', color: 'white' }}>
-                     Đăng nhập tài khoản CartoonToo <br /> để khám phá kho phim hoạt hình đặc sắc!
-                </p>
-            </div>
-                <ul className="nav nav-pills nav-fill justify-content-center mb-3 d-flex">
-                    <li className="nav-item w-50">
-                        <button
-                            type="button"
-                            className={`nav-link ${activeTab === 'phone' ? 'active' : ''}`}
-                            onClick={() => handleTabChange('phone')}
-                        >
-                            Số Điện Thoại
-                        </button>
-                    </li>
-                    <li className="nav-item w-50">
-                        <button
-                            type="button"
-                            className={`nav-link ${activeTab === 'qr' ? 'active' : ''}`}
-                            onClick={() => handleTabChange('qr')}
-                        >
-                            Quét Mã QR
-                        </button>
-                    </li>
-                </ul>
+          {isSoundOn ? "🔊" : "🔈"}
+        </button>
+      </div>
 
-                <form onSubmit={handleLogin}>
-                    {activeTab === 'phone' && (
-                        <>
-                            {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
-                            <div className="input-group mt-3">
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="📱 Số điện thoại"
-                                    value={phoneNumber}
-                                    onChange={(e) => setPhoneNumber(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="input-group mb-3">
-                                <input
-                                    type="password"
-                                    className="form-control"
-                                    placeholder="🔒 Mật khẩu"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                className="btn btn-primary w-100 mb-3"
-                                disabled={isLoggingIn}
-                            >
-                                {isLoggingIn ? 'Đang đăng nhập...' : 'Đăng Nhập Với Mật Khẩu'}
-                            </button>
-                        </>
-                    )}
+      {/* TOPBAR: logo + Xem ngay */}
+        <div className="auth-topbar">
+        <Link to="/main" className="brand">
+             <Logo type="wordmark" size={40} />
+            
+        </Link>
 
-                    {activeTab === 'qr' && (
-                        <div className="mb-3 text-center">
-                            <p>Quét mã QR để đăng nhập</p>
-                            <img src="../image/qr.png" alt="QR Code" style={{ width: '200px' }} />
-                        </div>
-                    )}
-                </form>
-
-                <div className="text-center">
-                    <a href="/forgot-password" className="text-decoration-none">Quên mật khẩu?</a>
-                </div>
-
-                <hr />
-
-                <div className="text-center">
-                    <span style={{color:'white'}}>Chưa có tài khoản ? </span>
-                    <Link to="/create-user" className="text-primary text-decoration-none fw-bold">Đăng Ký</Link>
-                </div>
-                <div className="text-center mt-3">
-                    <small style={{color: "#bbb",fontSize:'15px'}}>© Bản quyền thuộc về Tran Trong Tin (IUH)</small>
-                </div>
-            </div>
-
-            {isLoggingIn && (
-                <div className="loading-overlay">
-                    <div className="spinner"></div>
-                    <p className="loading-text">Đang đăng nhập...</p>
-                </div>
-            )}
+        <button className="btn-watch" style={{width:"10%"}} onClick={() => navigate('/main')}>
+            <FontAwesomeIcon icon={faPlay} /> Xem ngay
+        </button>
         </div>
+
+
+      {/* Card */}
+      <div className="login-content">
+        <div className="card auth-card p-4">
+          <div className="text-center mb-3">
+            <h1 className="auth-heading">CartoonToo</h1>
+            <p className="auth-subtitle">
+              Đăng nhập tài khoản để khám phá kho phim hoạt hình đặc sắc!
+            </p>
+          </div>
+
+          <ul className="nav nav-pills nav-fill justify-content-center mb-3 d-flex">
+            <li className="nav-item w-50">
+              <button
+                type="button"
+                className={`nav-link ${activeTab === 'phone' ? 'active' : ''}`}
+                onClick={() => handleTabChange('phone')}
+              >
+                Số Điện Thoại
+              </button>
+            </li>
+            <li className="nav-item w-50">
+              <button
+                type="button"
+                className={`nav-link ${activeTab === 'qr' ? 'active' : ''}`}
+                onClick={() => handleTabChange('qr')}
+              >
+                Quét Mã QR
+              </button>
+            </li>
+          </ul>
+
+          <form onSubmit={handleLogin}>
+            {activeTab === 'phone' && (
+              <>
+                {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+
+                <div className="input-group mt-2">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="📱 Số điện thoại"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="input-group mb-2">
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="🔒 Mật khẩu"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button type="submit" className="btn btn-primary w-100 mb-2" disabled={isLoggingIn}>
+                  {isLoggingIn ? 'Đang đăng nhập...' : 'Đăng Nhập Với Mật Khẩu'}
+                </button>
+              </>
+            )}
+
+            {activeTab === 'qr' && (
+              <div className="mb-3 text-center">
+                <p className="muted">Quét mã QR để đăng nhập</p>
+                <img src="../image/qr.png" alt="QR Code" style={{ width: 200, borderRadius: 12 }} />
+              </div>
+            )}
+          </form>
+
+          <div className="text-center mb-2">
+            <a href="/forgot-password" className="text-link">Quên mật khẩu?</a>
+          </div>
+
+          <hr className="auth-sep" />
+
+          <div className="text-center">
+            <span className="muted">Chưa có tài khoản? </span>
+            <Link to="/create-user" className="text-link fw-bold">Đăng Ký</Link>
+          </div>
+
+          <div className="auth-footer mt-3">
+            © Bản quyền thuộc về Tran Trong Tin (IUH)
+          </div>
+        </div>
+
+        {isLoggingIn && (
+          <div className="loading-overlay">
+            <div className="spinner"></div>
+            <p className="loading-text">Đang đăng nhập...</p>
+          </div>
+        )}
+      </div>
     </div>
-    );
+  );
 };
 
 export default LoginPage;

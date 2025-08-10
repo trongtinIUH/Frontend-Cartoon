@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import '../css/componentsCSS/RatingModal.css';
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 const RATINGS = [
   { value: 5, label: "Tuyệt vời", emoji: "😍" },
@@ -30,6 +31,10 @@ export default function RatingModal({
       setSubmitting(true);
       await onSubmit(selected);
       onClose?.();
+     toast("Đánh giá thành công!", "success");
+    } catch (error) {
+      console.error("Đánh giá thất bại", error);
+      toast("Đánh giá thất bại", "error");
     } finally {
       setSubmitting(false);
     }
