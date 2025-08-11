@@ -10,7 +10,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Funnel } from "lucide-react"; // Assuming you have lucide-react installed for icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCrown, faMedal ,faWallet} from "@fortawesome/free-solid-svg-icons"; // Import specific icon
+import { faCrown, faMedal, faWallet } from "@fortawesome/free-solid-svg-icons"; // Import specific icon
 
 
 
@@ -57,15 +57,23 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
     navigate("/");
   };
 
-  //load trang
-const reloadMainPage = () => {
-  if (typeof fetchMovies === "function") {
-    fetchMovies();
+  const handleProfile = () => {
+    navigate("/profile");
   }
-};
 
-//ẩn header khi cuộn xuống
-const [showHeader, setShowHeader] = useState(true);
+  const handlePurchaseHistory = () => {
+    navigate("/purchase-history");
+  }
+
+  //load trang
+  const reloadMainPage = () => {
+    if (typeof fetchMovies === "function") {
+      fetchMovies();
+    }
+  };
+
+  //ẩn header khi cuộn xuống
+  const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   const controlHeader = () => {
@@ -97,7 +105,7 @@ const [showHeader, setShowHeader] = useState(true);
               style={{ borderRadius: "20px", height: "50px", width: "80px" }}
             />
           </Link>
-            <div
+          <div
             className="mobile-menu-toggle"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
@@ -126,10 +134,10 @@ const [showHeader, setShowHeader] = useState(true);
                 </div>
               )}
             </div>
-            
+
           </nav>
 
-          <div className="search-container">        
+          <div className="search-container">
             <input
               type="text"
               placeholder="Tìm phim..."
@@ -167,82 +175,81 @@ const [showHeader, setShowHeader] = useState(true);
           </div>
 
           <div className="filter-toggle" onClick={() => setShowFilter(true)} title="Lọc phim">
-              <Funnel size={22} color="#fff" style={{ cursor: "pointer", marginLeft: "10px" }} />
-            </div>
+            <Funnel size={22} color="#fff" style={{ cursor: "pointer", marginLeft: "10px" }} />
+          </div>
 
         </div>
         <div className="header-right">
           <div className="buy-button">
-            <Link to="/buy-package" className="btn btn-warning text-black fw-bold me-2">
+            <Link to="/buy-package" className="buy-package-btn">
               <FontAwesomeIcon icon={faWallet} style={{ marginRight: "5px" }} />
               Mua Gói
             </Link>
           </div>
           <div className="user-menu">
-          {(MyUser?.my_user?.vipLevel === "GOLD" || MyUser?.my_user?.vipLevel === "SILVER") && (
-            <FontAwesomeIcon 
-              icon={faCrown} 
-              style={{
-                color: MyUser?.my_user?.vipLevel === "GOLD" ? "#FFD43B" : "#C0C0C0",
-                height: "20px", width: "40px",
-                
-                position: "absolute",
-                bottom: "30px",
-                
-              }} 
-              title={`VIP ${MyUser?.my_user?.vipLevel}`}
-            />
-          )}
-             <img
-              src={avatarPreview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-              alt="avatar"
-              className="user-avatar"
-            />
-            <span className="username">
-              Xin chào, <strong>{MyUser?.my_user?.userName || "Người dùng"}</strong>
+            {(MyUser?.my_user?.vipLevel === "GOLD" || MyUser?.my_user?.vipLevel === "SILVER") && (
+              <FontAwesomeIcon
+                icon={faCrown}
+                style={{
+                  color: MyUser?.my_user?.vipLevel === "GOLD" ? "#FFD43B" : "#C0C0C0",
+                  height: "20px", width: "40px",
+
+                  position: "absolute",
+                  bottom: "30px",
+
+                }}
+                title={`VIP ${MyUser?.my_user?.vipLevel}`}
+              />
+            )}
+            <span className="btn btn-light dropdown-toggle fw-bold">
+              <i className="fa-solid fa-user me-2"></i>
+              {MyUser?.my_user?.userName || "Thành viên"}
             </span>
-            <ul className="dropdown-menu bg-dark text-white">
-              {/* {isAdmin && <li onClick={() => setShowAddMovie(true)} style={{ color: "green" }}>Thêm phim</li>}
-              {isAdmin && <li><Link to="/control-panel">Bảng điều khiển</Link></li>}
-              {(isUser || isAdmin) && <li><Link to="/profile">Thông tin cá nhân</Link></li>} */}
-              <li><Link to="/profile"><i className="fa-solid fa-heart me-2"></i>Yêu thích</Link></li>
-              <li><Link to="/profile"><i className="fa-solid fa-user me-2"></i>Tài khoản</Link></li> <hr/>
-              {(isUser || isAdmin)
-                ? <li onClick={handleLogout} style={{ color: "red" }}><i className="fa-solid fa-sign-out-alt me-2"></i>Đăng xuất</li>
-                : <li onClick={handleLogin} style={{ color: "green" }}><i className="fa-solid fa-sign-in-alt me-2"></i>Đăng nhập</li>}
+            <ul className="dropdown-menu text-black">
+              {(isUser || isAdmin) ? (
+                <>
+                  <li><i className="fa-solid fa-heart me-2"></i>Yêu thích</li>
+                  <li  onClick={handlePurchaseHistory}><i className="fa-solid fa-history me-2"></i>Lịch sử mua gói</li>
+                  <li><i className="fa-solid fa-bell me-2"></i>Thông báo</li>
+                  <li onClick={handleProfile}><i className="fa-solid fa-user me-2"></i>Tài khoản</li> <hr />
+                  <li onClick={handleLogout} style={{ color: "red" }}><i className="fa-solid fa-sign-out-alt me-2"></i>Đăng xuất</li>
+                </>
+              ) : (
+                <li onClick={handleLogin} style={{ color: "green" }}><i className="fa-solid fa-sign-in-alt me-2"></i>Đăng nhập</li>
+              )}
             </ul>
           </div>
         </div>
       </header>
 
-     {setFilteredMovies && showFilter && (
+      {setFilteredMovies && showFilter && (
         <div className="filter-overlay" onClick={() => setShowFilter(false)}>
           <div className="filter-box" onClick={(e) => e.stopPropagation()}>
             <h5>Lọc Phim</h5>
-           <div className="filter-fields">
-            <div className="select-group">
-              <div className="select-item">
-                <label>Tháng:</label>
-                <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))}>
-                  <option value={0}>-- trống --</option>
-                  {[...Array(12)].map((_, i) => (
-                    <option key={i + 1} value={i + 1}>{i + 1}</option>
-                  ))}
-                </select>
-              </div>
+            <div className="filter-fields">
+              <div className="select-group">
+                <div className="select-item">
+                  <label>Tháng:</label>
+                  <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))}>
+                    <option value={0}>-- trống --</option>
+                    {[...Array(12)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>{i + 1}</option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="select-item">
-                <label>Năm:</label>
-                <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))}>
-                  <option value={0}>-- trống --</option>
-                  {Array.from({ length: 50 }, (_, i) => {
-                    const year = 2000 + i;
-                    return <option key={year} value={year}>{year}</option>;
-                  })}
-                </select>
+                <div className="select-item">
+                  <label>Năm:</label>
+                  <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))}>
+                    <option value={0}>-- trống --</option>
+                    {Array.from({ length: 50 }, (_, i) => {
+                      const year = 2000 + i;
+                      return <option key={year} value={year}>{year}</option>;
+                    })}
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
             <div className="filter-actions">
               <button
                 className="btn-filter"
@@ -262,8 +269,8 @@ const [showHeader, setShowHeader] = useState(true);
                   }
                 }}
               >
-                  Lọc
-                </button>
+                Lọc
+              </button>
 
             </div>
           </div>

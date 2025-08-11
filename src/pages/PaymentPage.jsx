@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SubscriptionPackageService from "../services/SubscriptionPackageService"; // nhớ chỉnh lại path import
 import { useAuth } from "../context/AuthContext";
@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 
 const PaymentPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { MyUser } = useAuth();
   const { selectedPackage } = location.state || {};
 
@@ -16,6 +17,13 @@ const PaymentPage = () => {
 
   const [qrData, setQrData] = useState(null);
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (!MyUser?.my_user) {
+      navigate('/');
+      return;
+    }
+  }, [MyUser, navigate]);
 
   useEffect(() => {
     const fetchSameVipPackages = async () => {

@@ -13,11 +13,16 @@ const featureTitles = [
 
 const BuyPackagePage = () => {
   const navigate = useNavigate();
+  const { MyUser } = useAuth();
   const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
 
   useEffect(() => {
     const fetchPackages = async () => {
+      if (!MyUser?.my_user) {
+        navigate('/');
+        return;
+      }
       try {
         const data = await SubscriptionPackageService.getAllPackages();
 

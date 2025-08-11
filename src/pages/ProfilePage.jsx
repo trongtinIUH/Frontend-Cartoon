@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import SidebarUserManagement from "../components/SidebarUserManagement";
-import "../css/ProfilePage.css";
-import UserService from "../services/UserService";
 import { toast } from "react-toastify";
+import default_avatar from "../image/default_avatar.jpg"
 
 const ProfilePage = () => {
   const { MyUser, updateUserInfo } = useAuth();
@@ -20,6 +19,8 @@ const ProfilePage = () => {
       setDisplayName(MyUser.my_user.userName);
       setGender(MyUser.my_user.gender || "unspecified");
       setAvatar(MyUser.my_user.avatarUrl);
+    } else {
+      navigate('/');
     }
   }, [MyUser]);
 
@@ -63,7 +64,7 @@ const ProfilePage = () => {
           <div className="col-md-3 text-center">
             <div className="position-relative d-inline-block mb-2">
               <img
-                src={avatar || "https://via.placeholder.com/150"}
+                src={avatar || default_avatar}
                 alt="avatar"
                 className="rounded-circle border border-2"
                 style={{ width: 120, height: 120 }}

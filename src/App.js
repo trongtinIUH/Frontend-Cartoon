@@ -21,6 +21,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import DashboardPage from './pages/admin/DashboardPage';
 import MovieManagementPage from './pages/admin/MovieManagementPage';
 import PaymentPage from './pages/PaymentPage';
+import PurchaseHistoryPage from './pages/PurchaseHistoryPage';
 
 function App() {
   const navigate = useNavigate();
@@ -61,6 +62,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/the-loai/:genre" element={<GenreMoviesPage />} />
                     <Route path="/tim-kiem/:title" element={<SearchResultPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
                     <Route path="/watch" element={<WatchPage />} />
                     <Route path="/buy-package" element={<BuyPackagePage />} />
                     <Route path="/payment" element={<PaymentPage />} />
