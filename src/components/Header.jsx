@@ -10,8 +10,11 @@ import { debounce } from "lodash";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Funnel } from "lucide-react"; // Assuming you have lucide-react installed for icons
+import {
+  faCrown, faWallet, faHeart, faListUl, faClock, faUser,
+  faRightFromBracket, faPlus
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCrown, faMedal ,faWallet} from "@fortawesome/free-solid-svg-icons"; // Import specific icon
 import Logo from "./Logo";
 
 
@@ -31,6 +34,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
   const [showAddMovie, setShowAddMovie] = useState(false);
   const isAdmin = MyUser?.my_user?.role === "ADMIN";
   const isUser = MyUser?.my_user?.role === "USER";
+  const isLoggedIn = Boolean(MyUser?.my_user?.userId || MyUser?.idToken);
   const [showGenres, setShowGenres] = useState(false);
 
   //set cho mobie 
@@ -85,6 +89,21 @@ const [showHeader, setShowHeader] = useState(true);
     return () => window.removeEventListener("scroll", controlHeader);
   }, [lastScrollY]);
 
+
+  // state menbership của user:
+const [openUserPanel, setOpenUserPanel] = useState(false);
+const vip = MyUser?.my_user?.vipLevel; // "GOLD" | "SILVER" | undefined
+
+// click outside để đóng (optional nhưng nên có)
+useEffect(() => {
+  const onClick = (e) => {
+    if (!e.target.closest?.('.user-menu')) setOpenUserPanel(false);
+  };
+  document.addEventListener('click', onClick);
+  return () => document.removeEventListener('click', onClick);
+}, []);
+
+
   return (
  <>
   <header className={`main-header ${showHeader ? "" : "hidden-header"}`}>
@@ -101,35 +120,6 @@ const [showHeader, setShowHeader] = useState(true);
         >
           ☰
         </button>
-
-        <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
-          <Link to="/main" onClick={reloadMainPage}>Trang chủ</Link>
-          <Link to="/main" onClick={reloadMainPage}>Chủ đề</Link>
-          <Link to="/main" onClick={reloadMainPage}>Phim bộ</Link>
-          {/* Thể loại dropdown (PC hover, mobile click) */}
-          <div
-            className="genre-menu-wrapper"
-            onMouseEnter={() => !isMobileMenuOpen && setShowGenres(true)}
-            onMouseLeave={() => !isMobileMenuOpen && setShowGenres(false)}
-            onClick={() => isMobileMenuOpen && setShowGenres(!showGenres)}
-          >
-            <span style={{ fontWeight: "500", cursor: "pointer" }}>Thể loại</span>
-            {showGenres && (
-              <div className="genres-dropdown" onClick={e => e.stopPropagation()}>
-                <ul>
-                  {GENRES.map((genre, index) => (
-                    <li key={index}>
-                      <Link to={`/the-loai/${genre}`}>{genre}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </nav>
-      </div>
-      {/* --- RIGHT: Search + Filter + Mua Gói + User --- */}
-      <div className="header-right">
         <div className="search-container">
           <input
             type="text"
@@ -166,6 +156,34 @@ const [showHeader, setShowHeader] = useState(true);
             </ul>
           )}
         </div>
+        <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
+          <Link to="/main" onClick={reloadMainPage}>Trang chủ</Link>
+          <Link to="/main" onClick={reloadMainPage}>Chủ đề</Link>
+          <Link to="/main" onClick={reloadMainPage}>Phim bộ</Link>
+          {/* Thể loại dropdown (PC hover, mobile click) */}
+          <div
+            className="genre-menu-wrapper"
+            onMouseEnter={() => !isMobileMenuOpen && setShowGenres(true)}
+            onMouseLeave={() => !isMobileMenuOpen && setShowGenres(false)}
+            onClick={() => isMobileMenuOpen && setShowGenres(!showGenres)}
+          >
+            <span style={{ fontWeight: "500", cursor: "pointer" }}>Thể loại</span>
+            {showGenres && (
+              <div className="genres-dropdown" onClick={e => e.stopPropagation()}>
+                <ul>
+                  {GENRES.map((genre, index) => (
+                    <li key={index}>
+                      <Link to={`/the-loai/${genre}`}>{genre}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </nav>
+      </div>
+      {/* --- RIGHT: Search + Filter + Mua Gói + User --- */}
+      <div className="header-right">
         <div className="filter-toggle" onClick={() => setShowFilter(true)} title="Lọc phim">
           <Funnel size={22} color="#fff" style={{ cursor: "pointer", marginLeft: "10px" }} />
         </div>
@@ -173,35 +191,118 @@ const [showHeader, setShowHeader] = useState(true);
           <FontAwesomeIcon icon={faWallet} style={{ marginRight: "5px" }} />
           Mua Gói
         </Link>
-        <div className="user-menu">
-          {(MyUser?.my_user?.vipLevel === "GOLD" || MyUser?.my_user?.vipLevel === "SILVER") && (
+      {/* USER MENU (hover desktop, click mobile) */}
+        <div
+          className="user-menu"
+          onMouseEnter={() => window.innerWidth > 768 && setOpenUserPanel(true)}
+          onMouseLeave={() => window.innerWidth > 768 && setOpenUserPanel(false)}
+          onClick={() => window.innerWidth <= 768 && setOpenUserPanel(v => !v)}
+        >
+          {/* vip crown nhỏ đặt cạnh avatar */}
+          {vip && (
             <FontAwesomeIcon
               icon={faCrown}
-              style={{
-                color: MyUser?.my_user?.vipLevel === "GOLD" ? "#FFD43B" : "#C0C0C0",
-                height: "20px", width: "40px",
-                position: "absolute", bottom: "30px",
-              }}
-              title={`VIP ${MyUser?.my_user?.vipLevel}`}
+              className={`vip-badge ${vip === 'GOLD' ? 'gold' : 'silver'}`}
+              title={`VIP ${vip}`}
             />
           )}
+
           <img
             src={avatarPreview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
             alt="avatar"
             className="user-avatar"
           />
-          <span className="username">
-            Xin chào, <strong>{MyUser?.my_user?.userName || "Người dùng"}</strong>
-          </span>
-          <ul className="dropdown-menu">
-            {isAdmin && <li onClick={() => setShowAddMovie(true)} style={{ color: "green" }}>Thêm phim</li>}
-            {isAdmin && <li><Link to="/control-panel">Bảng điều khiển</Link></li>}
-            {(isUser || isAdmin) && <li><Link to="/profile">Thông tin cá nhân</Link></li>}
-            {(isUser || isAdmin)
-              ? <li onClick={handleLogout} style={{ color: "red" }}>Đăng xuất</li>
-              : <li onClick={handleLogin} style={{ color: "green" }}>Đăng nhập</li>}
-          </ul>
+         
+
+        {openUserPanel && (
+          <div className="user-panel">
+            {/* Header */}
+            <div className="user-panel__header">
+              <img
+                src={avatarPreview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                alt="avatar"
+                className="user-panel__avatar"
+              />
+              <div className="user-panel__info">
+                <div className="user-panel__name">
+                  {isLoggedIn ? (MyUser?.my_user?.userName || "Người dùng") : "Khách"}
+                </div>
+                <div className="user-panel__sub">
+                  {isLoggedIn ? "Nâng cấp tài khoản để có trải nghiệm tốt hơn."
+                              : "Đăng nhập để đồng bộ lịch sử và danh sách yêu thích."}
+                </div>
+              </div>
+            </div>
+
+            {/* Nếu CHƯA login -> chỉ hiện nút đăng nhập, ẩn tất cả */}
+            {!isLoggedIn ? (
+              <>
+                <button
+                  className="user-panel__upgrade"
+                  onClick={() => navigate('/')}
+                >
+                  Đăng nhập
+                </button>
+                <div className="user-panel__arrow" />
+              </>
+            ) : (
+              <>
+                {/* ĐÃ login -> hiện đầy đủ */}
+                <button className="user-panel__upgrade" onClick={() => navigate('/buy-package')}>
+                  Nâng cấp ngay
+                </button>
+
+                <div className="user-panel__balance">
+                  <div className="balance-left">
+                    <FontAwesomeIcon icon={faWallet} />
+                    <span>Số dư</span>
+                    <b>{MyUser?.my_user?.balance ?? 0}</b>
+                    <span className="currency">R</span>
+                  </div>
+                  <button className="balance-add" style={{width:"30%"}} onClick={() => navigate('/buy-package')}>
+                    <FontAwesomeIcon icon={faPlus} /> Nạp
+                  </button>
+                </div>
+
+                {/* Actions */}
+                <ul className="user-panel__list">
+                  <li onClick={() => navigate('/favorites')}>
+                    <FontAwesomeIcon icon={faHeart} /> <span>Yêu thích</span>
+                  </li>
+                  <li onClick={() => navigate('/my-list')}>
+                    <FontAwesomeIcon icon={faListUl} /> <span>Danh sách</span>
+                  </li>
+                  <li onClick={() => navigate('/continue')}>
+                    <FontAwesomeIcon icon={faClock} /> <span>Xem tiếp</span>
+                  </li>
+                  <li onClick={() => navigate('/profile')}>
+                    <FontAwesomeIcon icon={faUser} /> <span>Tài khoản</span>
+                  </li>
+                  <li className="danger" onClick={handleLogout}>
+                    <FontAwesomeIcon icon={faRightFromBracket} /> <span>Thoát</span>
+                  </li>
+
+                  {/* Admin chỉ khi có quyền */}
+                  {isAdmin && (
+                    <>
+                      <li onClick={() => setShowAddMovie(true)} style={{ color: "var(--green-400,#22c55e)" }}>
+                        Thêm phim
+                      </li>
+                      <li onClick={() => navigate('/control-panel')}>
+                        Bảng điều khiển
+                      </li>
+                    </>
+                  )}
+                </ul>
+
+                <div className="user-panel__arrow" />
+              </>
+            )}
+          </div>
+        )}
+
         </div>
+
       </div>
     </div>
   </header>
