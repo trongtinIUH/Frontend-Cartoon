@@ -27,6 +27,15 @@ const UserService = {
         }
     },
 
+    getUserSubscriptionPackages: async (userId) => {
+        try {
+            const response = await axiosInstance.get(`${API_BASE_URL}/${userId}/subscription-packages`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
+
 };
 
 

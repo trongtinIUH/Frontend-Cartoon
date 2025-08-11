@@ -13,11 +13,16 @@ const featureTitles = [
 
 const BuyPackagePage = () => {
   const navigate = useNavigate();
+  const { MyUser } = useAuth();
   const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
 
   useEffect(() => {
     const fetchPackages = async () => {
+      if (!MyUser?.my_user) {
+        navigate('/');
+        return;
+      }
       try {
         const data = await SubscriptionPackageService.getAllPackages();
 
@@ -93,8 +98,8 @@ const BuyPackagePage = () => {
                               width: '20px',
                               height: '20px',
                               borderRadius: '50%',
-                              backgroundColor: hasFeature ? '#ff4b0aff' : 'gray',
-                              color: hasFeature ? 'white' : 'black',
+                              backgroundColor: hasFeature ? 'yellow' : 'gray',
+                              color: 'black',
                               fontWeight: 'bold',
                               fontSize: '0.75rem',
                               lineHeight: '18px',

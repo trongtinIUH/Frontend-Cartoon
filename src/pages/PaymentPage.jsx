@@ -1,12 +1,14 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SubscriptionPackageService from "../services/SubscriptionPackageService"; // nhớ chỉnh lại path import
 import { useAuth } from "../context/AuthContext";
 import PaymentQRCodeModal from "../models/PaymentQRCodeModal";
-import axios from "axios";
+import PaymentService from "../services/PaymentService";
+import { toast } from "react-toastify";
 
 const PaymentPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { MyUser } = useAuth();
   const { selectedPackage } = location.state || {};
 
@@ -17,12 +19,19 @@ const PaymentPage = () => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    if (!MyUser?.my_user) {
+      navigate('/');
+      return;
+    }
+  }, [MyUser, navigate]);
+
+  useEffect(() => {
     const fetchSameVipPackages = async () => {
       try {
         const data = await SubscriptionPackageService.getAllPackages();
         const filtered = data.filter(pkg => pkg.applicableVipLevel === selectedPackage.applicableVipLevel).sort((a, b) => a.durationInDays - b.durationInDays);
         setPackagesByVip(filtered);
-        setSelectedDurationPackage(selectedPackage); // mặc định chọn gói ban đầu
+        setSelectedDurationPackage(selectedPackage);
       } catch (error) {
         console.error("Lỗi khi lấy gói theo VIP:", error);
       }
@@ -37,37 +46,40 @@ const PaymentPage = () => {
     return <div className="text-white text-center mt-5">Không có gói nào được chọn.</div>;
   }
 
-const handleCreatePayment = async () => {
-  try {
-    const token = localStorage.getItem("idToken"); // token bạn lưu khi login
-    if (!token) {
-      alert("Vui lòng đăng nhập trước khi thanh toán!");
-      return;
-    }
+  const handleCreatePayment = async () => {
+    try {
+      const token = localStorage.getItem("idToken"); // token bạn lưu khi login
+      if (!token) {
+        alert("Vui lòng đăng nhập trước khi thanh toán!");
+        return;
+      }
 
-    const res = await axios.post(
-      'http://localhost:8080/payment/create',
-      {
+      const res = await PaymentService.createPayment({
         userId: MyUser.my_user.userId,
         packageId: selectedDurationPackage.packageId,
         returnUrl: "/main#/main",
-        cancelUrl: "/payment"
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+        cancelUrl: "/main#/payment"
+      });
+      setQrData(res);
+      setShowModal(true);
+    } catch (err) {
+      console.error("Lỗi khi tạo thanh toán:", err.response?.data || err.message);
+    }
+  };
+
+  const handleCancelPayment = async () => {
+    try {
+      if (!qrData?.orderCode) {
+        alert("Không có mã đơn hàng để hủy.");
+        return;
       }
-    );
-
-    setQrData(res.data);
-    setShowModal(true);
-  } catch (err) {
-    console.error("Lỗi khi tạo thanh toán:", err.response?.data || err.message);
-  }
-};
-
+      await PaymentService.cancelPayment(qrData.orderCode);
+      setShowModal(false);
+      setQrData(null);
+    } catch (err) {
+      console.error("Lỗi khi hủy thanh toán:", err.response?.data || err.message);
+    }
+  };
 
   return (
     <div className="container-fluid bg-dark text-white min-vh-100 py-5">
@@ -160,12 +172,12 @@ const handleCreatePayment = async () => {
 
                   <div className="d-flex justify-content-between bg-black">
                     <p>Tổng thanh toán</p>
-                    <h3 style={{ color: "#ff4b0aff" }} className="fw-bold">
+                    <h3 className="fw-bold text-warning">
                       {selectedDurationPackage?.amount.toLocaleString()} VND
                     </h3>
                   </div>
                   <div className="text-center mt-3">
-                    <button className="btn w-100 mt-3 text-white" style={{ backgroundColor: "#ff4b0aff", borderRadius: "999px" }}
+                    <button className="btn btn-warning w-100 mt-3 text-black fw-bold"
                       onClick={handleCreatePayment}>
                       Thanh toán
                     </button>
@@ -175,7 +187,7 @@ const handleCreatePayment = async () => {
             </div>
           </div>
         </div>
-        <PaymentQRCodeModal show={showModal} onClose={() => setShowModal(false)} qrData={qrData} />
+        <PaymentQRCodeModal show={showModal} onClose={handleCancelPayment} qrData={qrData} />
       </div>
     </div>
   );
