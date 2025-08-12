@@ -7,7 +7,7 @@
 .movie-title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #ffcc70;
+  color: #4bc1fa;
   text-shadow: 0 2px 16px #2228;
   
 }
@@ -28,7 +28,7 @@
   height: auto;
   aspect-ratio: 2/3;
   object-fit: cover;
-  border: 3px solid #ffcc70;
+  border: 3px solid #4bc1fa;
   transition: transform 0.3s;
   margin-left: auto;
   margin-right: auto;
@@ -47,8 +47,9 @@
 
 .glassmorphism-ep {
   background: rgba(42, 42, 64, 0.6);
-  border-left: 3px solid #ffcc70;
+  border-left: 3px solid #4bc1fa ;
   transition: background 0.2s;
+  cursor: pointer;
 }
 
 .glassmorphism-ep:hover {
@@ -75,7 +76,7 @@
 .top-movies-week {
   background: rgba(34, 36, 52, 0.84);
   min-height: 320px;
-  border-left: 5px solid #ffcc70;
+  border-left: 5px solid #4bc1fa ;
 }
 
 .top-movie-thumb {
@@ -164,19 +165,29 @@
 }
 
 .action-icons .action-item {
-  min-width: 54px;
+  min-width: 64px; /* tăng một chút để đủ chứa "Thêm vào" */
+  display: flex;
+  flex-direction: column; /* icon trên, chữ dưới */
+  align-items: center;
+  justify-content: center;
   color: #eee;
   opacity: 0.86;
   cursor: pointer;
+  white-space: nowrap; /* không cho xuống hàng */
   transition: color 0.15s, opacity 0.15s;
 }
+
 .action-icons .action-item:hover {
-  color: #ffcc70;
+  color: #4bc1fa;
   opacity: 1;
 }
-.action-icons i {
+
+.action-icons i,
+.action-icons svg {
   font-size: 1.2rem;
+  margin-bottom: 4px; /* cách icon với chữ một chút */
 }
+
 
 .movie-score {
   background: #262938;
@@ -274,4 +285,56 @@
     width: 100%;
     justify-content: center !important;
   }
+
+  .nav .nav-link {
+  cursor: pointer; /* hiện bàn tay khi hover */
+  transition: color 0.2s ease;
 }
+
+.nav .nav-link:hover {
+  color: #ffcc70; /* đổi vàng khi hover */
+}
+
+.nav .action-item {
+  color: #ffcc70; /* màu vàng khi active */
+}
+
+}
+
+/* Tab mặc định */
+.nav .nav-link {
+  cursor: pointer;               
+  color: #dfe6f2;                 
+  font-weight: 500;
+  transition: color 0.2s ease;      
+  border: none;                    
+  background: transparent;          
+}
+
+/* Hover */
+.nav .nav-link:hover {
+  color: #4bc1fa ;               
+}
+
+/* Active tab */
+.nav .action-item {
+  color: #4bc1fa  !important;       
+  font-weight: 600;
+}
+
+.nav .action-item {
+  position: relative;
+}
+
+.nav .action-item::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 3px;
+  background: #4bc1fa ;
+  border-radius: 2px;
+}
+
+

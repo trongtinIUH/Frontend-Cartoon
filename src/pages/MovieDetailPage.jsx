@@ -19,6 +19,9 @@ const MovieDetailPage = () => {
   const navigate = useNavigate();
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratings, setRatings] = useState([]); // danh sách rating của phim
+  const [tab, setTab] = useState("episodes");
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
 
   // Lấy tất cả đánh giá của phim
   useEffect(() => {
@@ -101,7 +104,7 @@ const MovieDetailPage = () => {
   const handleClickTopMovie = async (mid) => {
     try {
       await MovieService.incrementViewCount(mid);
-    } catch (_) {}
+    } catch (_) { }
     navigate(`/movie/${mid}`);
   };
   const handleOpenRatingModal = () => {
@@ -112,15 +115,15 @@ const MovieDetailPage = () => {
     setShowRatingModal(false);
   };
   //dánh giá phim
-  
-    const handleRateSubmit = async (value) => {
+
+  const handleRateSubmit = async (value) => {
     try {
       await MovieService.saveMovieRating(id, value, userId);
       // gọi lại API lấy chi tiết để cập nhật điểm trung bình + số lượt
-        const list = await MovieService.getAllMovieRatings(id);
-    setRatings(Array.isArray(list) ? list : []);
-  
-    setShowRatingModal(false);
+      const list = await MovieService.getAllMovieRatings(id);
+      setRatings(Array.isArray(list) ? list : []);
+
+      setShowRatingModal(false);
     } catch (error) {
       console.error("Đánh giá thất bại", error);
     }
@@ -132,13 +135,13 @@ const MovieDetailPage = () => {
   const performers = authors.filter((a) => a.authorRole === "PERFORMER");
 
   return (
-    <div className="movie-detail-page">
+    <div className="min-vh-100 bg-dark text-white" style={{ paddingTop: '100px', paddingBottom: '100px' }}>
       <div className="container py-5">
         <div className="row gx-5">
           {/* Cột trái: Thông tin phim */}
-          <div className="col-lg-8 mb-4">
+          <div className="col-lg-4 mb-4">
             <div className="movie-info-card glassmorphism p-4 shadow-lg rounded-4">
-              <div className="row align-items-center">
+              <div className="align-items-center">
                 <div className="col-md-4 text-center mb-3 mb-md-0">
                   <img
                     src={movie.thumbnailUrl || "https://via.placeholder.com/300x450"}
@@ -147,30 +150,29 @@ const MovieDetailPage = () => {
                   />
                 </div>
 
-                <div className="col-md-8">
-                  <h2 className="movie-title mb-3" style={{ color: "#ffd78bff" ,fontSize:"20px",textDecoration: "none" }}
-                  >{movie.title}</h2>
 
-                  <div className="movie-badges mb-2">
-                    {(movie.genres || []).map((g) => (
-                      <span className="badge genre-badge me-2 mb-1" key={g}>
-                        {g}
-                      </span>
-                    ))}
+                <h2 className="movie-title mb-3 mt-2" style={{ color: "#4bc1fa", fontSize: "20px", textDecoration: "none" }}
+                >{movie.title}</h2>
+
+                <div className="movie-badges mb-2">
+                  {(movie.genres || []).map((g) => (
+                    <span className="badge genre-badge me-2 mb-1" key={g}>
+                      {g}
+                    </span>
+                  ))}
+                </div>
+
+                <p className="mb-2 text-white" style={{ fontSize: "14px" }}>
+                  <strong>Mô tả:</strong> {movie.description || "Không có mô tả."}
+                </p>
+
+                <div className="d-flex flex-wrap mb-2 small" style={{ background: "transparent" }}>
+                  <div className="me-4">
+                    <strong>Ngày tạo:</strong>{" "}
+                    {movie.createdAt ? new Date(movie.createdAt).toLocaleString() : "-"}
                   </div>
-
-                  <p className="mb-2">
-                    <strong>Mô tả:</strong> {movie.description || "Không có mô tả."}
-                  </p>
-
-                  <div className="d-flex flex-wrap mb-2 small" style={{ background: "transparent" }}>
-                    <div className="me-4">
-                      <strong>Ngày tạo:</strong>{" "}
-                      {movie.createdAt ? new Date(movie.createdAt).toLocaleString() : "-"}
-                    </div>
-                    <div>
-                      <strong>Lượt xem:</strong> {movie.viewCount || 0}
-                    </div>
+                  <div>
+                    <strong>Lượt xem:</strong> {movie.viewCount || 0}
                   </div>
 
                   {/* Cast & Crew */}
@@ -221,99 +223,10 @@ const MovieDetailPage = () => {
                     </div>
                   )}
 
-                  {/* Thanh hành động */}
-                  <div className="movie-action-bar d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 mt-2 px-3 py-2 glassmorphism-action">
-                    <div
-                      className="d-flex align-items-center gap-4"
-                      style={{ background: "linear-gradient(120deg, #232526, #414345 80%)" }}
-                    >
-                      <button
-                        className="btn btn-xem-ngay d-flex align-items-center gap-2 px-4 py-2 fw-bold shadow-sm"
-                        onClick={handleWatchFirst}
-                      >
-                        <FontAwesomeIcon icon={faPlay} className="play-icon" />
-                        Xem Ngay
-                      </button>
-
-                      <div
-                        className="action-icons d-flex align-items-center gap-4 ms-2"
-                        style={{ background: "linear-gradient(120deg, #232526, #414345 80%)" }}
-                      >
-                        <div className="action-item text-center">
-                          <FontAwesomeIcon icon={faHeart} className="mb-1" />
-                          <div className="action-label small">Yêu thích</div>
-                        </div>
-                        <div className="action-item text-center">
-                          <FontAwesomeIcon icon={faPlus} className="mb-1" />
-                          <div className="action-label small">Thêm vào</div>
-                        </div>
-                        <div className="action-item text-center">
-                          <FontAwesomeIcon icon={faShare} className="mb-1" />
-                          <div className="action-label small">Chia sẻ</div>
-                        </div>
-                        <div className="action-item text-center">
-                          <FontAwesomeIcon icon={faCommentDots} className="mb-1" />
-                          <div className="action-label small">Bình luận</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="movie-score d-flex align-items-center gap-2 px-3 py-1 rounded-4">
-                      <span className="score-icon">
-                        <img
-                          src="https://cdn-icons-png.flaticon.com/512/616/616490.png"
-                          alt="star"
-                          width={20}
-                        />
-                      </span>
-                      <span className="fw-bold" style={{ fontSize: "1.15rem" }}>
-                        {avgRating.toFixed(1)}
-                      </span>
-                     <button
-                        type="button"
-                        className="btn-rate ms-1"
-                        onClick={handleOpenRatingModal}
-                      >
-                        Đánh giá
-                      </button>
-                    </div>                 
-                  </div>          
                 </div>
-                <RatingModal
-                  show={showRatingModal}
-                  movieTitle={movie.title}
-                  average={avgRating}
-                  total={totalRatings}
-                  onClose={handleCloseRatingModal}
-                 onSubmit={handleRateSubmit}
-                />
               </div>
-
-              {/* Danh sách tập phim */}
-              {movie.episodes && movie.episodes.length > 0 && (
-                <div className="episodes mt-4">
-                  <h5 className="mb-3">Danh sách tập phim</h5>
-                  <div className="row">
-                    {movie.episodes.map((ep) => (
-                      <div key={ep.episodeId} className="col-6 col-md-4 col-lg-3 mb-3">
-                        <div className="episode-card glassmorphism-ep p-2 rounded-3 shadow-sm">
-                          <div className="fw-bold">Tập {ep.episodeNumber}</div>
-                          <div className="small mb-2 text-truncate">{ep.title}</div>
-                          <button onClick={() => handleWatch(ep)} className="btn btn-watch w-100">
-                            Xem
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-
-          {/* Cột phải: Top phim tuần */}
-          <div className="col-lg-4">
-            <div className="top-movies-week glassmorphism p-4 rounded-4 shadow">
+            <div className="mt-4 bg-dark p-4 rounded-4">
               <h5 className="mb-3 text-warning">
                 <i className="bi bi-fire"></i> Top phim tuần này
               </h5>
@@ -326,7 +239,7 @@ const MovieDetailPage = () => {
                       className="d-flex align-items-center mb-3"
                       key={movieId || `topmovie-${idx}`}
                       onClick={() => movieId && handleClickTopMovie(movieId)}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: "pointer", borderRadius: "8px", padding: "10px", backgroundColor: "#1a1a1a" }}
                     >
                       <span className="top-rank me-3">{idx + 1}</span>
                       <img
@@ -338,7 +251,7 @@ const MovieDetailPage = () => {
                       />
                       <div>
                         <div className="fw-bold text-truncate">{item.title}</div>
-                        <div className="small text-muted">{item.viewCount} lượt xem</div>
+                        <div className="small text-truncate">{item.viewCount} lượt xem</div>
                       </div>
                     </li>
                   );
@@ -346,6 +259,182 @@ const MovieDetailPage = () => {
               </ol>
             </div>
           </div>
+
+          <div className="col-lg-8">
+            <div className="top-movies-week glassmorphism p-4 rounded-4 shadow">
+              {/* Thanh hành động */}
+              <div className="movie-action-bar d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 mt-2 px-3 py-2 glassmorphism-action">
+                <div
+                  className="d-flex align-items-center gap-4"
+                  style={{ background: "rgba(38, 38, 48, 0.88)" }}
+                >
+                  <button
+                    className="btn btn-watch w-100 d-flex align-items-center gap-2 px-4 py-2 fw-bold shadow-sm"
+                    onClick={handleWatchFirst}
+                  >
+                    <FontAwesomeIcon icon={faPlay} className="play-icon" />
+                    Xem Ngay
+                  </button>
+
+                  <div
+                    className="action-icons d-flex align-items-center gap-4 ms-2"
+                    style={{ background: "rgba(38, 38, 48, 0.88)" }}
+                  >
+                    <div className="action-item text-center">
+                      <FontAwesomeIcon icon={faHeart} className="mb-1" />
+                      <div className="action-label small">Yêu thích</div>
+                    </div>
+                    <div className="action-item text-center">
+                      <FontAwesomeIcon icon={faPlus} className="mb-1" />
+                      <div className="action-label small">Thêm vào</div>
+                    </div>
+                    <div className="action-item text-center">
+                      <FontAwesomeIcon icon={faShare} className="mb-1" />
+                      <div className="action-label small">Chia sẻ</div>
+                    </div>
+                    <div className="action-item text-center">
+                      <FontAwesomeIcon icon={faCommentDots} className="mb-1" />
+                      <div className="action-label small">Bình luận</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="movie-score d-flex align-items-center gap-2 px-3 py-1 rounded-4">
+                  <span className="score-icon">
+                    <img
+                      src="https://cdn-icons-png.flaticon.com/512/616/616490.png"
+                      alt="star"
+                      width={20}
+                    />
+                  </span>
+                  <span className="fw-bold" style={{ fontSize: "1.15rem" }}>
+                    {avgRating.toFixed(1)}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-rate ms-1"
+                    onClick={handleOpenRatingModal}
+                  >
+                    Đánh giá
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabs: Tập phim / Diễn viên */}
+              <div className="container mt-4 mb-3">
+                <ul className="nav">
+                  <li className="nav-item">
+                    <i
+                      className={`nav-link text-white ${tab === "episodes" ? "action-item" : ""}`}
+                      onClick={() => setTab("episodes")}
+                    >
+                      Tập phim
+                    </i>
+                  </li>
+                  <li className="nav-item">
+                    <i
+                      className={`nav-link text-white ${tab === "cast" ? "action-item" : ""}`}
+                      onClick={() => setTab("cast")}
+                    >
+                      Diễn viên
+                    </i>
+                  </li>
+                </ul>
+                <hr />
+
+                <div className="tab-content">
+                  {/* Tab: Tập phim */}
+                  {tab === "episodes" && (
+                    <div className="tab-pane fade show active">
+                      {/* Danh sách tập phim */}
+                      {movie.episodes && movie.episodes.length > 0 && (
+                        <div className="episodes mt-4">
+                          <h5 className="mb-3">Danh sách tập phim</h5>
+                          <div className="row">
+                            {movie.episodes.map((ep) => (
+                              <div key={ep.episodeId} className="col-6 col-md-4 col-lg-2 mb-3" onClick={() => handleWatch(ep)}>
+                                <div className="episode-card glassmorphism-ep p-2 rounded-3 shadow-sm">
+                                  <div className="fw-bold">Tập {ep.episodeNumber}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tab: Diễn viên */}
+                  {tab === "cast" && (
+                    <div className="tab-pane fade show active">
+                      {/* <div className="row g-3">
+                        {cast.map((c) => (
+                          <div className="col-6 col-md-4 col-lg-3" key={c.id}>
+                            <div className="card h-100 bg-dark-subtle bg-opacity-10 border-0">
+                              <div className="card-body text-center ratio ratio-1x1">
+                                <img
+                                  src={c.avatar}
+                                  alt={c.name}
+                                  className="rounded-top object-fit-cover"
+                                />
+                                <div className="fw-semibold text-white text-truncate align-self-center">
+                                  {c.name}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div> */}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="container mt-4">
+                <h5 className="mb-3 text-white">
+                  <i className="fa-regular fa-comment-dots me-2" /> Bình luận
+                </h5>
+
+                {/* Ô nhập bình luận */}
+                <div className="card bg-black border-0 mb-3">
+                  <div className="card-body">
+                    <textarea
+                      className="form-control bg-dark text-white border-secondary"
+                      rows="3"
+                      placeholder="Viết bình luận..."
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      maxLength={1000}
+                      style={{height: '100px', resize: 'none'}}
+                    />
+                    <div className="d-flex justify-content-between align-items-center mt-2 bg-black">
+                      <small className="text-white">{comment.length} / 1000</small>
+                      <i
+                        type="button"
+                        className="btn-rate ms-1"
+                        onClick={handleOpenRatingModal}
+                      >
+                        Gửi <i className="fa-solid fa-paper-plane ms-1" />
+                      </i>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Danh sách bình luận */}
+                <div className="list-group">
+                  
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <RatingModal
+            show={showRatingModal}
+            movieTitle={movie.title}
+            average={avgRating}
+            total={totalRatings}
+            onClose={handleCloseRatingModal}
+            onSubmit={handleRateSubmit}
+          />
         </div>
       </div>
     </div>

@@ -13,7 +13,6 @@
   width: min(560px, 92vw);
   border-radius: 18px;
   padding: 22px 20px 18px;
-  box-shadow: 0 12px 48px rgba(0,0,0,.35);
 }
 .glass {
   background: rgba(34, 36, 52, 0.88);

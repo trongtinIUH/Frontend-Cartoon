@@ -98,7 +98,7 @@ const BuyPackagePage = () => {
                               width: '20px',
                               height: '20px',
                               borderRadius: '50%',
-                              backgroundColor: hasFeature ? 'yellow' : 'gray',
+                              backgroundColor: hasFeature ? '#4bc1fa' : 'gray',
                               color: 'black',
                               fontWeight: 'bold',
                               fontSize: '0.75rem',

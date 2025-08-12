@@ -117,7 +117,7 @@ const PaymentPage = () => {
               </div>
 
               {/* Hình thức thanh toán */}
-              <div className="card bg-black p-3 text-white">
+              <div className="card bg-black p-3 text-white mb-3">
                 <h5>Chọn hình thức thanh toán</h5>
                 <div className="d-flex align-items-center bg-black p-3 rounded">
                   <input
@@ -177,7 +177,7 @@ const PaymentPage = () => {
                     </h3>
                   </div>
                   <div className="text-center mt-3">
-                    <button className="btn btn-warning w-100 mt-3 text-black fw-bold"
+                    <button className="btn btn-watch w-100 mt-3 text-black fw-bold"
                       onClick={handleCreatePayment}>
                       Thanh toán
                     </button>

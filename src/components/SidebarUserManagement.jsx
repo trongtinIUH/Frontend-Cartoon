@@ -6,7 +6,7 @@ const SidebarUserManagement = () => {
     const location = useLocation();
     const { MyUser } = useAuth();
     return (
-        <div className="sidebar bg-black text-white" style={{ width: '300px', height: '700px', marginTop: '100px', marginLeft: '100px', borderRadius: '50px' }}>
+        <div className="sidebar bg-black text-white" style={{ width: '300px', height: '650px', marginTop: '50px', marginLeft: '100px', borderRadius: '50px' , flex: '0 0 300px'}}>
             <div className="sidebar-header text-center py-4">
                 <h5 className="m-0">Quản lý tài khoản</h5>
             </div>
@@ -20,13 +20,12 @@ const SidebarUserManagement = () => {
                             <i className="fas fa-heart me-2"></i> Yêu thích
                         </Link>
                     </li> <hr />
-
                     <li className="nav-item">
                         <Link
                             to="/purchase-history"
                             className={`nav-link text-white ${location.pathname === '/purchase-history' ? 'active' : ''}`}
                         >
-                            <i className="fas fa-history me-2"></i> Lịch sử mua gói
+                            <i className="fas fa-history me-2"></i> Lịch sử thanh toán
                         </Link>
                     </li> <hr />
                     <li className="nav-item">
@@ -45,7 +44,7 @@ const SidebarUserManagement = () => {
                             <i className="fas fa-user me-2"></i> Tài khoản
                         </Link>
                     </li> <hr />
-                    <div className="sidebar-footer py-4 mt-5 ms-5 mb-5">
+                    <div className="sidebar-footer py-4 ms-5 mb-5">
                         <img
                             src={MyUser?.my_user?.avatarUrl || default_avatar}
                             alt="Avatar"
