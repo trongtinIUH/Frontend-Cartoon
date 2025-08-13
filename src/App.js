@@ -27,6 +27,7 @@ import PurchaseHistoryPage from './pages/PurchaseHistoryPage';
 import "react-toastify/dist/ReactToastify.css";
 import "./css/toastCSS/toast.css";
 import CustomToastCloseButton from "./utils/CustomToastCloseButton";
+import FavoritesPage from './pages/FavoritesPage';
 
 
 function App() {
@@ -69,6 +70,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/tim-kiem/:title" element={<SearchResultPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
+                    <Route path="/favorites" element={<FavoritesPage />} />
                     <Route path="/watch" element={<WatchPage />} />
                     <Route path="/buy-package" element={<BuyPackagePage />} />
                     <Route path="/payment" element={<PaymentPage />} />
