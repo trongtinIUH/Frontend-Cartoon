@@ -582,11 +582,12 @@
   .mobile-menu-toggle {
     display: block;
     font-size: 26px;
-    background: none;
+    background: transparent !important;
     border: none;
     margin-left: 8px;
     color: white;
     cursor: pointer;
+    outline: none;
   }
   .header-right {
     gap: 12px;
@@ -745,4 +746,51 @@
   .user-avatar{ width:32px; height:32px; }
   .user-panel{ right:-6px; width:92vw; max-width:360px; }
   .username{ display:none; }
+}
+
+
+/*thêm phần mua gói vào menu moblie*/
+/* helper visibility */
+.desktop-only { display: inline-flex; }
+.mobile-only  { display: none; }
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: flex !important; }
+  .buy-package-btn{ display: none !important; }
+}
+
+/* CTA trong menu 3 gạch (mobile) */
+/* hiện bản trong menu 3 gạch (nếu có .menu-cta) */
+.nav-links .menu-cta{ display: none; }
+@media (max-width:768px){
+  .nav-links .menu-cta{
+    display: flex;               /* hiện trong menu */
+    align-items: center;
+    font-weight: 700;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: linear-gradient(to right,#ff5f6d,#ff7f50);
+    color: #fff !important;
+    text-decoration: none;
+    margin-top: 8px;
+  }
+}
+
+/* giữ style cũ của nút ngoài desktop */
+.buy-package-btn {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(to right, #ff5f6d, #ff7f50);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: bold;
+  text-decoration: none;
+  margin-right: 10px;
+  transition: background 0.3s ease;
+}
+.buy-package-btn:hover {
+  background: linear-gradient(to right, #ff7f50, #ff5f6d);
+  color: #fff;
 }

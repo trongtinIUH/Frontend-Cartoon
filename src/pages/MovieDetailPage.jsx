@@ -105,7 +105,7 @@ const MovieDetailPage = () => {
   }, []);
 
   const handleWatch = (episode) => {
-    navigate("/watch", { state: { episode } });
+    navigate("/watch", { state: { episode, movie, authors, episodes: movie.episodes || [] } });
   };
 
   const handleWatchFirst = () => {

@@ -160,6 +160,10 @@ useEffect(() => {
           <Link to="/main" onClick={reloadMainPage}>Trang chủ</Link>
           <Link to="/main" onClick={reloadMainPage}>Chủ đề</Link>
           <Link to="/main" onClick={reloadMainPage}>Phim bộ</Link>
+          <Link to="/buy-package"  className="menu-cta" 
+          onClick={() => setIsMobileMenuOpen(false)}>
+          Mua gói
+          </Link>
           {/* Thể loại dropdown (PC hover, mobile click) */}
           <div
             className="genre-menu-wrapper"
