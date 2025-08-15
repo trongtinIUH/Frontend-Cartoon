@@ -7,8 +7,8 @@ const WishlistService = {
   addToWishlist: async (userId, movieId) => {
     try {
       const response = await axiosInstance.post(`${API_BASE_URL}/add`, {
-        userId,
-        movieId,
+          userId,
+          movieId,
       });
       return response.data;
     } catch (error) {
@@ -19,9 +19,11 @@ const WishlistService = {
   // Xóa phim khỏi danh sách yêu thích
   removeFromWishlist: async (userId, movieId) => {
     try {
-      const response = await axiosInstance.post(`${API_BASE_URL}/remove`, {
-        userId,
-        movieId,
+      const response = await axiosInstance.delete(`${API_BASE_URL}/remove`, {
+        data: {
+          userId,
+          movieId,
+        },
       });
       return response.data;
     } catch (error) {
@@ -38,6 +40,18 @@ const WishlistService = {
       console.error('Error fetching wishlist:', error);
     }
   },
+
+  // Kiểm tra xem phim có trong danh sách yêu thích không
+  existsInWishlist: async (userId, movieId) => {
+    try {
+      const response = await axiosInstance.get(`${API_BASE_URL}/exists`, {
+        params: { userId, movieId },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error checking wishlist existence:', error);
+    }
+  }
 };
 
 export default WishlistService;

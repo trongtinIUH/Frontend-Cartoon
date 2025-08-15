@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import SidebarUserManagement from "../components/SidebarUserManagement";
 import { toast } from "react-toastify";
@@ -31,6 +31,17 @@ const FavoritesPage = () => {
     fetchWishlist();
   }, [MyUser]);
 
+  const handleRemoveFromWishlist = async (movieId) => {
+    try {
+      await WishlistService.removeFromWishlist(MyUser.my_user.userId, movieId);
+      setWishlist((prevWishlist) => prevWishlist.filter((movie) => movie.movieId !== movieId));
+      toast.success('Xóa khỏi danh sách yêu thích');
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      toast.error('Xóa khỏi danh sách yêu thích thất bại');
+    }
+  };
+
   return (
     <div className="d-flex bg-dark text-white min-vh-100 py-5 px-5">
       <SidebarUserManagement />
@@ -46,12 +57,14 @@ const FavoritesPage = () => {
                 <div className="card bg-transparent border-0">
                   {/* Poster */}
                   <div className="position-relative rounded-3 overflow-hidden shadow-sm">
-                    <img
-                      src={movie.moviePosterUrl || default_avatar}
-                      alt={movie.movieTitle}
-                      className="w-100 d-block"
-                      style={{ aspectRatio: '2 / 3', objectFit: 'cover' }}
-                    />
+                    <Link to={`/movie/${movie.movieId}`} className="position-relative rounded-3 overflow-hidden shadow-sm d-block">
+                      <img
+                        src={movie.moviePosterUrl || default_avatar}
+                        alt={movie.movieTitle}
+                        className="w-100 d-block"
+                        style={{ aspectRatio: '2 / 3', objectFit: 'cover' }}
+                      />
+                    </Link>
 
                     {/* Nút X xoá */}
                     <button
@@ -59,6 +72,7 @@ const FavoritesPage = () => {
                       className="btn btn-sm btn-dark bg-opacity-75 border-0 position-absolute top-0 end-0 m-2 rounded-circle"
                       aria-label="Remove from wishlist"
                       style={{ width: 28, height: 28, lineHeight: '28px', padding: 0 }}
+                      onClick={() => handleRemoveFromWishlist(movie.movieId)}
                     >
                       ×
                     </button>

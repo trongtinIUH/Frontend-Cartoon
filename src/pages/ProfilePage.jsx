@@ -109,14 +109,14 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="col-12">
-            <span type="submit" className="btn btn-warning px-4 py-2 fw-bold text-black">
+          <div className="col-3">
+            <button type="submit" className="btn btn-watch px-4 py-2 fw-bold text-black">
               Cập nhật
-            </span>
+            </button>
           </div>
 
           <div className="col-12 text-white">
-            Đổi mật khẩu, nhấn vào <a href="/change-password" className="text-warning">đây</a>
+            Đổi mật khẩu, nhấn vào <a href="/change-password" style={{ color: '#4bc1fa', textDecoration: 'none' }}>đây</a>
           </div>
         </form>
       </div>

@@ -6,9 +6,10 @@ import SubscriptionPackageService from '../services/SubscriptionPackageService';
 const featureTitles = [
   "Phim bộ châu Á mới nhất, chiếu song song",
   "Phim lẻ, anime, thiếu nhi, show đặc sắc",
-  "Xem Full HD",
-  "Không quảng cáo",
-  "Tải xuống"
+  "Xem phim chất lượng 4K",
+  "Xem phim trên nhiều thiết bị",
+  "Không giới hạn lượt xem",
+  "Không quảng cáo trong VOD"
 ];
 
 const BuyPackagePage = () => {
@@ -35,11 +36,8 @@ const BuyPackagePage = () => {
           }
         });
 
-        // Sắp xếp SILVER trước GOLD
-        const sorted = Object.values(grouped).sort((a, b) => {
-          const order = { 'SILVER': 0, 'GOLD': 1 };
-          return order[a.applicableVipLevel] - order[b.applicableVipLevel];
-        });
+        // Sắp xếp theo amount
+        const sorted = Object.values(grouped).sort((a, b) => a.amount - b.amount);
 
         setPackages(sorted);
       } catch (error) {
@@ -58,32 +56,39 @@ const BuyPackagePage = () => {
 
 
   return (
-    <div className="min-vh-100 bg-dark text-white" style={{ paddingTop: '100px', paddingBottom: '50px' }}>
+    <div className="min-vh-100 bg-dark text-white" style={{ paddingTop: '50px', paddingBottom: '50px' }}>
       <div className="container">
-        {/* Page Header */}
-        <div className="text-center mb-5">
-          <h1 className="display-4 fw-bold mb-3">
-            <span className="text-warning">Nâng cấp</span>
-            <span className="text-info"> VIP</span>
-          </h1>
-          <p className="lead text-light">Trải nghiệm xem phim tuyệt vời nhất với các gói VIP của chúng tôi</p>
-        </div>
-
         {/* Package Selection */}
         <div className="mb-5">
           <div className="table-responsive mt-5">
             <table className="table table-striped text-center table-dark align-middle">
-              <thead>
+              <thead className="p-0 m-0">
                 <tr>
-                  <th className="text-start"><h2>Mua gói</h2></th>
+                  <th className="text-start">
+                    <h2 className="mb-0 text-white">Mua gói</h2>
+                  </th>
                   {packages.map((pkg) => (
-                    <th key={pkg.id}>
-                      <div className="fw-bold fs-5">{pkg.applicableVipLevel}</div>
-                      <div>{pkg.amount.toLocaleString()}vnđ / tháng</div>
+                    <th key={pkg.id} className="text-center align-middle p-0 m-0">
+                      <img
+                        src={pkg.namePackage}
+                        alt={pkg.namePackage}
+                        className="img-fluid rounded-top"
+                        style={{
+                          width: '100%',        
+                          height: '150px',
+                          objectFit: 'cover',
+                          display: 'block'
+                        }}
+                      />
+                      <div className="fw-bold text-white">
+                        {pkg.amount.toLocaleString('vi-VN')}vnđ
+                      </div>
+                      <div className="text-secondary small">1 tháng</div>
                     </th>
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {featureTitles.map((title, index) => (
                   <tr key={index}>

@@ -13,6 +13,7 @@ import default_avatar from "../image/default_avatar.jpg"
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
+import WishlistService from "../services/WishlistService";
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
@@ -36,6 +37,7 @@ const MovieDetailPage = () => {
   const size = 10;
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
 
   // Lấy tất cả đánh giá của phim
   useEffect(() => {
@@ -230,6 +232,35 @@ const MovieDetailPage = () => {
     }
   };
 
+  // Thêm vào danh sách yêu thích
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!userId || !id) return;
+      const exists = await WishlistService.existsInWishlist(userId, id);
+      setIsInWishlist(exists);
+    };
+
+    checkWishlist();
+  }, [userId, id]);
+
+  const handleToggleWishlist = async () => {
+    if (!id) return;
+    try {
+      if (isInWishlist) {
+        await WishlistService.removeFromWishlist(userId, id);
+        toast.success("Đã xóa khỏi danh sách yêu thích");
+        setIsInWishlist(false);
+      } else {
+        await WishlistService.addToWishlist(userId, id);
+        toast.success("Đã thêm vào danh sách yêu thích");
+        setIsInWishlist(true);
+      }
+    } catch (error) {
+      console.error("Lỗi thao tác wishlist:", error);
+      toast.error("Thao tác thất bại");
+    }
+  };
+
   if (!movie) return <div className="text-center mt-5">Đang tải thông tin phim...</div>;
 
   const directors = authors.filter((a) => a.authorRole === "DIRECTOR");
@@ -381,7 +412,10 @@ const MovieDetailPage = () => {
                     className="action-icons d-flex align-items-center gap-4 ms-2"
                     style={{ background: "rgba(38, 38, 48, 0.88)" }}
                   >
-                    <div className="action-item text-center">
+                    <div className="action-item text-center"
+                      onClick={handleToggleWishlist}
+                      style={{ color: isInWishlist ? "#4bc1fa" : "" }}
+                    >
                       <FontAwesomeIcon icon={faHeart} className="mb-1" />
                       <div className="action-label small">Yêu thích</div>
                     </div>
@@ -490,7 +524,7 @@ const MovieDetailPage = () => {
                 <h5 className="text-white">
                   <i className="fa-regular fa-comment-dots me-2" /> Bình luận
                 </h5>
-                <small className="text-white mb-3">Vui lòng <a href="/" style={{color:'#4bc1fa', textDecoration: 'none' }} className="fw-bold">đăng nhập</a> để tham gia bình luận.</small>
+                <small className="text-white mb-3">Vui lòng <a href="/" style={{ color: '#4bc1fa', textDecoration: 'none' }} className="fw-bold">đăng nhập</a> để tham gia bình luận.</small>
                 {/* Ô nhập bình luận */}
                 <div className="card bg-black border-0 mb-3 mt-3">
                   <div className="card-body">
