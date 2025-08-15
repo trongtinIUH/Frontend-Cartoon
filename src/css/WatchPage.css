@@ -1,59 +1,164 @@
-/* Tổng thể */
-.watch-page {
-  background-color: #141414;
-  min-height: 100vh;
-  padding: 2rem;
+/* ====== Base container ====== */
+.watch.layout { background:#0b1117; color:#e9edf7; min-height:100vh; padding:16px 0 40px; padding-top: 50px; }
+.watch-empty{ color:#fff; padding:40px; }
+.player-wrap, .watch-grid, .watch-bread { max-width:1280px; margin:0 auto; }
+
+/* ====== Bread ====== */
+.watch-bread{ display:flex; align-items:center; gap:12px; padding:8px 16px; }
+.btn-circle{ width:36px; height:36px; border-radius:50%; background:#1b2532; color:#fff;
+  display:flex; align-items:center; justify-content:center; text-decoration:none; }
+.btn-circle:hover{ background:#525353 !important; }
+.watch-title{ font-size:18px; font-weight:800; margin:0; }
+.watch-title .sub{ font-size:14px; opacity:.8; margin-left:6px; }
+
+/* ====== Player ====== */
+.player-wrap{ padding:0 16px; }
+.player-frame {
+  border-radius: 14px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  transition: all 0.4s ease; /* mượt khi chuyển */
+  transform-origin: bottom right; /* thu nhỏ từ góc phải */
+}
+
+.player-frame.is-sticky {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 720px;
+  max-width: 60vw;
+  z-index: 1100;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0,0,0,.5);
+  transform: scale(0.35) translate(-100%, -100%); /* scale mượt */
+  cursor: move;
+}
+.player-frame.is-sticky.dragging {
+  transform: none; /* để kéo chính xác */
+}
+
+.player-placeholder {
+  width: 100%;
+  transition: height 0.4s ease;
+}
+
+.player-frame .video-js{ width:100%; height:auto; aspect-ratio:16/9; background:#000; }
+
+@media (max-width:992px){
+  .player-frame.is-sticky{ position:static; width:100%; box-shadow:none; }
+  .player-placeholder{ height:0 !important; }
+}
+
+/* ====== Control bar ====== */
+.player-controls{ display:flex; align-items:center; gap:12px; padding:10px 4px 0; margin:8px 12px 0; flex-wrap:wrap; }
+.pc-item{ display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:14px;
+  color:#cfe1ff; background:transparent; border:0; padding:6px 10px; border-radius:10px; cursor:pointer; }
+.pc-item:hover{ background:rgba(255,255,255,.06); }
+.pc-item.active{ color:#ffd43b; }
+.pc-item.danger{ color:#ff8b8b; }
+.pc-toggle{ display:flex; align-items:center; gap:8px; color:#b9c5d6; font-weight:600; }
+.pc-spacer{ flex:1 1 auto; min-width:40px; }
+.pc-next{ border:0; border-radius:10px; padding:8px 12px; font-weight:800; cursor:pointer;
+  background:linear-gradient(90deg,#e11d48,#f97316); color:#fff; display:inline-flex; align-items:center; gap:8px; flex:0 0 auto; }
+
+@media (max-width:768px){
+  .pc-item span{ display:none; }
+  .pc-item{ padding:6px; gap:6px; }
+  .pc-toggle{ gap:6px; }
+  .pc-next{ width:100%; justify-content:center; }
+}
+
+/* ====== Grid ====== */
+.watch-grid{ display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:18px; padding:12px 16px 0; }
+@media (max-width:1280px){ .watch-grid{ grid-template-columns:minmax(0,1fr) 320px; } }
+@media (max-width:992px){ .watch-grid{ grid-template-columns:1fr; } .wg-side{ order:2; } .wg-main{ order:1; } }
+
+/* ====== Info ====== */
+.info-card{ display:flex; gap:16px; background:#111827; border:1px solid rgba(255,255,255,.06);
+  border-radius:12px; padding:12px; }
+.info-card .poster img{ width:105px; height:140px; object-fit:cover; border-radius:10px; }
+.info-card .meta{ flex:1; min-width:0; }
+.info-card .name a{ color:#eaf1ff; text-decoration:none; font-weight:900; }
+.info-card .alias{ color:#a5b4c5; margin:2px 0 6px; }
+.tags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.chip{ font-size:12px; padding:2px 8px; border-radius:999px; background:#1f2937; border:1px solid rgba(255,255,255,.08); }
+.chip.ghost{ background:rgba(255,255,255,.06); }
+.desc{ color:#c8d2e1; line-height:1.5; }
+
+@media (max-width:768px){
+  .info-card{ padding:10px; }
+  .info-card .poster img{ width:84px; height:112px; }
+  .watch-title{ font-size:16px; }
+}
+
+/* ====== Episodes ====== */
+.episodes-box{ background:#111827; border:1px solid rgba(255,255,255,.06); border-radius:12px; margin-top:12px; }
+.eb-head{ display:flex; align-items:center; justify-content:space-between; padding:10px 12px; }
+.tabs{ display:flex; gap:8px; }
+.tab{ padding:6px 10px; border-radius:10px; border:0; background:#1b2532; color:#cfe1ff; font-weight:700; }
+.tab.active{ background:#223043; }
+.right-tools{ display:flex; align-items:center; gap:6px; color:#a5b4c5; }
+
+.eb-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; padding:10px; }
+.ep-card{ background:#0f1621; border:1px solid rgba(255,255,255,.06); border-radius:10px; overflow:hidden; cursor:pointer; text-align:left; }
+.ep-card.active{ outline:2px solid #38bdf8; }
+.ep-card .thumb{ position:relative; aspect-ratio:16/9; background:#000; }
+.ep-card .thumb img{ position:absolute; width:100%; height:100%; object-fit:cover; inset:0; }
+.ep-card .thumb .play{ position:absolute; left:8px; top:8px; color:#fff; opacity:.9; }
+.ep-card .ep-meta{ padding:8px; display:flex; flex-direction:column; gap:4px; }
+.ep-no{ font-weight:800; color:#eaf1ff; }
+.ep-title{ font-size:12px; color:#a5b4c5; }
+
+@media (max-width:768px){
+  .eb-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+/* ====== Comments ====== */
+.comments{ background:#111827; border:1px solid rgba(255,255,255,.06); border-radius:12px; margin-top:12px; }
+.c-head{ display:flex; align-items:center; justify-content:space-between; padding:10px 12px; }
+.c-input{ display:flex; gap:10px; align-items:flex-start; padding:10px 12px 14px; }
+.c-input img{ width:36px; height:36px; border-radius:50%; }
+.c-input textarea{ flex:1; background:#0f1621; border:1px solid rgba(255,255,255,.08); color:#e9edf7; border-radius:10px; padding:10px; resize:vertical; }
+.btn-primary{ padding:8px 12px; border-radius:10px; border:0; background:linear-gradient(90deg,#e11d48,#f97316); color:#fff; font-weight:900; }
+
+/* ====== Sidebar ====== */
+.wg-side .rate-box{ background:#111827; border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:14px; }
+.rate-box .score{ font-size:28px; font-weight:900; }
+.rate-box .act{ margin-top:8px; display:flex; gap:8px; }
+.rate-box .act button{ background:#1b2532; border:0; color:#cfe1ff; padding:6px 10px; border-radius:10px; font-weight:700; }
+
+.actors-box,.suggest-box{ margin-top:12px; background:#111827; border:1px solid rgba(255,255,255,.06); border-radius:12px; }
+.box-head{ padding:10px 12px; font-weight:800; }
+.actors{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:10px; }
+.actor{ text-decoration:none; color:#eaf1ff; display:flex; gap:8px; align-items:center; }
+.actor img{ width:48px; height:64px; object-fit:cover; border-radius:10px; }
+
+.suggest{ display:flex; flex-direction:column; gap:10px; padding:10px; }
+.s-item{ display:flex; gap:10px; text-decoration:none; color:#eaf1ff; background:#0f1621; border-radius:10px; overflow:hidden; }
+.s-item img{ width:96px; height:64px; object-fit:cover; }
+.s-meta .t{ font-weight:800; }
+.s-meta .a{ font-size:12px; color:#a5b4c5; }
+.s-meta .line{ margin-top:4px; display:flex; gap:6px; flex-wrap:wrap; }
+
+.watch-info-top {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  background: #111827;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
   color: #fff;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: opacity 0.3s ease;
 }
-
-/* Tiêu đề tập phim */
-.watch-page h2 {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  color: #e50914; /* đỏ đặc trưng Netflix */
+.watch-info-top h2 {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
 }
-
-/* Mô tả tập */
-.watch-page p {
-  font-size: 1rem;
-  color: #ccc;
-  margin-top: 1.5rem;
-  line-height: 1.6;
-}
-
-/* Video */
-.watch-page video {
-  width: 100%;
-  height: auto;
-  max-height: 70vh;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.6);
-  background-color: #000;
-}
-
-/* Responsive nhỏ */
-@media (max-width: 768px) {
-  .watch-page {
-    padding: 1rem;
-  }
-
-  .watch-page h2 {
-    font-size: 1.5rem;
-  }
-
-  .watch-page p {
-    font-size: 0.95rem;
-  }
-}
-.video-player {
-  transition: filter 0.2s ease;
-}
-.video-js {
-  width: 100%;
-  max-height: 70vh;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.6);
-  background-color: #000;
+.watch-info-top .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
 }
