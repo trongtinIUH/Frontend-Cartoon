@@ -136,7 +136,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
             <div className="search-container">
               <input
                 type="text"
-                placeholder="Tìm phim..."
+                placeholder="Tìm kiếm phim, diễn viên"
                 value={searchText}
                 onChange={async (e) => {
                   const value = e.target.value;
@@ -183,13 +183,16 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
             {/* Main Nav */}
             <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
               <Link to="/main" onClick={reloadMainPage}>
-                Trang chủ
-              </Link>
-              <Link to="/main" onClick={reloadMainPage}>
                 Chủ đề
               </Link>
               <Link to="/main" onClick={reloadMainPage}>
+                Phim lẻ
+              </Link>
+              <Link to="/main" onClick={reloadMainPage}>
                 Phim bộ
+              </Link>
+              <Link to="/main" onClick={reloadMainPage}>
+                Xem chung
               </Link>
               <Link
                 to="/buy-package"

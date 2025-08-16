@@ -57,7 +57,7 @@ const MovieSlider = () => {
   if (featuredMovies.length === 0) return null;
 
   return (
-    <div id="top_slide" style={{position: 'relative', minHeight: 500, paddingTop: 70}}>
+    <div id="top_slide" style={{position: 'relative', minHeight: 500, paddingTop: 5}}>
       <div className="slide-wrapper top-slide-wrap" style={{position: 'relative', minHeight: 500}}>
         <Carousel
           activeIndex={activeIndex}
@@ -69,7 +69,7 @@ const MovieSlider = () => {
           className="top-slide-main"
         >
           {featuredMovies.map((movie, idx) => (
-            <Carousel.Item key={movie.movieId} style={{height: 500, position: "relative"}}>
+            <Carousel.Item key={movie.movieId} style={{height: 600, position: "relative"}}>
               {/* Background blur */}
               <div
                 className="background-fade"
@@ -214,7 +214,7 @@ const MovieSlider = () => {
                           style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: 54, height: 54, fontSize: 28,
-                            backgroundColor: '#e50914', borderRadius: '50%',
+                            backgroundColor: '#4bc1fa', borderRadius: '50%',
                             color: 'white', boxShadow: '0 4px 18px #000a', transition: 'transform 0.23s'
                           }}>
                       <FontAwesomeIcon icon={faPlay}/>
