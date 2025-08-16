@@ -1,14 +1,14 @@
 // components/Logo.jsx
-export default function Logo({ type = "wordmark", size = 40, onClick }) {
+export default function Logo({ type = "wordmark", size = 80, onClick }) {
   const style = { display: "inline-flex", alignItems: "center", gap: 10, cursor: onClick ? "pointer" : "default" };
   if (type === "icon") {
     return (
       <img
-        src={`${process.env.PUBLIC_URL}/image/cartoontoo-icon.svg`}
+        src={`${process.env.PUBLIC_URL}/image/cartoonToo.png`}
         alt="CartoonToo"
         width={size}
         height={size}
-        style={{ borderRadius: 12 }}
+        style={{ borderRadius: 7 }}
         onClick={onClick}
       />
     );
@@ -16,7 +16,7 @@ export default function Logo({ type = "wordmark", size = 40, onClick }) {
   return (
     <span style={style} onClick={onClick}>
       <img
-        src={`${process.env.PUBLIC_URL}/image/cartoontoo-icon.svg`}
+        src={`${process.env.PUBLIC_URL}/image/cartoonToo.png`}
         alt="CartoonToo"
         width={size}
         height={size}

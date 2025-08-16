@@ -1,7 +1,7 @@
 /* ====== Base container ====== */
-.watch.layout { background:#0b1117; color:#e9edf7; min-height:100vh; padding:16px 0 40px; padding-top: 50px; }
+.watch.layout { background:#0b1117; color:#e9edf7; min-height:100vh; padding:16px 0 40px; padding-top: 80px; }
 .watch-empty{ color:#fff; padding:40px; }
-.player-wrap, .watch-grid, .watch-bread { max-width:1280px; margin:0 auto; }
+.player-wrap, .watch-grid, .watch-bread { max-width:1048px; margin:0 auto; }
 
 /* ====== Bread ====== */
 .watch-bread{ display:flex; align-items:center; gap:12px; padding:8px 16px; }
@@ -27,6 +27,7 @@
   right: 16px;
   bottom: 16px;
   width: 720px;
+  height: 450px;
   max-width: 60vw;
   z-index: 1100;
   border-radius: 12px;
@@ -109,6 +110,12 @@
 .ep-card .ep-meta{ padding:8px; display:flex; flex-direction:column; gap:4px; }
 .ep-no{ font-weight:800; color:#eaf1ff; }
 .ep-title{ font-size:12px; color:#a5b4c5; }
+
+.eb-grid :hover {
+  background:#1b2532; color:#fff;
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
 
 @media (max-width:768px){
   .eb-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }

@@ -114,11 +114,16 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
     <>
       <header className={`main-header ${showHeader ? "" : "hidden-header"}`}>
         <div className="header-container">
-          {/* --- LEFT: Logo + Menu --- */}
+          {/* --- LEFT: Logo + Menu + Search + Nav --- */}
           <div className="header-left">
             <Link to="/main" className="logo-wrap" onClick={reloadMainPage}>
-              <Logo type="icon" size={40} />
+              <img
+                src={`${process.env.PUBLIC_URL}/image/cartoonToo.png`}
+                alt=""
+                style={{ borderRadius: 7, width: 50, height: 40 }}
+              />
             </Link>
+
             {/* Hamburger only on mobile */}
             <button
               className="mobile-menu-toggle"
@@ -126,6 +131,8 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
             >
               ☰
             </button>
+
+            {/* Search */}
             <div className="search-container">
               <input
                 type="text"
@@ -134,27 +141,37 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                 onChange={async (e) => {
                   const value = e.target.value;
                   setSearchText(value);
-                  debouncedSearch(value);
+                  debouncedSearch?.(value);
                   if (value.trim() === "") {
-                    setSuggestions([]);
-                    setShowSuggestions(false);
+                    setSuggestions?.([]);
+                    setShowSuggestions?.(false);
                     return;
                   }
                 }}
                 onFocus={() => {
-                  if (suggestions.length > 0) setShowSuggestions(true);
+                  if (suggestions?.length > 0) setShowSuggestions?.(true);
                 }}
                 onBlur={() => {
-                  setTimeout(() => setShowSuggestions(false), 150);
+                  // trì hoãn để kịp click item
+                  setTimeout(() => setShowSuggestions?.(false), 150);
                 }}
                 className="search-input"
               />
-              {showSuggestions && suggestions.length > 0 && (
+
+              {showSuggestions && suggestions?.length > 0 && (
                 <ul className="search-suggestions">
                   {suggestions.slice(0, 6).map((movie) => (
                     <li key={movie.movieId} className="suggestion-item">
-                      <Link to={`/movie/${movie.movieId}`} className="suggestion-link">
-                        <img src={movie.thumbnailUrl} alt={movie.title} className="suggestion-img" />
+                      <Link
+                        to={`/movie/${movie.movieId}`}
+                        className="suggestion-link"
+                        onClick={() => setShowSuggestions?.(false)}
+                      >
+                        <img
+                          src={movie.thumbnailUrl}
+                          alt={movie.title}
+                          className="suggestion-img"
+                        />
                         <span className="suggestion-title">{movie.title}</span>
                       </Link>
                     </li>
@@ -162,24 +179,44 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                 </ul>
               )}
             </div>
+
+            {/* Main Nav */}
             <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
-              <Link to="/main" onClick={reloadMainPage}>Trang chủ</Link>
-              <Link to="/main" onClick={reloadMainPage}>Chủ đề</Link>
-              <Link to="/main" onClick={reloadMainPage}>Phim bộ</Link>
-              <Link to="/buy-package" className="menu-cta"
-                onClick={() => setIsMobileMenuOpen(false)}>
+              <Link to="/main" onClick={reloadMainPage}>
+                Trang chủ
+              </Link>
+              <Link to="/main" onClick={reloadMainPage}>
+                Chủ đề
+              </Link>
+              <Link to="/main" onClick={reloadMainPage}>
+                Phim bộ
+              </Link>
+              <Link
+                to="/buy-package"
+                className="menu-cta"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 Mua gói
               </Link>
+
               {/* Thể loại dropdown (PC hover, mobile click) */}
               <div
                 className="genre-menu-wrapper"
                 onMouseEnter={() => !isMobileMenuOpen && setShowGenres(true)}
                 onMouseLeave={() => !isMobileMenuOpen && setShowGenres(false)}
-                onClick={() => isMobileMenuOpen && setShowGenres(!showGenres)}
+                onClick={() =>
+                  isMobileMenuOpen && setShowGenres((prev) => !prev)
+                }
               >
-                <span style={{ fontWeight: "500", cursor: "pointer" }}>Thể loại</span>
+                <span style={{ fontWeight: 500, cursor: "pointer" }}>
+                  Thể loại
+                </span>
+
                 {showGenres && (
-                  <div className="genres-dropdown" onClick={e => e.stopPropagation()}>
+                  <div
+                    className="genres-dropdown"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <ul>
                       {GENRES.map((genre, index) => (
                         <li key={index}>
@@ -192,27 +229,41 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
               </div>
             </nav>
           </div>
-          {/* --- RIGHT: Search + Filter + Mua Gói + User --- */}
+
+          {/* --- RIGHT: Filter + Buy + User --- */}
           <div className="header-right">
-            <div className="filter-toggle" onClick={() => setShowFilter(true)} title="Lọc phim">
-              <Funnel size={22} color="#fff" style={{ cursor: "pointer", marginLeft: "10px" }} />
-            </div>
-            <Link to="/buy-package" className="btn btn-watch">
-              <FontAwesomeIcon icon={faWallet} style={{ marginRight: "5px" }} />
+            {/* Lọc phim (sau dùng nơi khác, giữ nút để mở modal) */}
+
+            {/* Mua Gói */}
+            <Link to="/buy-package" className="buy-package-btn">
+              <FontAwesomeIcon
+                icon={faWallet}
+                style={{ marginRight: "5px" }}
+              />
               Mua Gói
             </Link>
+
             {/* USER MENU (hover desktop, click mobile) */}
             <div
               className="user-menu"
-              onMouseEnter={() => window.innerWidth > 768 && setOpenUserPanel(true)}
-              onClick={() => window.innerWidth <= 768 && setOpenUserPanel(v => !v)}
+              onMouseEnter={() =>
+                window.innerWidth > 768 && setOpenUserPanel(true)
+              }
+              onClick={() =>
+                window.innerWidth <= 768 &&
+                setOpenUserPanel((v) => !v)
+              }
             >
+              {/* VIP badge cạnh avatar */}
 
-              <button className="btn btn-light dropdown-toggle fw-bold">
-                <i className="fa-solid fa-user me-2"></i>
-                {MyUser?.my_user?.userName || "Thành viên"}
-              </button>
 
+              <img
+                src={avatarPreview || default_avatar}
+                alt="avatar"
+                className="user-avatar"
+              />
+
+              {/* Panel */}
               {openUserPanel && (
                 <div className="user-panel">
                   {/* Header */}
@@ -223,22 +274,27 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                       className="user-panel__avatar"
                     />
                     <div className="user-panel__info">
-                    <div className="user-panel__name">
-                      {MyUser?.my_user?.userName || ""}
-                    </div>
+                      <div className="user-panel__name">
+                        {isLoggedIn
+                          ? MyUser?.my_user?.userName || "Người dùng"
+                          : "Khách"}
+                      </div>
                       <div className="user-panel__sub">
-                        {isLoggedIn ? "Mua gói để có trải nghiệm tốt hơn."
+                        {isLoggedIn
+                          ? "Mua gói để có trải nghiệm tốt hơn."
                           : "Đăng nhập để đồng bộ lịch sử và danh sách yêu thích."}
                       </div>
                     </div>
-                  </div> <hr />
+                  </div>
 
-                  {/* Nếu CHƯA login -> chỉ hiện nút đăng nhập, ẩn tất cả */}
+                  <hr />
+
+                  {/* Nếu CHƯA login -> chỉ hiện nút đăng nhập */}
                   {!isLoggedIn ? (
                     <>
                       <button
                         className="btn btn-watch"
-                        onClick={() => go('/')}
+                        onClick={() => ("/")}
                       >
                         Đăng nhập
                       </button>
@@ -248,88 +304,111 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                     <>
                       {/* Actions */}
                       <ul className="user-panel__list">
-                        <li onClick={() => go('/favorites')}>
-                          <FontAwesomeIcon icon={faHeart} /> <span>Danh sách yêu thích</span>
+                        <li onClick={() => go("/favorites")}>
+                          <FontAwesomeIcon icon={faHeart} />{" "}
+                          <span>Danh sách yêu thích</span>
                         </li>
-                        <li onClick={() => go('/purchase-history')}>
-                          <FontAwesomeIcon icon={faHistory} /> <span>Lịch sử thanh toán</span>
+                        <li onClick={() => go("/purchase-history")}>
+                          <FontAwesomeIcon icon={faHistory} />{" "}
+                          <span>Lịch sử thanh toán</span>
                         </li>
-                        <li onClick={() => go('/continue')}>
-                          <FontAwesomeIcon icon={faClock} /> <span>Xem tiếp</span>
+                        <li onClick={() => go("/continue")}>
+                          <FontAwesomeIcon icon={faClock} />{" "}
+                          <span>Xem tiếp</span>
                         </li>
-                        <li onClick={() => go('/profile')}>
-                          <FontAwesomeIcon icon={faUser} /> <span>Tài khoản</span>
-                        </li> <hr />
+                        <li onClick={() => go("/profile")}>
+                          <FontAwesomeIcon icon={faUser} />{" "}
+                          <span>Tài khoản</span>
+                        </li>
+                        <hr />
                         <li className="danger" onClick={handleLogout}>
-                          <FontAwesomeIcon icon={faRightFromBracket} /> <span>Thoát</span>
+                          <FontAwesomeIcon icon={faRightFromBracket} />{" "}
+                          <span>Thoát</span>
                         </li>
 
-                        {/* Admin chỉ khi có quyền */}
-                        {/* {isAdmin && (
-                    <>
-                      <li onClick={() => setShowAddMovie(true)} style={{ color: "var(--green-400,#22c55e)" }}>
-                        Thêm phim
-                      </li>
-                      <li onClick={() => navigate('/control-panel')}>
-                        Bảng điều khiển
-                      </li>
-                    </>
-                  )} */}
+                        {/* Admin (mở khi có quyền)
+                        {isAdmin && (
+                          <>
+                            <li
+                              onClick={() => setShowAddMovie(true)}
+                              style={{ color: "var(--green-400,#22c55e)" }}
+                            >
+                              Thêm phim
+                            </li>
+                            <li onClick={() => _go('/control-panel')}>
+                              Bảng điều khiển
+                            </li>
+                          </>
+                        )} */}
                       </ul>
 
                       <div className="user-panel__arrow" />
                     </>
                   )}
-                </div>
+                </div> // ✅ ĐÃ đóng .user-panel đúng chỗ
               )}
-
             </div>
-
           </div>
         </div>
       </header>
+
       {/* Filter Modal */}
       {setFilteredMovies && showFilter && (
         <div className="filter-overlay" onClick={() => setShowFilter(false)}>
           <div className="filter-box" onClick={(e) => e.stopPropagation()}>
             <h5>Lọc Phim</h5>
+
             <div className="filter-fields">
               <div className="select-group">
                 <div className="select-item">
                   <label>Tháng:</label>
-                  <select value={filterMonth} onChange={(e) => setFilterMonth(Number(e.target.value))}>
+                  <select
+                    value={filterMonth}
+                    onChange={(e) => setFilterMonth(Number(e.target.value))}
+                  >
                     <option value={0}>-- trống --</option>
                     {[...Array(12)].map((_, i) => (
-                      <option key={i + 1} value={i + 1}>{i + 1}</option>
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
                     ))}
                   </select>
                 </div>
+
                 <div className="select-item">
                   <label>Năm:</label>
-                  <select value={filterYear} onChange={(e) => setFilterYear(Number(e.target.value))}>
+                  <select
+                    value={filterYear}
+                    onChange={(e) => setFilterYear(Number(e.target.value))}
+                  >
                     <option value={0}>-- trống --</option>
                     {Array.from({ length: 50 }, (_, i) => {
                       const year = 2000 + i;
-                      return <option key={year} value={year}>{year}</option>;
+                      return (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      );
                     })}
                   </select>
                 </div>
               </div>
             </div>
+
             <div className="filter-actions">
               <button
                 className="btn-filter"
                 onClick={async () => {
-                  const result = await MovieService.filterMoviesByYearAndMonth(
+                  const result = await MovieService?.filterMoviesByYearAndMonth(
                     filterYear || 0,
                     filterMonth || 0
                   );
                   if (Array.isArray(result) && result.length > 0) {
                     setFilteredMovies(result);
-                    showToast("Đã lọc phim!", "success");
+                    showToast?.("Đã lọc phim!", "success");
                   } else {
                     setFilteredMovies([]);
-                    showToast("Không tìm thấy phim phù hợp", "error");
+                    showToast?.("Không tìm thấy phim phù hợp", "error");
                   }
                 }}
               >
@@ -339,14 +418,21 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
           </div>
         </div>
       )}
+
       {/* Add Movie Modal */}
       {showAddMovie && (
-        <div className="modaladd-backdrop-custom" onClick={() => setShowAddMovie(false)}>
-          <div className="modaladd-content-custom" onClick={e => e.stopPropagation()}>
+        <div
+          className="modaladd-backdrop-custom"
+          onClick={() => setShowAddMovie(false)}
+        >
+          <div
+            className="modaladd-content-custom"
+            onClick={(e) => e.stopPropagation()}
+          >
             <ModelAddMovie
               onSuccess={() => {
                 setShowAddMovie(false);
-                fetchMovies();
+                fetchMovies?.();
               }}
             />
           </div>
@@ -355,4 +441,5 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
     </>
   );
 }
+
 export default Header;

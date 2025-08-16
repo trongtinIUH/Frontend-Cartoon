@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState, useMemo,useCallback } from "react";
+import { Link, useLocation, useNavigate,useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; 
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import "videojs-contrib-quality-levels";
@@ -12,6 +13,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../css/WatchPage.css";
 import { initAntiCapture } from "../utils/antiCapture"; 
 
+/*import phần bình luận */
+import { toast } from "react-toastify";
+import FeedbackService from "../services/FeedbackService";
+import default_avatar from "../image/default_avatar.jpg";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/vi";
+
+dayjs.extend(relativeTime);
+dayjs.locale("vi");
+
+
 
 export default function WatchPage() {
   const { state } = useLocation();
@@ -21,6 +34,21 @@ export default function WatchPage() {
   const movie    = state?.movie;               // { id, title, year, genres[], alias, poster, ... }
   const episodes = state?.episodes || [];  
   const authors  = state?.authors || [];       // list cùng season
+
+
+  const movieId = movie?.movieId; // dùng cho bình luận
+  const { MyUser } = useAuth();
+  const userId = MyUser?.my_user?.userId ?? null;
+
+
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [size] = useState(5); // số bình luận mỗi trang
+  const [totalPages, setTotalPages] = useState(1);
+
 
   const nextEp = useMemo(() => {
     if (!episode) return null;
@@ -52,7 +80,8 @@ export default function WatchPage() {
       fluid: true,
       responsive: true,
       sources: [{ src: episode.videoUrl, type: "application/x-mpegURL" }],
-      
+    },function(){
+      initAntiCapture(player);
     });
 
     player.hlsQualitySelector?.({ displayCurrentQuality: true });
@@ -80,9 +109,7 @@ export default function WatchPage() {
         setPlayerH(frameRef.current.getBoundingClientRect().height || 0);
       }
     };
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+   
   }, [episode?.videoUrl]);
 
   // Sticky mini-player (desktop) + hysteresis tránh giật
@@ -145,24 +172,75 @@ useEffect(() => {
 }, [dragging, offset]);
 
 
-//áp dụng bảo mật video
-  useEffect(() => {
-    if (videoRef.current) {
-      playerRef.current = videojs(videoRef.current, {
-        controls: true,
-        autoplay: false,
-        preload: "auto"
-      }, () => {
-        initAntiCapture(playerRef.current);
-      });
-    }
+//phần bình luận
+    const fetchFeedback = useCallback(async () => {
+      if (!movieId) return;
+      try {
+        const { items, totalPages: tp } = await FeedbackService.getListFeedbackByIdMovie(movieId, page, size);
+        setComments(items);
+        setTotalPages(tp || 1);
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu phản hồi:", error);
+        setComments([]);
+        setTotalPages(1);
+      } finally {
+        setLoading(false);
+      }
+    }, [movieId, page, size]);
 
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.dispose();
+    useEffect(() => {
+      fetchFeedback();
+    }, [fetchFeedback]);
+
+    const goTo = (p) => {
+      if (p < 0 || p >= totalPages || loading) return;
+      setPage(p);
+    };
+
+    const getPageItems = (total, current, siblings = 1) => {
+      if (total <= 1) return [0];
+      const first = 0;
+      const last = total - 1;
+      const start = Math.max(current - siblings, first + 1);
+      const end = Math.min(current + siblings, last - 1);
+      const items = [first];
+      if (start > first + 1) items.push("ellipsis-left");
+      for (let i = start; i <= end; i++) items.push(i);
+      if (end < last - 1) items.push("ellipsis-right");
+      if (last > first) items.push(last);
+      return items;
+    };
+    const pageItems = React.useMemo(() => getPageItems(totalPages, page, 1), [totalPages, page]);
+
+    const handleFeedbackSubmit = async () => {
+      if (!comment.trim()) {
+        toast.error("Nội dung không được để trống");
+        return;
+      }
+      if (!movieId) {
+        toast.error("Không tìm thấy movieId");
+        return;
+      }
+      if (!userId) {
+        toast.error("Bạn cần đăng nhập để bình luận");
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        await FeedbackService.submitFeedback({ userId, movieId, content: comment });
+        toast.success("Gửi bình luận thành công!");
+        setComment("");
+        await fetchFeedback();
+      } catch (error) {
+        console.error(error);
+        toast.error("Gửi bình luận thất bại");
+      } finally {
+        setSubmitting(false);
       }
     };
-  }, []);
+
+
   if (!episode) return <div className="watch-empty">Không tìm thấy tập phim.</div>;
   return (
     <div className={`watch layout ${isTheater ? "theater" : ""}`}>
@@ -308,20 +386,99 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="comments">
-            <div className="c-head">
-              <span>Bình luận</span>
-              <div className="tabs">
-                <button className="tab active">Bình luận</button>
-                <button className="tab">Đánh giá</button>
+          <div className="container mt-4">
+            <h5 className="text-white">
+              <i className="fa-regular fa-comment-dots me-2" /> Bình luận
+            </h5>
+            <small className="text-white mb-3">
+              Vui lòng{" "}
+              <a href="/" style={{ color: '#4bc1fa', textDecoration: 'none' }} className="fw-bold">
+                đăng nhập
+              </a>{" "}
+              để tham gia bình luận.
+            </small>
+
+            <div className="card bg-black border-0 mb-3 mt-3">
+              <div className="card-body">
+                <textarea
+                  className="form-control bg-dark text-white border-secondary"
+                  rows="3"
+                  placeholder="Viết bình luận..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  maxLength={1000}
+                  style={{ height: '100px', resize: 'none' }}
+                  disabled={submitting}
+                />
+                <div className="d-flex justify-content-between align-items-center mt-2 bg-black">
+                  <small className="text-white">{comment.length} / 1000</small>
+                  <i
+                    role="button"
+                    aria-disabled={submitting || !comment.trim()}
+                    className={`btn-rate ms-1 ${submitting || !comment.trim() ? "opacity-50 pe-none" : ""}`}
+                    onClick={handleFeedbackSubmit}
+                  >
+                    {submitting ? "Đang gửi..." : "Gửi"} <i className="fa-solid fa-paper-plane ms-1" />
+                  </i>
+                </div>
               </div>
             </div>
-            <div className="c-input">
-              <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="" />
-              <textarea rows={3} placeholder="Viết bình luận…" />
-              <button className="btn-primary">Gửi</button>
+
+            <div className="container mt-4 comments-top">
+              {comments.map((fb) => (
+                <div key={fb.feedbackId ?? fb.id} className="list-group-item text-white mb-3 mt-4">
+                  <div className="d-flex align-items-start mb-2 glassmorphism border-0">
+                    <img
+                      src={fb.avatarUrl || default_avatar}
+                      alt={fb.userId}
+                      className="rounded-circle me-3 flex-shrink-0"
+                      width="42" height="42"
+                    />
+                    <div className="flex-grow-1 min-w-0">
+                      <div className="fw-bold text-truncate">
+                        {fb.userName || "Ẩn danh"}
+                        <small className="text-secondary ms-2">{dayjs(fb.createdAt).fromNow()}</small>
+                      </div>
+                      <p className="mb-0 text-break" style={{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                        {fb.content}
+                      </p>
+                    </div>
+                  </div>
+                  <hr />
+                </div>
+              ))}
+              {comments.length === 0 && (
+                <div className="text-secondary text-center py-3">Chưa có bình luận nào</div>
+              )}
             </div>
+
+            <nav aria-label="Feedback pagination" className="mt-2">
+              <ul className="pagination justify-content-center">
+                <li className={`page-item ${page === 0 ? 'disabled' : ''}`}>
+                  <button className="page-link" onClick={() => goTo(page - 1)} aria-label="Previous">
+                    &laquo;
+                  </button>
+                </li>
+                {pageItems.map((it, idx) =>
+                  typeof it === 'number' ? (
+                    <li key={idx} className={`page-item ${page === it ? 'active' : ''}`}>
+                      <button className="page-link" onClick={() => goTo(it)}>{it + 1}</button>
+                    </li>
+                  ) : (
+                    <li key={idx} className="page-item disabled">
+                      <span className="page-link">…</span>
+                    </li>
+                  )
+                )}
+                <li className={`page-item ${page >= totalPages - 1 ? 'disabled' : ''}`}>
+                  <button className="page-link" onClick={() => goTo(page + 1)} aria-label="Next">
+                    &raquo;
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
+
         </div>
 
         {/* RIGHT */}
