@@ -111,7 +111,7 @@ useEffect(() => {
       {/* --- LEFT: Logo + Menu --- */}
       <div className="header-left">
         <Link to="/main" className="logo-wrap" onClick={reloadMainPage}>
-          <Logo type="icon" size={40} />
+          <img src={`${process.env.PUBLIC_URL}/image/cartoonToo.png`} alt=""  style={{ borderRadius: 7,width: 50,height: 40 }}/>
         </Link>
         {/* Hamburger only on mobile */}
         <button
@@ -188,9 +188,7 @@ useEffect(() => {
       </div>
       {/* --- RIGHT: Search + Filter + Mua Gói + User --- */}
       <div className="header-right">
-        <div className="filter-toggle" onClick={() => setShowFilter(true)} title="Lọc phim">
-          <Funnel size={22} color="#fff" style={{ cursor: "pointer", marginLeft: "10px" }} />
-        </div>
+        {/* --- lọc phim tạm thời ẩn sau này sẽ dùng trong phần khác 15/8/2025 --- */}
         <Link to="/buy-package" className="buy-package-btn">
           <FontAwesomeIcon icon={faWallet} style={{ marginRight: "5px" }} />
           Mua Gói

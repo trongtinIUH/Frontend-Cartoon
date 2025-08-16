@@ -77,7 +77,28 @@ export function initAntiCapture(player) {
     }
   }, 500);
 
-  // Ẩn video khi tab không active
+   // 2️⃣ Mất focus cửa sổ (Alt+Tab, Windows+Shift+S...)
+  window.addEventListener("blur", () => {
+    showOverlay();
+  });
+
+  window.addEventListener("focus", () => {
+    hideOverlay();
+  });
+
+  // 3️⃣ Chặn phím Print Screen & Windows+Shift+S
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.key === "PrintScreen" ||
+      (e.shiftKey && e.metaKey) || // Windows+Shift
+      (e.shiftKey && e.key.toLowerCase() === "s") // Shift+S
+    ) {
+      e.preventDefault();
+      showOverlay();
+    }
+  });
+
+  // 4️⃣ Đổi tab hoặc minimize
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       showOverlay();
@@ -85,4 +106,5 @@ export function initAntiCapture(player) {
       hideOverlay();
     }
   });
+
 }

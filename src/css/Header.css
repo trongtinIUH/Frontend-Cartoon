@@ -64,7 +64,7 @@
 .buy-package-btn {
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(to right, #ff5f6d, #ff7f50);
+  background: linear-gradient(to right, #2BC0E4 0%, #cbccb2 51%, #2BC0E4 100%) !important;
   color: white;
   padding: 8px 14px;
   border-radius: 10px;
@@ -75,8 +75,10 @@
 }
 
 .buy-package-btn:hover {
-  background: linear-gradient(to right, #ff7f50, #ff5f6d);
-  color: #fff;
+  background-position: right center !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(43, 192, 228, 0.6) !important;
+  color: white !important;
 }
 .dropdown-menu {
   position: absolute;

@@ -178,7 +178,7 @@ const LoginPage = () => {
                   />
                 </div>
 
-                <button type="submit" className="btn btn-primary w-100 mb-2" disabled={isLoggingIn}>
+                <button type="submit" className="btn-login-dark w-100 mb-2" disabled={isLoggingIn}>
                   {isLoggingIn ? 'Đang đăng nhập...' : 'Đăng Nhập Với Mật Khẩu'}
                 </button>
               </>
