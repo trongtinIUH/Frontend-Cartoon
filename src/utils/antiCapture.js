@@ -51,7 +51,7 @@ export function initAntiCapture(player) {
 
   // Hàm hiển thị overlay
   const showOverlay = () => {
-    player.pause();
+    player?.pause();
     overlay.style.display = "flex";
   };
 

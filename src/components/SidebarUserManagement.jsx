@@ -33,7 +33,7 @@ const SidebarUserManagement = () => {
                             to="/notifications"
                             className={`nav-link text-white ${location.pathname === '/notifications' ? 'active' : ''}`}
                         >
-                            <i className="fas fa-bell me-2"></i> Thông báo
+                            <i className="fas fa-clock me-2"></i> Xem tiếp
                         </Link>
                     </li> <hr />
                     <li className="nav-item">
