@@ -4,6 +4,7 @@ import MovieService from "../services/MovieService";
 import AuthorService from "../services/AuthorService";
 import RatingModal from "../components/RatingModal";
 import { useAuth } from "../context/AuthContext";
+import TrailerPlayer from "../components/TrailerPlayer";
 import "../css/MovieDetailPage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart, faPlus, faShare, faCommentDots, faPlay } from "@fortawesome/free-solid-svg-icons";
@@ -38,6 +39,12 @@ const MovieDetailPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
+
+  // state thêm:
+  const [seasons, setSeasons] = useState([]);       // [{seasonId, seasonNumber, ...}]
+  const [selectedSeason, setSelectedSeason] = useState(null);
+  const [episodes, setEpisodes] = useState([]);     // episodes của season đang chọn
+
 
   // Lấy tất cả đánh giá của phim
   useEffect(() => {
@@ -104,18 +111,68 @@ const MovieDetailPage = () => {
     fetchTopMovies();
   }, []);
 
+  // nạp chi tiết (movie + seasons + count)
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await MovieService.getMovieDetail(id); // BE trả: { movie, seasons: [...] }
+        setMovie(data.movie);
+        setSeasons(Array.isArray(data.seasons) ? data.seasons : []);
+        // nếu có season thì chọn season đầu và nạp tập
+        if (data.seasons && data.seasons.length > 0) {
+          const first = data.seasons[0];
+          setSelectedSeason(first);
+          const eps = await EpisodeService.getEpisodesByMovieId(first.seasonId);
+          setEpisodes(Array.isArray(eps) ? eps : []);
+        } else {
+          setSelectedSeason(null);
+          setEpisodes([]);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [id]);
+
+  // đổi season -> nạp tập
+  const handleSelectSeason = async (s) => {
+    setSelectedSeason(s);
+    try {
+      const eps = await EpisodeService.getEpisodesByMovieId(s.seasonId);
+      setEpisodes(Array.isArray(eps) ? eps : []);
+    } catch (e) {
+      console.error(e);
+      setEpisodes([]);
+    }
+};
+
+
+
   const handleWatch = (episode) => {
-    navigate("/watch", { state: { episode, movie, authors, episodes: movie.episodes || [] } });
+    navigate("/watch", { state: { episode, movie, authors, episodes } });
   };
 
+
   const handleWatchFirst = () => {
-    if (!movie || !movie.episodes || movie.episodes.length === 0) {
-      alert("Phim này chưa có tập nào để xem!");
+  if (!movie) return;
+
+  if (movie.status === "UPCOMING") {
+    if (!movie.trailerUrl) {
+      toast.error("Phim sắp chiếu chưa có trailer.");
       return;
     }
-    const firstEpisode = movie.episodes[0];
-    handleWatch(firstEpisode);
-  };
+    // Có thể phát ngay trên trang, nên không navigate nữa
+    document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+
+  if (!episodes || episodes.length === 0) {
+    toast.warn("Chưa có tập nào trong season này.");
+    return;
+  }
+  navigate("/watch", { state: { episode: episodes[0], movie, seasons, episodes } });
+};
+
 
   const handleClickTopMovie = async (mid) => {
     try {
@@ -392,7 +449,15 @@ const MovieDetailPage = () => {
             </div>
           </div>
 
-          <div className="col-lg-8">
+          <div className="col-lg-8"> 
+            {/* Trailer (UPCOMING) */}
+            {movie.status === "UPCOMING" && movie.trailerUrl && (
+              <div id="trailer-section" className="mb-4">
+                <h5 className="mb-3">Trailer</h5>
+                <TrailerPlayer src={movie.trailerUrl} poster={movie.bannerUrl || movie.thumbnailUrl} />
+              </div>
+            )}
+
             <div className="top-movies-week glassmorphism p-4 rounded-4 shadow">
               {/* Thanh hành động */}
               <div className="movie-action-bar d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 mt-2 px-3 py-2 glassmorphism-action">
@@ -477,23 +542,62 @@ const MovieDetailPage = () => {
                   {/* Tab: Tập phim */}
                   {tab === "episodes" && (
                     <div className="tab-pane fade show active">
-                      {/* Danh sách tập phim */}
-                      {movie.episodes && movie.episodes.length > 0 && (
-                        <div className="episodes mt-4">
-                          <h5 className="mb-3">Danh sách tập phim</h5>
+
+                      {/* COMPLETED: Seasons + Episodes */}
+                      {movie.status === "COMPLETED" && (
+                        <>
+                          {/* Season tabs */}
+                          <div className="d-flex flex-wrap gap-2 mb-3">
+                            {seasons.map(s => (
+                              <button
+                                key={s.seasonId}
+                                className={`btn btn-sm ${selectedSeason?.seasonId === s.seasonId ? "btn-primary" : "btn-outline-primary"}`}
+                                onClick={async () => {
+                                  setSelectedSeason(s);
+                                  try {
+                                    const eps = await EpisodeService.getEpisodesByMovieId(s.seasonId); // (nên rename: getEpisodesBySeasonId)
+                                    setEpisodes(Array.isArray(eps) ? eps : []);
+                                  } catch {
+                                    setEpisodes([]);
+                                  }
+                                }}
+                              >
+                                Season {s.seasonNumber}{s.episodesCount ? ` (${s.episodesCount})` : ""}
+                              </button>
+                            ))}
+                            {seasons.length === 0 && <span className="text-muted">Chưa có season nào</span>}
+                          </div>
+
+                          {/* Episode list */}
                           <div className="row">
-                            {movie.episodes.map((ep) => (
-                              <div key={ep.episodeId} className="col-3 col-md-4 col-lg-2 mb-3" onClick={() => handleWatch(ep)}>
-                                <div className="episode-card glassmorphism-ep p-2 rounded-3 shadow-sm">
+                            {episodes.map(ep => (
+                              <div
+                                key={ep.episodeId || `${ep.seasonId}-${ep.episodeNumber}`}
+                                className="col-6 col-md-4 col-lg-3 mb-3"
+                                onClick={() => handleWatch(ep)}
+                                style={{ cursor: "pointer" }}
+                              >
+                                <div className="p-2 rounded-3 glassmorphism-ep h-100">
                                   <div className="fw-bold">Tập {ep.episodeNumber}</div>
+                                  <div className="small text-truncate">{ep.title || ""}</div>
                                 </div>
                               </div>
                             ))}
+                            {episodes.length === 0 && (
+                              <div className="text-muted">Season này chưa có tập.</div>
+                            )}
                           </div>
-                        </div>
+                        </>
+                      )}
+
+                      {/* UPCOMING: không có danh sách tập, chỉ trailer (đã render phía trên) */}
+                      {movie.status === "UPCOMING" && (
+                        <div className="text-muted">Phim sắp chiếu — xem trailer bên trên.</div>
                       )}
                     </div>
                   )}
+
+
 
                   {/* Tab: Diễn viên */}
                   {tab === "cast" && (

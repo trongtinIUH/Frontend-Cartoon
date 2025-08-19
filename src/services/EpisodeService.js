@@ -5,24 +5,21 @@ const API_BASE_URL = 'http://localhost:8080/episodes';
 
 const EpisodeService = {
 
-    // Lấy tất cả tập của một bộ phim
-    getEpisodesByMovieId: async (movieId) => {
+    // Lấy tất cả tập của một bộ phim //sửa lại  thành getEpisodesBySeasonId
+    getEpisodesByMovieId: async (seasonId) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/movie/${movieId}`);
+            const response = await axios.get(`${API_BASE_URL}/season/${seasonId}`);
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
     },
 
-    // Lấy một tập cụ thể
-    getEpisodeById: async (episodeId) => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/${episodeId}`);
-            return response.data;
-        } catch (error) {
-            throw error.response ? error.response.data : error;
-        }
+
+    // Lấy 1 tập theo composite key
+    getEpisodeBySeasonAndNumber: async (seasonId, episodeNumber) => {
+        const res = await axios.get(`${API_BASE_URL}/season/${seasonId}/ep/${episodeNumber}`);
+        return res.data;
     },
 
     // Thêm mới một tập phim (video + thông tin)
@@ -67,7 +64,13 @@ const EpisodeService = {
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
-    }
+    },
+
+      // Đếm tập theo season
+    countEpisodesBySeasonId: async (seasonId) => {
+        const res = await axios.get(`${API_BASE_URL}/season/${seasonId}/count`);
+        return res.data.count;
+    },
 
 
 };

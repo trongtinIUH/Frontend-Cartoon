@@ -35,11 +35,12 @@
   font-weight: 500;
 }
 
-.model-add-movie .form-control {
+.model-add-movie .form-control{
   border-radius: 6px;
   box-shadow: none;
   border: 1px solid #d1d5db;
 }
+
 
 .model-add-movie .form-check {
  
@@ -101,5 +102,23 @@
   align-items: center;
   gap: 6px;
 }
+/* Fix all text colors in modal */
+.model-add-movie,
+.model-add-movie * {
+  color: #212529 !important;
+}
 
+.model-add-movie .form-control,
+.model-add-movie .form-select,
+.model-add-movie textarea {
+  color: #212529 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db;
+}
 
+.model-add-movie .form-control:focus,
+.model-add-movie .form-select:focus,
+.model-add-movie textarea:focus {
+  color: #212529 !important;
+  background-color: #ffffff !important;
+}

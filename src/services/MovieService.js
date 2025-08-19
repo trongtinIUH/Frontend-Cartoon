@@ -10,12 +10,20 @@ const MovieService = {
     getAllMovies: async () => {
         try {
             const response = await axios.get(`${API_BASE_URL}/all`);
-            response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            return response.data;
+            return (response.data || []).sort(
+                (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            );
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
     },
+
+    // BE mới có endpoint detail
+    getMovieDetail: async (movieId) => {
+        const res = await axios.get(`${API_BASE_URL}/${movieId}/detail`);
+        return res.data;
+    },
+
 
     //get movie by id
     getMovieById: async (id) => {
@@ -33,7 +41,7 @@ const MovieService = {
                 const token = localStorage.getItem("idToken");
                 const response = await axios.post(`${API_BASE_URL}/create`, movieData,{
                     headers: {
-                        'Content-Type': 'multipart/form-data',
+                      
                         'Authorization': `Bearer ${token}`
                     }
                 });

@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import MovieService from "../services/MovieService";
 import EpisodeService from "../services/EpisodeService";
+import SeasonService from "../services/SeasonService";
 import { getCountries } from "../api/countryApi";
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { FaVideo, FaImage, FaClock, FaGlobe, FaTags, FaLink } from "react-icons/fa";
 import "../css/ModelAddMovie.css";
 import TOPICS from "../constants/topics";
+import GENRES from "../constants/genres";
 import AuthorService from "../services/AuthorService";
 
 const ModelAddMovie = ({ onSuccess }) => {
@@ -37,9 +39,9 @@ const [isNewAuthor, setIsNewAuthor] = useState(false);
     };
     fetchAuthors();
   }, []);
-//thêm tác giả mới vào form
+// thêm dòng nhập tác giả mới
 const addNewAuthorField = () => {
-  setAuthors([...authors, { name: "", authorRole: "DIRECTOR" }]);
+  setNewAuthor([...newAuthor, { name: "", authorRole: "DIRECTOR" }]);
 };
 // Chuyển authors thành format { value, label }
 const authorOptions = authors.map(a => ({
@@ -47,42 +49,43 @@ const authorOptions = authors.map(a => ({
   label: `${a.name} (${a.authorRole})`
 }));
 
-const updateNewAuthor = (index, field, value) => {
-  const updated = [...authors];
-  updated[index][field] = value;
-  setAuthors(updated);
-};
+  // update field của tác giả mới
+  const updateNewAuthor = (index, field, value) => {
+    const updated = [...newAuthor];
+    updated[index][field] = value;
+    setNewAuthor(updated);
+  };
 
 
   const [form, setForm] = useState({
     title: "",
+    originalTitle: "",
     description: "",
     genres: [],
-    video: null,
-    thumbnail: null,
-    videoLink: "",
-    accessVipLevel: "FREE",
-    duration: "",
     country: "",
     topic: "",
     movieType: "SINGLE",
+    minVipLevel: "FREE",
+    status: "UPCOMING",         // mặc định
+    releaseYear: "",
+    duration: "",
+    // media
+    thumbnail: null,
+    banner: null,
+   
+    //trailer phim nếu sắp ra
+    trailerVideo: null,
+   
+    // completed-only (nội dung phim)
+    contentVideo: null,
+  
+
+    authorIds: [],
+  slug: ""
   });
 
   const [loading, setLoading] = useState(false);
   const [uploadVideo, setUploadVideo] = useState(false);
-
-  const GENRES = [
-    "Âm nhạc", "Anime", "Bí ẩn", "Bi kịch", "CN Animation", "[CNA] Hài hước",
-    "[CNA] Ngôn tình", "Đam mỹ", "Demon", "Dị giới", "Đời thường", "Drama",
-    "Ecchi", "Gia Đình", "Giả tưởng", "Hài hước", "Hành động", "Harem",
-    "Hệ Thống", "HH2D", "HH3D", "Học đường", "Huyền ảo", "Khoa huyễn",
-    "Kiếm hiệp", "Kinh dị", "Lịch sử", "Live Action", "Luyện Cấp",
-    "Ma cà rồng", "Mecha", "Ngôn tình", "OVA", "Phiêu lưu", "Psychological",
-    "Quân đội", "Samurai", "Sắp chiếu", "Seinen", "Shoujo", "Shoujo AI",
-    "Shounen", "Shounen AI", "Siêu năng lực", "Siêu nhiên", "Thám tử",
-    "Thể thao", "Thriller", "Tiên hiệp", "Tình cảm", "Tokusatsu", "Trò chơi",
-    "Trùng sinh", "Tu Tiên", "Viễn tưởng", "Võ hiệp", "Võ thuật", "Xuyên không"
-  ];
 
   const VIDEO_TYPES = ["video/mp4", "video/avi", "video/mkv", "video/webm", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
   const THUMBNAIL_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp"];
@@ -102,6 +105,10 @@ const updateNewAuthor = (index, field, value) => {
         toast("❌ Chỉ chấp nhận ảnh jpg, png, gif, webp...");
         return;
       }
+      if (name === "banner" && !isValidImageFile(file)) {
+        toast("❌ Chỉ chấp nhận ảnh jpg, png, gif, webp...");
+        return;
+      }
       setForm({ ...form, [name]: file });
     } else {
       setForm({ ...form, [name]: value });
@@ -118,64 +125,95 @@ const updateNewAuthor = (index, field, value) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title || (!form.video && !form.videoLink)) {
-      toast.error("Vui lòng nhập tiêu đề và chọn video!");
+    if (!form.title) {
+      toast.error("Vui lòng nhập tiêu đề!");
+      return;
+    }
+    // Validate trailer tối thiểu cho UPCOMING
+    if (form.status === "UPCOMING" && !form.trailerVideo) {
+      toast.error("UPCOMING cần trailer (file)");
+      return;
+    }
+
+    // Validate COMPLETED: cần nội dung tập 1 (file hoặc link)
+    if (form.status === "COMPLETED" && !form.contentVideo ) {
+      toast.error("COMPLETED cần video tập 1 (file)");
       return;
     }
     setLoading(true);
     try {
-      // 1. Tạo phim mới
-      const movieData = new FormData();
-      Object.entries(form).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        value.forEach((v) => movieData.append(key, v));
-      } else if (value !== null && value !== undefined) {
-        movieData.append(key, value);
-      } else {
-        movieData.append(key, ""); // Nếu null/undefined thì gửi chuỗi rỗng
-      }
-    });
+       // 0) TẠO TÁC GIẢ MỚI (nếu có) -> gom full authorIds trước khi tạo Movie
+    // =========================================================
+    let allAuthorIds = Array.isArray(form.authorIds) ? [...form.authorIds] : [];
 
-      movieData.append("userId", MyUser.my_user.userId);
-      movieData.append("role", "ADMIN");
+    // newAuthor là mảng các tác giả “tạo mới” (name + authorRole)
+    for (const author of newAuthor || []) {
+      const name = (author?.name || "").trim();
+      if (!name) continue;
 
-      const newMovie = await MovieService.createMovie(movieData);
+      const created = await AuthorService.createAuthor({
+        name,
+        authorRole: author.authorRole || "DIRECTOR",
+        movieId: [] // để trống, sẽ gán sau
+      });
 
-     // 2. Tạo tác giả mới nếu có
-      let allAuthorIds = form.authorIds ? [...form.authorIds] : [];
-
-      for (const author of newAuthor) {
-        if (author.name.trim()) {
-          const createdAuthor = await AuthorService.createAuthor({
-            name: author.name,
-            authorRole: author.authorRole,
-            movieId: []
-          });
-         // Backend có thể return object với authorId field
-        if (createdAuthor.authorId) {
-          allAuthorIds.push(createdAuthor.authorId);
-        } else if (createdAuthor.id) {
-          allAuthorIds.push(createdAuthor.id);
-        }
-      }
+      const newId = created?.authorId || created?.id;
+      if (newId) allAuthorIds.push(newId);
     }
 
-      // 3. Gán movieId cho tất cả tác giả
+      // 1. Tạo phim mới
+      const fd = new FormData();
+      [
+        "title","originalTitle","description","country","topic",
+        "movieType","minVipLevel","status","releaseYear","slug"
+      ].forEach(k => form[k] != null && fd.append(k, form[k]));
+
+      // genres[]
+      (form.genres || []).forEach(g => fd.append("genres", g));
+      // authorIds[]
+      (allAuthorIds || []).forEach(id => fd.append("authorIds", id));
+
+
+      if (form.thumbnail) fd.append("thumbnail", form.thumbnail);
+      if (form.banner) fd.append("banner", form.banner);
+      if (form.trailerVideo) fd.append("trailerVideo", form.trailerVideo);
+
+      fd.append("role", "ADMIN");
+
+      const movie = await MovieService.createMovie(fd);
+
+      //gán quyền tác giả/diễn viên cho movie
       if (allAuthorIds.length > 0) {
-        await AuthorService.addMovieToMultipleAuthors(allAuthorIds, newMovie.movieId);
-      }
+      await AuthorService.addMovieToMultipleAuthors(allAuthorIds, movie.movieId);
+    }
 
-      const episodeData = new FormData();
-      episodeData.append("movieId", newMovie.movieId);
-      episodeData.append("title", `${form.title} - Tập 1`);
-      episodeData.append("episodeNumber", 1);
-      if (uploadVideo) episodeData.append("videoLink", form.videoLink);
-      else episodeData.append("video", form.video);
 
-      await EpisodeService.addEpisode(episodeData);
+    // 2) Nếu COMPLETED: tạo Season 1 + Episode 1
+  if (form.status === "COMPLETED") {
+      // tạo Season 1
+      const season = await SeasonService.createSeason({
+        movieId: movie.movieId,
+        seasonNumber: 1,
+        title: "Phần 1",
+        description: "",
+        releaseYear: form.releaseYear || null,
+        posterUrl: "" // nếu có URL thì truyền
+      });
 
-      toast.success("✅ Tạo phim và tập đầu tiên thành công!");
-      onSuccess?.();
+      // tạo Episode 1
+      const epFd = new FormData();
+      epFd.append("movieId", movie.movieId);
+      epFd.append("seasonId", season.seasonId);
+      epFd.append("title", `${form.title} - Tập 1`);
+      epFd.append("episodeNumber", 1);
+      if (form.contentVideo) epFd.append("video", form.contentVideo);
+
+      await EpisodeService.addEpisode(epFd);
+    }
+
+    toast.success("✅ Tạo phim thành công!");
+    onSuccess?.();
+     
     } catch (err) {
       toast.error("❌ Lỗi: " + (err.message || "Không thể thêm phim."));
     } finally {
@@ -186,47 +224,139 @@ const updateNewAuthor = (index, field, value) => {
   return (
     <div className="modal-overlay">
       <div className="model-add-movie card shadow-lg p-4">
-        <h4 className="mb-4 text-center fw-bold text-primary">Thêm Phim Mới</h4>
-        <form onSubmit={handleSubmit} encType="multipart/form-data" className="row g-3">
+        <h4 className="mb-3 text-center fw-bold text-primary">Thêm Phim Mới</h4>
 
-          {/* Tiêu đề + Mô tả */}
-          <div className="col-12">
-            <label className="form-label">Tiêu đề</label>
-            <input type="text" className="form-control" name="title" value={form.title} onChange={handleChange} required />
+        {/* Trạng thái & loại phim */}
+        <div className="row g-3 mb-1">
+          <div className="col-md-6">
+            <label className="form-label">Trạng thái</label>
+            <div className="d-flex gap-3">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  id="st-upcoming"
+                  name="status"
+                  value="UPCOMING"
+                  checked={form.status === "UPCOMING"}
+                  onChange={e => setForm({ ...form, status: e.target.value })}
+                />
+                <label className="form-check-label" htmlFor="st-upcoming">UPCOMING</label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  id="st-completed"
+                  name="status"
+                  value="COMPLETED"
+                  checked={form.status === "COMPLETED"}
+                  onChange={e => setForm({ ...form, status: e.target.value })}
+                />
+                <label className="form-check-label" htmlFor="st-completed">COMPLETED</label>
+              </div>
+            </div>
           </div>
+
+          <div className="col-md-6">
+            <label className="form-label">VIP tối thiểu</label>
+            <select
+              name="minVipLevel"
+              className="form-select"
+              value={form.minVipLevel}
+              onChange={handleChange}
+            >
+              <option value="FREE">FREE</option>
+              <option value="SILVER">SILVER</option>
+              <option value="GOLD">GOLD</option>
+            </select>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} encType="multipart/form-data" className="row g-3">
+          {/* Title & Original Title */}
+          <div className="col-md-8">
+            <label className="form-label">Tiêu đề</label>
+            <input
+              type="text"
+              className="form-control"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="col-md-4">
+            <label className="form-label">Năm phát hành</label>
+            <input
+              type="number"
+              min="1900"
+              max="2100"
+              className="form-control"
+              name="releaseYear"
+              value={form.releaseYear}
+              onChange={handleChange}
+              placeholder="VD: 2025"
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Tên gốc (Original Title)</label>
+            <input
+              type="text"
+              className="form-control"
+              name="originalTitle"
+              value={form.originalTitle}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Slug (tuỳ chọn)</label>
+            <input
+              type="text"
+              className="form-control"
+              name="slug"
+              value={form.slug}
+              onChange={handleChange}
+              placeholder="auto nếu để trống"
+            />
+          </div>
+
+          {/* Description */}
           <div className="col-12">
             <label className="form-label">Mô tả</label>
-            <textarea className="form-control" rows="2" name="description" value={form.description} onChange={handleChange} />
+            <textarea
+              className="form-control"
+              rows="2"
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+            />
           </div>
 
-          {/* Thể loại */}
+          {/* Genres */}
           <div className="col-12">
             <label className="form-label"><FaTags /> Thể loại</label>
             <div className="d-flex flex-wrap genre-box p-2">
-              {GENRES.map((genre) => (
+              {GENRES.map(genre => (
                 <div key={genre} className="form-check me-3">
-                  <input className="form-check-input" type="checkbox" value={genre} id={genre} checked={form.genres.includes(genre)} onChange={handleGenreChange} />
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    value={genre}
+                    id={genre}
+                    checked={form.genres.includes(genre)}
+                    onChange={handleGenreChange}
+                  />
                   <label className="form-check-label" htmlFor={genre}>{genre}</label>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Các thông tin phụ */}
-          <div className="col-md-6">
-            <label>VIP Level</label>
-            <select name="accessVipLevel" className="form-select" value={form.accessVipLevel} onChange={handleChange}>
-              <option value="FREE">FREE</option>
-              <option value="SILVER">SILVER</option>
-              <option value="GOLD">GOLD</option>
-            </select>
-          </div>
-          <div className="col-md-6">
-            <label><FaClock /> Thời lượng</label>
-            <input type="text" className="form-control" name="duration" value={form.duration} onChange={handleChange} placeholder="VD: 120 phút" />
-          </div>
-          <div className="col-md-6">
-            <label><FaGlobe /> Quốc gia</label>
+          {/* Country / Topic / Type */}
+          <div className="col-md-4">
+            <label className="form-label"><FaGlobe /> Quốc gia</label>
             <select name="country" className="form-select" value={form.country} onChange={handleChange}>
               <option value="">-- Chọn quốc gia --</option>
               {countries.map((c, i) => (
@@ -234,124 +364,135 @@ const updateNewAuthor = (index, field, value) => {
               ))}
             </select>
           </div>
-          <div className="col-md-6">
-            <label>Chủ đề</label>
+          <div className="col-md-4">
+            <label className="form-label">Chủ đề</label>
             <select name="topic" className="form-select" value={form.topic} onChange={handleChange}>
               <option value="">-- Chọn chủ đề --</option>
-              {TOPICS.map((topic, i) => (
-                <option key={i} value={topic}>{topic}</option>
+              {TOPICS.map((t, i) => (
+                <option key={i} value={t}>{t}</option>
               ))}
             </select>
           </div>
-          <div className="col-md-6">
-            <label>Loại phim</label>
+          <div className="col-md-4">
+            <label className="form-label">Loại phim</label>
             <select name="movieType" className="form-select" value={form.movieType} onChange={handleChange}>
               <option value="SINGLE">Phim lẻ</option>
               <option value="SERIES">Phim bộ</option>
             </select>
           </div>
-          <div className="col-md-6">
-            <label className="form-label fw-bold">Tác giả</label>
 
-            {/* Radio chọn chế độ */}
-            <div className="form-check">
-              <input
-                className="form-check-input"
-                type="radio"
-                name="authorOption"
-                checked={!isNewAuthor}
-                onChange={() => setIsNewAuthor(false)}
-              />
-              <label className="form-check-label">Chọn tác giả có sẵn</label>
-            </div>
-            <div className="form-check mb-2">
-              <input
-                className="form-check-input"
-                type="radio"
-                name="authorOption"
-                checked={isNewAuthor}
-                onChange={() => setIsNewAuthor(true)}
-              />
-              <label className="form-check-label">Tạo tác giả mới</label>
-            </div>
-
-            {/* Chế độ: Chọn tác giả có sẵn */}
-           {!isNewAuthor ? (
-            <Select
-              isMulti
-              options={authorOptions}
-              value={authorOptions.filter(opt => form.authorIds?.includes(opt.value))}
-              onChange={(selected) =>
-                setForm({
-                  ...form,
-                  authorIds: selected.map(opt => opt.value)
-                })
-              }
-              placeholder="Chọn tác giả..."
-              className="basic-multi-select"
-              classNamePrefix="select"
-            />
-          ) : (
-            /* Form thêm tác giả mới giữ nguyên như trước */
-            <div>
-              {newAuthor.map((author, idx) => (
-                <div key={idx} className="d-flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Tên tác giả"
-                    value={author.name}
-                    onChange={(e) => updateNewAuthor(idx, "name", e.target.value)}
-                  />
-                  <select
-                    className="form-select"
-                    value={author.authorRole}
-                    onChange={(e) => updateNewAuthor(idx, "authorRole", e.target.value)}
-                  >
-                    <option value="DIRECTOR">Đạo diễn</option>
-                    <option value="PERFORMER">Diễn viên</option>
-                  </select>
-                </div>
-              ))}
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-primary"
-                onClick={addNewAuthorField}
-              >
-                + Thêm tác giả
-              </button>
-            </div>
-          )}
-
-          
-        </div>
-          {/* Video */}
+          {/* Authors block */}
           <div className="col-12">
-            <label className="form-label"><FaVideo /> Video</label>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <input type="checkbox" checked={uploadVideo} onChange={() => setUploadVideo(!uploadVideo)} /> Upload Link
+            <label className="form-label fw-bold">Tác giả</label>
+            <div className="d-flex gap-4 mb-2">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="authorMode"
+                  checked={!isNewAuthor}
+                  onChange={() => setIsNewAuthor(false)}
+                />
+                <label className="form-check-label">Chọn tác giả có sẵn</label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="authorMode"
+                  checked={isNewAuthor}
+                  onChange={() => setIsNewAuthor(true)}
+                />
+                <label className="form-check-label">Tạo tác giả mới</label>
+              </div>
             </div>
-            {uploadVideo ? (
-              <input type="text" className="form-control" name="videoLink" value={form.videoLink} onChange={handleChange} placeholder="Nhập link video..." required />
+
+            {!isNewAuthor ? (
+              <Select
+                isMulti
+                options={authorOptions}
+                value={authorOptions.filter(o => form.authorIds?.includes(o.value))}
+                onChange={selected => setForm({ ...form, authorIds: selected.map(s => s.value) })}
+                placeholder="Chọn tác giả..."
+                classNamePrefix="select"
+              />
             ) : (
-              <input type="file" className="form-control" name="video" accept="video/*" onChange={handleChange} required />
+              <div>
+                {newAuthor.map((a, idx) => (
+                  <div key={idx} className="d-flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Nhập tên..."
+                      value={a.name}
+                      onChange={e => updateNewAuthor(idx, "name", e.target.value)}
+                    />
+                    <select
+                      className="form-select"
+                      value={a.authorRole}
+                      onChange={e => updateNewAuthor(idx, "authorRole", e.target.value)}
+                    >
+                      <option value="DIRECTOR">Đạo diễn</option>
+                      <option value="PERFORMER">Diễn viên</option>
+                    </select>
+                  </div>
+                ))}
+                <button type="button" className="btn btn-sm btn-outline-primary" onClick={addNewAuthorField}>
+                  + Thêm tác giả
+                </button>
+              </div>
             )}
           </div>
 
-          {/* Thumbnail */}
-          <div className="col-12">
+          {/* Media: thumbnail & banner */}
+          <div className="col-md-6">
             <label className="form-label"><FaImage /> Thumbnail</label>
             <input type="file" className="form-control" name="thumbnail" accept="image/*" onChange={handleChange} />
           </div>
+          <div className="col-md-6">
+            <label className="form-label"><FaImage /> Banner</label>
+            <input type="file" className="form-control" name="banner" accept="image/*" onChange={handleChange} />
+          </div>
 
-          {/* Buttons */}
-          <div className="col-12 d-flex gap-2 mt-3">
+          {/* Trailer (UPCOMING only) */}
+          {form.status === "UPCOMING" && (
+           <div className="col-12">
+            <label className="form-label"><FaVideo /> Trailer</label>
+            <input
+              type="file"
+              className="form-control"
+              name="trailerVideo"
+              accept="video/*"
+              onChange={handleChange}
+              required
+            />
+          </div>
+        )}
+
+          {/* Content ep1 (COMPLETED only) */}
+          {form.status === "COMPLETED" && (
+            <div className="col-12">
+              <label className="form-label"><FaVideo /> Video tập 1</label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    name="contentVideo"
+                    accept="video/*"
+                    onChange={handleChange}
+                    required
+                  />
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="col-12 d-flex gap-2 mt-2">
             <button className="btn btn-primary flex-fill" type="submit" disabled={loading}>
               {loading ? "Đang thêm..." : "Thêm phim"}
             </button>
-            <button className="btn btn-outline-secondary flex-fill" onClick={onSuccess}>Đóng</button>
+            <button type="button" className="btn btn-outline-secondary flex-fill" onClick={onSuccess}>
+              Đóng
+            </button>
           </div>
-
         </form>
       </div>
     </div>

@@ -9,38 +9,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const MovieSlider = () => {
   const [featuredMovies, setFeaturedMovies] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
- const [translatedTitles, setTranslatedTitles] = useState({});
-
-  // Function translate Vietnamese to English
-  const translateToEnglish = async (vietnameseText) => {
-    try {
-      const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=en&dt=t&q=${encodeURIComponent(vietnameseText)}`);
-      const data = await response.json();
-      return data[0][0][0]; // Lấy text đã translate
-    } catch (error) {
-      console.error('Translation error:', error);
-      return vietnameseText; // Fallback về text gốc
-    }
-  };
-    // Function để translate title khi component mount
-  useEffect(() => {
-    const translateTitles = async () => {
-      const translations = {};
-      
-      for (const movie of featuredMovies) {
-        if (movie.title && !movie.aliasTitle) {
-          const englishTitle = await translateToEnglish(movie.title);
-          translations[movie.movieId] = englishTitle;
-        }
-      }
-      
-      setTranslatedTitles(translations);
-    };
-
-    if (featuredMovies.length > 0) {
-      translateTitles();
-    }
-  }, [featuredMovies]);
 
   useEffect(() => {
     async function fetchFeaturedMovies() {
@@ -74,7 +42,7 @@ const MovieSlider = () => {
               <div
                 className="background-fade"
                 style={{
-                  backgroundImage: `url(${movie.backgroundUrl || movie.thumbnailUrl})`,
+                  backgroundImage: `url(${movie.bannerUrl || movie.thumbnailUrl})`,
                   position: 'absolute',
                   top: 0, left: 0, width: '100%', height: '100%',
                   backgroundSize: 'cover',
@@ -121,19 +89,19 @@ const MovieSlider = () => {
                       }}>
                     <Link to={`/movie/${movie.movieId}`}
                           style={{color: '#fff', textDecoration: 'none', textShadow: '1px 1px 5px #000'}}>
-                       {movie.aliasTitle || translatedTitles[movie.movieId] || movie.title}
+                       {movie.originalTitle|| movie.title}
                     </Link>
                   </h3>
                   {/* Tag row */}
                   <div className="hl-tags mb-3"
                        style={{display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 14}}>
-                    {movie.imdb && (
+                    {movie.avgRating && (
                       <div className="tag-imdb"
                            style={{
                              padding: '2px 8px', background: '#f5c518',
                              color: '#222', borderRadius: 4, fontWeight: 700, fontSize: '1rem'
                            }}>
-                        IMDb <span>{movie.imdb}</span>
+                        IMDb <span>{movie.avgRating}</span>
                       </div>
                     )}
                     {movie.age && (
@@ -146,14 +114,14 @@ const MovieSlider = () => {
                         <span className="last"><strong>{movie.age}</strong></span>
                       </div>
                     )}
-                    {movie.year && (
+                    {movie.releaseYear && (
                       <div className="tag-classic"
                            style={{
                              padding: '2px 8px',
                              background: 'rgba(255,255,255,0.10)', color: '#fff',
                              borderRadius: 4
                            }}>
-                        <span>{movie.year}</span>
+                        <span>{movie.releaseYear}</span>
                       </div>
                     )}
                     {movie.season && (

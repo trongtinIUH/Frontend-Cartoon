@@ -329,7 +329,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                           <span>Thoát</span>
                         </li>
 
-                        {/* Admin (mở khi có quyền)
+                      
                         {isAdmin && (
                           <>
                             <li
@@ -338,11 +338,11 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                             >
                               Thêm phim
                             </li>
-                            <li onClick={() => _go('/control-panel')}>
+                            <li onClick={() => go('/control-panel')}>
                               Bảng điều khiển
                             </li>
                           </>
-                        )} */}
+                        )}
                       </ul>
 
                       <div className="user-panel__arrow" />
