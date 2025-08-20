@@ -20,8 +20,12 @@ const MovieService = {
 
     // BE mới có endpoint detail
     getMovieDetail: async (movieId) => {
-        const res = await axios.get(`${API_BASE_URL}/${movieId}/detail`);
-        return res.data;
+        try{
+            const res = await axios.get(`${API_BASE_URL}/${movieId}/detail`);
+            return res.data;
+            }catch(error){
+               throw error.response ? error.response.data : error;
+            }
     },
 
 

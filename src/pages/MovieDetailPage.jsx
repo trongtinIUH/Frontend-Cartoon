@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MovieService from "../services/MovieService";
 import AuthorService from "../services/AuthorService";
+import EpisodeService from "../services/EpisodeService";
 import RatingModal from "../components/RatingModal";
 import { useAuth } from "../context/AuthContext";
 import TrailerPlayer from "../components/TrailerPlayer";
@@ -66,22 +67,6 @@ const MovieDetailPage = () => {
     ? (ratings.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / totalRatings)
     : 0;
 
-
-  // Lấy chi tiết phim
-  useEffect(() => {
-    const fetchMovie = async () => {
-      try {
-        const data = await MovieService.getMovieById(id);
-        setMovie({
-          ...data.movie,
-          episodes: data.episodes || [],
-        });
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu phim:", error);
-      }
-    };
-    fetchMovie();
-  }, [id]);
 
   // Lấy thông tin author trong bộ phim
   useEffect(() => {
@@ -341,7 +326,20 @@ const MovieDetailPage = () => {
 
 
                 <h2 className="movie-title mb-3 mt-2" style={{ color: "#4bc1fa", fontSize: "20px", textDecoration: "none" }}
-                >{movie.title}</h2>
+                >{movie.title}</h2> 
+                {/* Tên tiếng Anh - phụ */}
+                {movie.originalTitle && (
+                  <div className="original-title mb-2" style={{
+                    color: "#adb5bd",
+                    fontSize: "14px", 
+                    fontStyle: "italic",
+                    opacity: 0.85,
+                    marginTop: "-8px" // ✅ Thay đổi từ -4px thành -8px
+                  }}>
+                    <i className="fas" style={{ fontSize: "12px", opacity: 0.7 }}></i>
+                    {movie.originalTitle}
+                  </div>
+                )}
 
                 <div className="movie-badges mb-2">
                   {(movie.genres || []).map((g) => (
@@ -351,17 +349,45 @@ const MovieDetailPage = () => {
                   ))}
                 </div>
 
-                <p className="mb-2 text-white" style={{ fontSize: "14px" }}>
-                  <strong>Mô tả:</strong> {movie.description || "Không có mô tả."}
-                </p>
+              <div className="movie-description mb-3">
+                <div className="d-flex align-items-center mb-2">
+                  <i className="fas fa-align-left me-2" style={{ color: "#4bc1fa", fontSize: "14px" }}></i>
+                  <strong style={{ color: "#fff", fontSize: "15px" }}>Nội dung phim</strong>
+                </div>
+                
+                <div className="description-content p-3 rounded-3" style={{
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  fontSize: "14px",
+                  lineHeight: "1.6",
+                  color: "#e9ecef"
+                }}>
+                  {movie.description || "Chưa có mô tả cho bộ phim này."}
+                </div>
+              </div>
 
                 <div className="d-flex flex-wrap mb-2 small" style={{ background: "transparent" }}>
-                  <div className="me-4">
-                    <strong>Ngày tạo:</strong>{" "}
-                    {movie.createdAt ? new Date(movie.createdAt).toLocaleString() : "-"}
-                  </div>
-                  <div>
-                    <strong>Lượt xem:</strong> {movie.viewCount || 0}
+                 <div className="movie-details mb-3">
+                    <div className="detail-item mb-2">
+                      <span className="detail-label fw-bold">Năm sản xuất:</span>{" "}
+                      <span className="detail-value">{movie.releaseYear || "-"}</span>
+                    </div>
+                    
+                    <div className="detail-item mb-2">
+                      <span className="detail-label fw-bold">Lượt xem:</span>{" "}
+                      <span className="detail-value">{(movie.viewCount || 0).toLocaleString()}</span>
+                    </div>
+                    
+                    <div className="detail-item mb-2">
+                      <span className="detail-label fw-bold">Thời lượng:</span>{" "}
+                      <span className="detail-value">{movie.duration ? `${movie.duration}m` : "-"}</span>
+                    </div>
+                    
+                    <div className="detail-item mb-2">
+                      <span className="detail-label fw-bold">Quốc gia:</span>{" "}
+                      <span className="detail-value">{movie.country || "-"}</span>
+                    </div>
+
                   </div>
 
                   {/* Cast & Crew */}

@@ -11,7 +11,7 @@ export function initAntiCapture(player) {
     overlay.id = "anti-capture-overlay";
     overlay.innerHTML = `
       <div class="overlay-content">
-        <img src="https://thuvienmeme.com/wp-content/uploads/2024/06/meme-meo-chi-tay-may-coi-chung-tao.jpg" alt="warning" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Vanuatu_stop_sign.svg/600px-Vanuatu_stop_sign.svg.png" alt="warning" />
         <h2>CÓ BIẾN RỒI</h2>
         <p>Hãy thử refresh lại</p>
       </div>
