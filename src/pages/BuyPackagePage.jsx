@@ -81,7 +81,7 @@ const BuyPackagePage = () => {
                         }}
                       />
                       <div className="fw-bold text-white">
-                        {pkg.amount.toLocaleString('vi-VN')}vnđ
+                        {pkg.amount?.toLocaleString('vi-VN')}vnđ
                       </div>
                       <div className="text-secondary small">1 tháng</div>
                     </th>
@@ -94,7 +94,7 @@ const BuyPackagePage = () => {
                   <tr key={index}>
                     <td className="text-start">{title}</td>
                     {packages.map((pkg) => {
-                      const hasFeature = pkg.features.includes(title);
+                      const hasFeature = pkg.features?.includes(title);
                       return (
                         <td key={pkg.packageId}>
                           <div

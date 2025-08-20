@@ -29,7 +29,18 @@ const PaymentPage = () => {
     const fetchSameVipPackages = async () => {
       try {
         const data = await SubscriptionPackageService.getAllPackages();
-        const filtered = data.filter(pkg => pkg.applicableVipLevel === selectedPackage.applicableVipLevel).sort((a, b) => a.durationInDays - b.durationInDays);
+        const normalized = data.map(p => ({
+          ...p,
+          discountedAmount:
+            p?.discountedAmount != null && p.discountedAmount < p.amount
+              ? p.discountedAmount
+              : null, // nếu = amount thì set null
+        }));
+
+        const filtered = normalized
+          .filter(pkg => pkg.applicableVipLevel === selectedPackage.applicableVipLevel)
+          .sort((a, b) => (a.durationInDays ?? 0) - (b.durationInDays ?? 0));
+
         setPackagesByVip(filtered);
         setSelectedDurationPackage(selectedPackage);
       } catch (error) {
@@ -93,26 +104,46 @@ const PaymentPage = () => {
               <div className="card bg-black p-3 text-white mb-4">
                 <h5>Chọn thời hạn gói {selectedPackage.vipLevel}</h5>
                 <div className="card-body">
-                  {packagesByVip.map((pkg) => (
-                    <div
-                      key={pkg.packageId}
-                      className={`d-flex align-items-center mb-3 rounded p-3 bg-dark ${selectedDurationPackage?.packageId === pkg.packageId ? "border border-dark" : ""
-                        }`}
-                      onClick={() => setSelectedDurationPackage(pkg)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <input
-                        type="radio"
-                        className="form-check-input me-3"
-                        checked={selectedDurationPackage?.packageId === pkg.packageId}
-                        readOnly
-                      />
-                      <div className="d-flex justify-content-between w-100 bg-dark">
-                        <span>{pkg.durationInDays / 30} tháng</span>
-                        <span>{pkg.amount.toLocaleString()} VND</span>
+                  {packagesByVip.map((pkg) => {
+                    const amount = pkg?.amount ?? 0;
+                    const discounted = pkg?.discountedAmount ?? null;
+                    const hasDiscount = discounted != null && amount > 0 && discounted < amount;
+                    const percentOff = hasDiscount
+                      ? Math.round(((amount - discounted) / amount) * 100)
+                      : 0;
+
+                    return (
+                      <div
+                        key={pkg.packageId}
+                        className={`d-flex align-items-center mb-3 rounded p-3 bg-dark ${selectedDurationPackage?.packageId === pkg.packageId ? "border border-dark" : ""
+                          }`}
+                        onClick={() => setSelectedDurationPackage(pkg)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <input
+                          type="radio"
+                          className="form-check-input me-3"
+                          checked={selectedDurationPackage?.packageId === pkg.packageId}
+                          readOnly
+                        />
+                        <div className="d-flex justify-content-between w-100 bg-dark">
+                          <span>{Math.round((pkg.durationInDays ?? 30) / 30)} tháng</span>
+                          <div className="text-end">
+                            {hasDiscount && (
+                              <span
+                                className="badge rounded-pill bg-danger"
+                              >
+                                Giảm {percentOff}%
+                              </span>
+                            )}
+                            <span className="ms-3 fw-semibold">
+                              {(hasDiscount ? discounted : amount)?.toLocaleString()} VND
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -163,17 +194,17 @@ const PaymentPage = () => {
                   </div> <hr />
                   <div className="d-flex justify-content-between bg-black">
                     <p>Giá gói</p>
-                    <p className="fw-bold">{selectedDurationPackage?.amount.toLocaleString()} VND</p>
+                    <p className="fw-bold">{selectedDurationPackage?.discountedAmount?.toLocaleString() || selectedDurationPackage?.amount?.toLocaleString()} VND</p>
                   </div>
                   <div className="d-flex justify-content-between bg-black">
                     <p>Giảm giá</p>
-                    <p className="fw-bold">0 VND</p>
+                    <p className="fw-bold">0 VNĐ</p>
                   </div> <hr />
 
                   <div className="d-flex justify-content-between bg-black">
                     <p>Tổng thanh toán</p>
                     <h3 className="fw-bold text-warning">
-                      {selectedDurationPackage?.amount.toLocaleString()} VND
+                      {selectedDurationPackage?.discountedAmount?.toLocaleString() || selectedDurationPackage?.amount?.toLocaleString()} VND
                     </h3>
                   </div>
                   <div className="text-center mt-3">
