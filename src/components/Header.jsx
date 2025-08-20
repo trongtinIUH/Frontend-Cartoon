@@ -297,7 +297,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                     <>
                       <button
                         className="btn btn-watch"
-                        onClick={() => ("/")}
+                        onClick={() => go("/")}
                       >
                         Đăng nhập
                       </button>

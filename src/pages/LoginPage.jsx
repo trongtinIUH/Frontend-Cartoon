@@ -127,30 +127,9 @@ const LoginPage = () => {
           <div className="text-center mb-3">
             <h1 className="auth-heading">CartoonToo</h1>
             <p className="auth-subtitle">
-              Đăng nhập tài khoản để khám phá kho phim hoạt hình đặc sắc!
+              Đăng nhập tài khoản <br /> để khám phá kho phim hoạt hình đặc sắc!
             </p>
           </div>
-
-          <ul className="nav nav-pills nav-fill justify-content-center mb-3 d-flex">
-            <li className="nav-item w-50">
-              <button
-                type="button"
-                className={`nav-link ${activeTab === 'phone' ? 'active' : ''}`}
-                onClick={() => handleTabChange('phone')}
-              >
-                Số Điện Thoại
-              </button>
-            </li>
-            <li className="nav-item w-50">
-              <button
-                type="button"
-                className={`nav-link ${activeTab === 'qr' ? 'active' : ''}`}
-                onClick={() => handleTabChange('qr')}
-              >
-                Quét Mã QR
-              </button>
-            </li>
-          </ul>
 
           <form onSubmit={handleLogin}>
             {activeTab === 'phone' && (
@@ -183,13 +162,6 @@ const LoginPage = () => {
                 </button>
               </>
             )}
-
-            {activeTab === 'qr' && (
-              <div className="mb-3 text-center">
-                <p className="muted">Quét mã QR để đăng nhập</p>
-                <img src="../image/qr.png" alt="QR Code" style={{ width: 200, borderRadius: 12 }} />
-              </div>
-            )}
           </form>
 
           <div className="text-center mb-2">
@@ -204,7 +176,7 @@ const LoginPage = () => {
           </div>
 
           <div className="auth-footer mt-3">
-            © Bản quyền thuộc về Tran Trong Tin (IUH)
+            © Bản quyền thuộc về Cartoon Too.
           </div>
         </div>
 
