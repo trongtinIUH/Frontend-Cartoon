@@ -1,134 +1,222 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
-import '../css/Sidebar.css'; // Import the CSS file for styling
+import React, { useEffect, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "../css/Sidebar.css"; // CSS ở bên dưới
 
 const Sidebar = () => {
+  const { MyUser } = useAuth();
+  const admin = MyUser?.my_user || {};
   const location = useLocation();
+
+  // Off-canvas on mobile
+  const [open, setOpen] = useState(false);
   const [openStats, setOpenStats] = useState(false);
-  const [settingOpen, setSettingOpen] = useState(false);
+  const [openSettings, setOpenSettings] = useState(false);
+
+  // Auto close when route changes (mobile)
+  useEffect(() => { setOpen(false); }, [location.pathname]);
+
+  //đăng xuất
+    const handleLogout = () => {
+    localStorage.removeItem("idToken");
+    localStorage.removeItem("my_user");
+    localStorage.removeItem("phoneNumber");
+    localStorage.removeItem("userAttributes");
+    window.location.replace("/");
+  };
   return (
-    <div className="sidebar bg-dark text-white vh-100 position-fixed" style={{ width: '250px' }}>
-      <div className="sidebar-header text-center py-4 border-bottom">
-        <h5 className="m-0">Admin Cartoon Too</h5>
+    <>
+      {/* Toggler chỉ hiện trên màn hình nhỏ */} 
+      <button
+        className="btn btn-primary rounded-circle shadow sidebar-toggler d-lg-none"
+        onClick={() => setOpen(true)}
+        aria-label="Open sidebar"
+      >
+        <i className="fas fa-bars"></i>
+      </button>
+
+      {/* Overlay (mobile) */}
+      <div
+        className={`sidebar-overlay ${open ? "show" : ""}`}
+        onClick={() => setOpen(false)}
+      />
+
+      <aside className={`sidebar-wrapper bg-dark text-white ${open ? "open" : ""}`}>
+       <div className="px-3 pt-3">
+        <div className="sidebar-tile d-flex align-items-center gap-2 brand-tile">
+          <div className="brand-logo rounded-circle d-flex align-items-center justify-content-center">
+           <img  src={`${process.env.PUBLIC_URL}/image/cartoonToo.png`}alt=""  style={{width: 40, height: 40 ,borderRadius:"6px"}}/>
+          </div>
+          <div className="min-w-0">
+            <div className="fw-bold text-truncate">Admin Cartoon Too</div>
+            <small className="text-white-50">Dashboard</small>
+          </div>
+        </div>
       </div>
-      <div className="text-center mt-3">
-        <img
-          src="https://adminlte.io/themes/v3/dist/img/user2-160x160.jpg"
-          className="rounded-circle"
-          width="80"
-          alt="User"
-        />
-        <p className="mt-2">DAT TRAN</p>
-      </div> <hr />
-      <div className="sidebar-menu mt-3 px-3">
-        {/* <div className="form-group mb-3">
-          <input className="form-control form-control-sm" placeholder="Search" />
-        </div> */}
 
-        <ul className="nav flex-column">
-          <li className="nav-item">
-            <Link
-              to="/admin-dashboard"
-              className={`nav-link text-white hover-bg ${location.pathname === '/admin-dashboard' ? 'active' : ''}`}
-            >
-              <i className="fas fa-tachometer-alt me-2"></i> Dashboard
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link
-              to="#"
-              className={`nav-link text-white hover-bg ${location.pathname === '/admin-order' ? 'active' : ''}`}
-            >
-              <i className="fas fa-shopping-cart me-2"></i> Quản lý đơn hàng
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link
-              to="/admin-movie"
-              className={`nav-link text-white hover-bg ${location.pathname === '/admin-movie' ? 'active' : ''}`}
-            >
-              <i className="fas fa-box-open me-2"></i> Quản lý phim
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link
-              to="#"
-              className={`nav-link text-white hover-bg ${location.pathname === '/admin-episode' ? 'active' : ''}`}
-            >
-              <i className="fas fa-th me-2"></i> Quản lý tập phim
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link
-              to="#"
-              className={`nav-link text-white hover-bg ${location.pathname === '/admin-member' ? 'active' : ''}`}
-            >
-              <i className="fas fa-users me-2"></i> Quản lý thành viên
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link
-              to="#"
-              className={`nav-link text-white hover-bg ${location.pathname === '/admin-promotion' ? 'active' : ''}`}
-            >
-              <i className="fas fa-percent me-2"></i> Quản lý khuyến mãi
-            </Link>
-          </li>
-          <li className="nav-item">
-            <div
-              className="nav-link text-white hover-bg d-flex justify-content-between align-items-center"
-              style={{ cursor: 'pointer' }}
-              onClick={() => setOpenStats(!openStats)}
-            >
-              <span>
-                <i className="fas fa-chart-line me-2"></i> Thống kê
-              </span>
-              <i className={`fas fa-chevron-${openStats ? 'down' : 'right'}`}></i>
-            </div>
-            {openStats && (
-              <ul className="nav flex-column ms-3">
-                <li className="nav-item">
-                  <Link 
-                  to="#" 
-                  className={`nav-link text-white hover-bg ${location.pathname === '/admin-revenue' ? 'active' : ''}`}>
-                    <i className="fa-solid fa-dollar-sign me-2"></i> Doanh thu
-                  </Link>
-                </li>
-              </ul>
-            )}
-          </li>
-          <li className="nav-item">
-            <div
-              className="nav-link text-white hover-bg d-flex justify-content-between align-items-center"
-              style={{ cursor: 'pointer' }}
-              onClick={() => setSettingOpen(!settingOpen)}
-            >
-              <div>
-                <i className="fas fa-cog me-2"></i> Cài đặt
-              </div>
-              <i className={`fas fa-chevron-${settingOpen ? 'down' : 'right'}`}></i>
-            </div>
+      {/* User card */}
+      <div className="px-3 py-3">
+        <div className="sidebar-tile d-flex align-items-center gap-3 user-card">
+          <img
+            src={admin.avatarUrl || "https://adminlte.io/themes/v3/dist/img/user2-160x160.jpg"}
+            alt="avatar"
+            className="rounded-circle object-cover"
+            width="36"
+            height="36"
+          />
+          <div className="name-wrap min-w-0">
+            <div className="fw-semibold text-truncate">{admin.userName || "Admin"}</div>
+            <small className="text-white-50">Quản trị viên</small>
+          </div>
+        </div>
+      </div>
 
-            {/* Dropdown con */}
-            {settingOpen && (
-              <ul className="nav flex-column ms-3 mt-1">
-                <li className="nav-item">
-                  <Link to="/profile" className="nav-link text-white hover-bg">
-                    <i className="fas fa-user me-2"></i> Thông tin cá nhân
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link to="/logout" className="nav-link text-white hover-bg">
-                    <i className="fas fa-sign-out-alt me-2"></i> Đăng xuất
-                  </Link>
-                </li>
-              </ul>
-            )}
+        {/* Menu */}
+{/* Menu */}
+<div className="sidebar-scroll px-3 pb-4">
+  <nav aria-label="Admin navigation">
+    <ul className="nav flex-column gap-1">
+
+      <li className="nav-item">
+        <NavLink
+          to="/admin-dashboard"
+          className={({ isActive }) =>
+            `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+          }
+        >
+          <i className="fas fa-gauge me-2" /> <span>Dashboard</span>
+        </NavLink>
+      </li>
+
+      <li className="nav-item">
+        <NavLink
+          to="/admin-order"
+          className={({ isActive }) =>
+            `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+          }
+        >
+          <i className="fas fa-shopping-cart me-2" /> <span>Quản lý đơn hàng</span>
+        </NavLink>
+      </li>
+
+      <li className="nav-item">
+        <NavLink
+          to="/admin-movie"
+          className={({ isActive }) =>
+            `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+          }
+        >
+          <i className="fas fa-box-open me-2" /> <span>Quản lý phim</span>
+        </NavLink>
+      </li>
+
+      <li className="nav-item">
+        <NavLink
+          to="/admin-episode"
+          className={({ isActive }) =>
+            `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+          }
+        >
+          <i className="fas fa-th me-2" /> <span>Quản lý tập phim</span>
+        </NavLink>
+      </li>
+
+      <li className="nav-item">
+        <NavLink
+          to="/admin-member"
+          className={({ isActive }) =>
+            `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+          }
+        >
+          <i className="fas fa-users me-2" /> <span>Quản lý thành viên</span>
+        </NavLink>
+      </li>
+
+      <li className="nav-item">
+        <NavLink
+          to="/admin-promotion"
+          className={({ isActive }) =>
+            `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+          }
+        >
+          <i className="fas fa-percent me-2" /> <span>Quản lý khuyến mãi</span>
+        </NavLink>
+      </li>
+
+      {/* Thống kê (submenu) */}
+      <li className="nav-item">
+        <button
+          type="button"
+          className="nav-link sidebar-link d-flex align-items-center justify-content-between w-100"
+          aria-expanded={openStats}
+          aria-controls="submenu-stats"
+          onClick={() => setOpenStats(v => !v)}
+        >
+          <span><i className="fas fa-chart-line me-2" /> Thống kê</span>
+          <i className={`fas fa-chevron-right ms-2 transition ${openStats ? "rotate-90" : ""}`} />
+        </button>
+        <ul
+          id="submenu-stats"
+          className={`nav flex-column ms-4 mt-1 collapse ${openStats ? "show" : ""}`}
+        >
+          <li className="nav-item">
+            <NavLink
+              to="/admin-revenue"
+              className={({ isActive }) =>
+                `nav-link sidebar-sublink d-flex align-items-center ${isActive ? "active" : ""}`
+              }
+            >
+              <i className="fas fa-dollar-sign me-2" /> Doanh thu
+            </NavLink>
           </li>
         </ul>
-      </div>
-    </div>
+      </li>
+
+      {/* Cài đặt (submenu + lối ra giao diện chính + logout) */}
+      <li className="nav-item">
+        <button
+          type="button"
+          className="nav-link sidebar-link d-flex align-items-center justify-content-between w-100"
+          aria-expanded={openSettings}
+          aria-controls="submenu-settings"
+          onClick={() => setOpenSettings(v => !v)}
+        >
+          <span><i className="fas fa-cog me-2" /> Cài đặt</span>
+          <i className={`fas fa-chevron-right ms-2 transition ${openSettings ? "rotate-90" : ""}`} />
+        </button>
+        <ul
+          id="submenu-settings"
+          className={`nav flex-column ms-4 mt-1 collapse ${openSettings ? "show" : ""}`}
+        >
+          <li className="nav-item">
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `nav-link sidebar-sublink d-flex align-items-center ${isActive ? "active" : ""}`
+              }
+            >
+              <i className="fas fa-user me-2" /> Thông tin cá nhân
+            </NavLink>
+          </li>
+          <li className="nav-item">
+            <NavLink to="/main" className="nav-link sidebar-sublink d-flex align-items-center">
+              <i className="fas fa-tv me-2" /> Giao diện người xem
+            </NavLink>
+          </li>
+          <li className="nav-item">
+            <NavLink to="/login" className="nav-link sidebar-sublink d-flex align-items-center" onClick={handleLogout}>
+              <i className="fas fa-sign-out-alt me-2" /> Đăng xuất
+            </NavLink>
+          </li>
+        </ul>
+      </li>
+
+    </ul>
+  </nav>
+</div>
+
+      </aside>
+    </>
   );
 };
 

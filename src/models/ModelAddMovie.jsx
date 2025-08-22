@@ -13,7 +13,7 @@ import TOPICS from "../constants/topics";
 import GENRES from "../constants/genres";
 import AuthorService from "../services/AuthorService";
 
-const ModelAddMovie = ({ onSuccess }) => {
+const ModelAddMovie = ({ onSuccess,onClose  }) => {
   const navigate = useNavigate();
   const { MyUser } = useAuth();
 
@@ -489,7 +489,7 @@ const authorOptions = authors.map(a => ({
             <button className="btn btn-primary flex-fill" type="submit" disabled={loading}>
               {loading ? "Đang thêm..." : "Thêm phim"}
             </button>
-            <button type="button" className="btn btn-outline-secondary flex-fill" onClick={onSuccess}>
+            <button type="button" className="btn btn-outline-secondary flex-fill" onClick={onclose}>
               Đóng
             </button>
           </div>

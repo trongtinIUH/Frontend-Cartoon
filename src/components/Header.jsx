@@ -338,7 +338,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                             >
                               Thêm phim
                             </li>
-                            <li onClick={() => go('/control-panel')}>
+                            <li onClick={() => go('/admin-dashboard')}>
                               Bảng điều khiển
                             </li>
                           </>

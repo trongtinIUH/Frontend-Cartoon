@@ -1,8 +1,128 @@
-.hover-bg:hover {
-  background-color: rgba(255, 255, 255, 0.1); /* Nền sáng nhẹ khi hover */
+/* ===================== THEME TOKENS ===================== */
+:root{
+  --sb-bg: #14171c;
+  --sb-text: #e9edf2;
+  --sb-subtext: #b9c0c9;
+  --sb-border: rgba(255,255,255,.08);
+  --sb-hover: rgba(255,255,255,.06);
+  --sb-active: rgba(255,255,255,.12);
+  --sb-tile-from: rgba(255,255,255,.06);
+  --sb-tile-to: rgba(255,255,255,.03);
+  --sb-accent-grad: linear-gradient(135deg,#ff7a59,#ff4d4f);
+  --sb-ring: rgba(255,122,89,.45);
 }
 
-.nav-link.active {
-  background-color: rgba(255, 255, 255, 0.1); /* giữ màu sáng khi đã chọn */
+/* ===================== WRAPPER & LAYOUT ===================== */
+.sidebar-wrapper{
+  position: fixed;
+  inset: 0 auto 0 0;                 /* top:0; left:0; bottom:0 */
+  width: 260px;
+  background: var(--sb-bg);
+  color: var(--sb-text);
+  transform: translateX(0);
+  transition: transform .25s ease, box-shadow .25s ease;
+  z-index: 1040;
+  box-shadow: 0 6px 30px rgba(0,0,0,.2);
+}
+.object-cover{ object-fit: cover; }
+
+/* Brand logo nhỏ */
+.sidebar-header .brand-logo,
+.brand-tile .brand-logo{
+  width: 36px; height: 36px;
+  background: var(--sb-accent-grad);
+  color:#fff;
+  border-radius: 50%;
 }
 
+/* Viền ngăn cách dịu */
+.sidebar-wrapper .border-bottom{ border-color: var(--sb-border) !important; }
+
+/* ===================== TILES (brand + user) ===================== */
+.sidebar-tile{
+  background: linear-gradient(180deg, var(--sb-tile-from), var(--sb-tile-to));
+  border: 1px solid var(--sb-border);
+  border-radius: 12px;
+  padding: .6rem .75rem;
+}
+.sidebar-tile:hover{ background: rgba(255,255,255,.09); }
+
+/* Chặn mọi nền/viền “lạ” trong tile */
+.brand-tile, .user-card,
+.brand-tile *, .user-card *{
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border: 0 !important;
+}
+
+/* ===================== SCROLL AREA ===================== */
+.sidebar-scroll{ height: calc(100vh - 140px); overflow-y: auto; }
+.sidebar-scroll::-webkit-scrollbar{ width: 6px; }
+.sidebar-scroll::-webkit-scrollbar-thumb{ background: #2f3542; border-radius: 8px; }
+
+/* ===================== LINKS ===================== */
+.sidebar-link{
+  color: var(--sb-text) !important;
+  border-radius: 12px;
+  padding: .65rem .85rem;
+  display:flex; align-items:center; gap:.6rem;
+  background: transparent !important;
+  border: 0; box-shadow:none;
+  transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.sidebar-link:hover{ background: var(--sb-hover) !important; color:#fff !important; }
+.sidebar-link:focus-visible{ box-shadow: 0 0 0 2px var(--sb-ring); }
+
+.sidebar-sublink{
+  color: var(--sb-subtext) !important;
+  border-radius: 10px;
+  padding: .5rem .7rem;
+  display:flex; align-items:center; gap:.5rem;
+}
+.sidebar-sublink:hover{ background: var(--sb-hover) !important; color:#fff !important; }
+.sidebar-sublink:focus-visible{ box-shadow: 0 0 0 2px var(--sb-ring); }
+
+/* Active NavLink */
+.nav-link.active,
+a.nav-link.active{
+  background: var(--sb-active) !important;
+  color: #fff !important;
+}
+
+/* ===================== OVERLAY (MOBILE) ===================== */
+.sidebar-overlay{
+  position: fixed; inset: 0; background: rgba(0,0,0,.35);
+  opacity: 0; visibility: hidden; transition: .2s ease; z-index: 1030;
+}
+.sidebar-overlay.show{ opacity: 1; visibility: visible; }
+
+/* ===================== OFF-CANVAS (MOBILE) ===================== */
+@media (max-width: 991.98px){
+  .sidebar-wrapper{ transform: translateX(-100%); }
+  .sidebar-wrapper.open{ transform: translateX(0); }
+
+  /* Nút mở sidebar nổi */
+  .sidebar-toggler{
+    position: fixed; left: 12px; bottom: 12px; z-index: 1050;
+    width: 46px; height: 46px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 8px 22px rgba(0,0,0,.25);
+  }
+}
+
+/* ===================== CONTENT OFFSET (DESKTOP) ===================== */
+@media (min-width: 992px){
+  .content-with-sidebar{ margin-left: 260px; } /* gắn class này cho wrapper nội dung */
+}
+
+/* ===================== UTILITIES ===================== */
+.text-white-50{ color: var(--sb-subtext) !important; }
+.min-w-0{ min-width:0; }
+.text-truncate{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+
+
+.transition { transition: transform .2s ease; }
+.rotate-90 { transform: rotate(90deg); }
