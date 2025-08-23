@@ -56,6 +56,8 @@ const GENRES = [
   "Viễn Tưởng",
   "Võ Thuật",
   "Xuyên Không",
-  "Đời Thường"
+  "Đời Thường",
+  "T13+",
+  "T18+"
 ];
 export default GENRES;

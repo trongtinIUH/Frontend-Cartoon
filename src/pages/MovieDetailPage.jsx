@@ -45,7 +45,12 @@ const MovieDetailPage = () => {
   const [seasons, setSeasons] = useState([]);       // [{seasonId, seasonNumber, ...}]
   const [selectedSeason, setSelectedSeason] = useState(null);
   const [episodes, setEpisodes] = useState([]);     // episodes của season đang chọn
+  const [totals, setTotals] = useState({ seasonsCount: 0, episodesCount: 0 });
 
+
+  const [descExpanded, setDescExpanded] = useState(false);
+  // hiển thị nút khi mô tả đủ dài
+  const needClamp = (movie?.description || "").trim().length > 220;
 
   // Lấy tất cả đánh giá của phim
   useEffect(() => {
@@ -97,27 +102,39 @@ const MovieDetailPage = () => {
   }, []);
 
   // nạp chi tiết (movie + seasons + count)
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await MovieService.getMovieDetail(id); // BE trả: { movie, seasons: [...] }
-        setMovie(data.movie);
-        setSeasons(Array.isArray(data.seasons) ? data.seasons : []);
-        // nếu có season thì chọn season đầu và nạp tập
-        if (data.seasons && data.seasons.length > 0) {
-          const first = data.seasons[0];
-          setSelectedSeason(first);
-          const eps = await EpisodeService.getEpisodesByMovieId(first.seasonId);
-          setEpisodes(Array.isArray(eps) ? eps : []);
-        } else {
-          setSelectedSeason(null);
-          setEpisodes([]);
-        }
-      } catch (e) {
-        console.error(e);
+useEffect(() => {
+  (async () => {
+    try {
+      const data = await MovieService.getMovieDetail(id); // { movie, seasons, seasonsCount?, episodesCount? }
+      setMovie(data.movie);
+
+      const seasonsArr = Array.isArray(data.seasons) ? data.seasons : [];
+      setSeasons(seasonsArr);
+
+      // ✅ Ưu tiên dùng số BE trả về; nếu không có thì tự tính
+      const seasonsCount = data.seasonsCount ?? seasonsArr.length;
+      const episodesCount =
+        data.episodesCount ??
+        seasonsArr.reduce((sum, s) => sum + (Number(s.episodesCount) || 0), 0);
+
+      setTotals({ seasonsCount, episodesCount });
+
+      // chọn season đầu & nạp tập như cũ
+      if (seasonsArr.length > 0) {
+        const first = seasonsArr[0];
+        setSelectedSeason(first);
+        const eps = await EpisodeService.getEpisodesByMovieId(first.seasonId);
+        setEpisodes(Array.isArray(eps) ? eps : []);
+      } else {
+        setSelectedSeason(null);
+        setEpisodes([]);
       }
-    })();
-  }, [id]);
+    } catch (e) {
+      console.error(e);
+    }
+  })();
+}, [id]);
+
 
   // đổi season -> nạp tập
   const handleSelectSeason = async (s) => {
@@ -349,22 +366,36 @@ const MovieDetailPage = () => {
                   ))}
                 </div>
 
-              <div className="movie-description mb-3">
-                <div className="d-flex align-items-center mb-2">
-                  <i className="fas fa-align-left me-2" style={{ color: "#4bc1fa", fontSize: "14px" }}></i>
-                  <strong style={{ color: "#fff", fontSize: "15px" }}>Nội dung phim</strong>
+                <div className="movie-description mb-3">
+                  <div className="d-flex align-items-center mb-2">
+                    <i className="fas fa-align-left me-2" style={{ color: "#4bc1fa", fontSize: "14px" }}></i>
+                    <strong style={{ color: "#fff", fontSize: "15px" }}>Nội dung phim</strong>
+                  </div>
+
+                  <div
+                    className={`description-content p-3 rounded-3 ${descExpanded ? "is-expanded" : "is-clamped"}`}
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)"
+                    }}
+                  >
+                    <p className="desc-text mb-0">
+                      {movie.description || "Chưa có mô tả cho bộ phim này."}
+                    </p>
+                  </div>
+
+                  {needClamp && (
+                    <button
+                      type="button"
+                      className="btn-see-more"
+                      onClick={() => setDescExpanded(v => !v)}
+                      aria-expanded={descExpanded}
+                    >
+                      {descExpanded ? "Thu gọn" : "Xem thêm"}
+                    </button>
+                  )}
                 </div>
-                
-                <div className="description-content p-3 rounded-3" style={{
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  fontSize: "14px",
-                  lineHeight: "1.6",
-                  color: "#e9ecef"
-                }}>
-                  {movie.description || "Chưa có mô tả cho bộ phim này."}
-                </div>
-              </div>
+
 
                 <div className="d-flex flex-wrap mb-2 small" style={{ background: "transparent" }}>
                  <div className="movie-details mb-3">
@@ -441,38 +472,61 @@ const MovieDetailPage = () => {
                 </div>
               </div>
             </div>
-            <div className="mt-4 bg-dark p-4 rounded-4">
-              <h5 className="mb-3 text-warning">
-                <i className="bi bi-fire"></i> Top phim tuần này
-              </h5>
+          <div className="mt-4">
+            <h5 className="mb-3 text-warning">
+              <i className="bi bi-fire me-2" /> Top phim tuần này
+            </h5>
 
-              <ol className="list-unstyled">
-                {topMovies.map((item, idx) => {
-                  const movieId = item.id || item._id || item.movieId;
-                  return (
-                    <li
-                      className="d-flex align-items-center mb-3"
-                      key={movieId || `topmovie-${idx}`}
-                      onClick={() => movieId && handleClickTopMovie(movieId)}
-                      style={{ cursor: "pointer", borderRadius: "8px", padding: "10px", backgroundColor: "#1a1a1a" }}
-                    >
-                      <span className="top-rank me-3">{idx + 1}</span>
+            <div className="list-group">
+              {(topMovies || []).slice(0, 10).map((item, idx) => {
+                const movieId = item.movieId || item.id || item._id;
+                const views = Number(item.viewCount || 0).toLocaleString("vi-VN");
+
+                return (
+                  <a
+                    key={movieId || `top-${idx}`}
+                    href="#"
+                    className="list-group-item list-group-item-action bg-dark text-white border rounded-3 px-3 py-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      movieId && handleClickTopMovie(movieId);
+                    }}
+                    tabIndex={-1}                 // tránh hiện focus ring (viền trắng)
+                    style={{ boxShadow: "none" }} // phòng trường hợp vẫn còn shadow
+                  >
+                    <div className="d-flex align-items-center w-100" style={{ background: "rgba(34, 36, 52, 0.7)" }}>
+                      <span className="badge bg-warning text-dark me-3">{idx + 1}</span>
+
                       <img
-                        src={item.thumbnailUrl || "https://via.placeholder.com/50x70"}
+                        src={item.thumbnailUrl || "https://via.placeholder.com/46x64?text=No+Img"}
                         alt={item.title}
-                        className="rounded-2 me-2 top-movie-thumb"
-                        width={40}
-                        height={56}
+                        className="rounded me-3"
+                        style={{ width: 46, height: 64, objectFit: "cover" }}
                       />
-                      <div>
-                        <div className="fw-bold text-truncate">{item.title}</div>
-                        <div className="small text-truncate">{item.viewCount} lượt xem</div>
+
+                      <div className="flex-grow-1">
+                        <div className="fw-semibold text-truncate">
+                          {item.title && item.title.length > 20 
+                            ? `${item.title.substring(0, 20)}...` 
+                            : item.title
+                          }
+                        </div>
+                        <div className="small text-truncate">{views} lượt xem</div>
                       </div>
-                    </li>
-                  );
-                })}
-              </ol>
+
+                     
+                    </div>
+                  </a>
+                );
+              })}
+
+              {(!topMovies || topMovies.length === 0) && (
+                <div className="list-group-item bg-dark text-secondary border rounded-3">
+                  Chưa có dữ liệu tuần này
+                </div>
+              )}
             </div>
+          </div>
           </div>
 
           <div className="col-lg-8"> 
@@ -573,11 +627,11 @@ const MovieDetailPage = () => {
                       {movie.status === "COMPLETED" && (
                         <>
                           {/* Season tabs */}
-                          <div className="d-flex flex-wrap gap-2 mb-3">
+                          <div className="d-flex flex-wrap gap-2 mb-3"  style={{borderRadius:"50px"}}>
                             {seasons.map(s => (
                               <button
                                 key={s.seasonId}
-                                className={`btn btn-sm ${selectedSeason?.seasonId === s.seasonId ? "btn-primary" : "btn-outline-primary"}`}
+                                className={`btn btn-sm btn-season ${selectedSeason?.seasonId === s.seasonId ? "is-active" : ""}`}
                                 onClick={async () => {
                                   setSelectedSeason(s);
                                   try {

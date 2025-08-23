@@ -58,6 +58,7 @@ export default function WatchPage() {
 
   const playerRef = useRef(null);
   const videoRef  = useRef(null);
+  const antiCapCleanupRef = useRef(null);
 
   // khối player để đo chiều cao làm placeholder
   const frameRef = useRef(null);
@@ -80,15 +81,18 @@ export default function WatchPage() {
       fluid: true,
       responsive: true,
       sources: [{ src: episode.videoUrl, type: "application/x-mpegURL" }],
-    },function(){
-      initAntiCapture(player);
-    });
+    },function onReady() {
+        // gắn anti-capture & giữ cleanup
+        antiCapCleanupRef.current?.();
+        antiCapCleanupRef.current = initAntiCapture(player);
+      }
+    );
 
     player.hlsQualitySelector?.({ displayCurrentQuality: true });
 
     player.on("ended", () => {
       if (autoNext && nextEp) {
-        navigate(`/watch/${movie?.id}/${nextEp.id}`, {
+        navigate(`/watch/${movie?.movieId}/${nextEp.episodeId }`, {
           state: { episode: nextEp, movie, episodes }
         });
       }
@@ -96,6 +100,9 @@ export default function WatchPage() {
 
     playerRef.current = player;
    return () => {
+     // gỡ anti-capture listeners/timers TRƯỚC khi dispose player
+      antiCapCleanupRef.current?.();
+      antiCapCleanupRef.current = null;
     if (playerRef.current) {
       playerRef.current.dispose();
       playerRef.current = null;

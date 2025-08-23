@@ -245,7 +245,7 @@ const resetAll = useCallback((reload = false) => {
               </thead>
               <tbody>
                 {filtered.map((m, idx) => {
-                  const id = m.movieId || m.id || idx;
+                  const id = m.movieId ;
                   return (
                     <tr key={id}>
                       <td>

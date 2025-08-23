@@ -337,4 +337,85 @@
   border-radius: 2px;
 }
 
+/* vùng mô tả */
+.description-content {
+  position: relative;
+}
+
+/* nội dung văn bản */
+.description-content .desc-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e9ecef;
+  white-space: pre-line; /* giữ xuống dòng nếu có */
+}
+
+/* trạng thái rút gọn: 4 dòng + fade cuối */
+.description-content.is-clamped .desc-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;          /* số dòng muốn hiển thị */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.description-content.is-clamped::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2.2rem;
+  /* lớp mờ để tạo cảm giác bị cắt nội dung; 
+     màu nên gần nền của .description-content */
+  background: linear-gradient(to bottom, rgba(20,20,24,0), rgba(20,20,24,0.85));
+  pointer-events: none;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+/* trạng thái mở rộng: hiện full */
+.description-content.is-expanded .desc-text {
+  display: block;
+}
+
+/* nút xem thêm/thu gọn */
+.btn-see-more {
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #4bc1fa;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.btn-see-more:hover { 
+  text-decoration: underline;
+  background-color: transparent !important; 
+ }
+
+/* thanh season riêng, không đụng global primary */
+.btn-season{
+  --season: #68c2f0;
+  --season-2: #368091; /* xanh nhạt hơn để làm gradient */
+  border-radius: 9999px;
+  padding: .45rem 1rem;
+  font-weight: 600;
+  letter-spacing: .2px;
+  background: transparent;
+  color: var(--season);
+  border: 1px solid var(--season);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+  transition: all .18s ease;
+}
+.btn-season:hover{ background: rgba(75,193,250,.08); }
+
+.btn-season.is-active{
+  color: #fff;
+  border-color: transparent;
+  background-image: linear-gradient(90deg,var(--season-2),var(--season));
+  box-shadow: 0 6px 16px rgba(75,193,250,.25);
+}
+.btn-season.is-active:focus{
+  box-shadow: 0 0 0 .2rem rgba(75,193,250,.35);
+}
+
+
 

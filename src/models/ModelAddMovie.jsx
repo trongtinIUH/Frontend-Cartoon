@@ -165,7 +165,7 @@ const authorOptions = authors.map(a => ({
       const fd = new FormData();
       [
         "title","originalTitle","description","country","topic",
-        "movieType","minVipLevel","status","releaseYear","slug"
+        "movieType","minVipLevel","status","releaseYear","slug","duration"
       ].forEach(k => form[k] != null && fd.append(k, form[k]));
 
       // genres[]
@@ -489,7 +489,7 @@ const authorOptions = authors.map(a => ({
             <button className="btn btn-primary flex-fill" type="submit" disabled={loading}>
               {loading ? "Đang thêm..." : "Thêm phim"}
             </button>
-            <button type="button" className="btn btn-outline-secondary flex-fill" onClick={onclose}>
+            <button type="button" className="btn btn-outline-secondary flex-fill" onClick={onClose}>
               Đóng
             </button>
           </div>

@@ -9,7 +9,7 @@ const ModelAddNewEpisode = ({ movieId, onClose, onSuccess }) => {
     description: "",
     episodeNumber: "",
     video: null,
-    thumbnail: null,
+ 
   });
   const [loading, setLoading] = useState(false);
 
@@ -17,12 +17,8 @@ const ModelAddNewEpisode = ({ movieId, onClose, onSuccess }) => {
   const VIDEO_TYPES = [
     "video/mp4", "video/avi", "video/mkv", "video/webm", "video/quicktime", "video/x-msvideo", "video/x-matroska"
   ];
-  const THUMBNAIL_TYPES = [
-    "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp"
-  ];
 
   const isValidVideoFile = (file) => file && VIDEO_TYPES.includes(file.type);
-  const isValidImageFile = (file) => file && THUMBNAIL_TYPES.includes(file.type);
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -30,10 +26,6 @@ const ModelAddNewEpisode = ({ movieId, onClose, onSuccess }) => {
       const file = files[0];
       if (name === "video" && !isValidVideoFile(file)) {
         toast("Chỉ chấp nhận các định dạng video phổ biến như mp4, avi, mkv, webm, mov...");
-        return;
-      }
-      if (name === "thumbnail" && !isValidImageFile(file)) {
-        toast("Chỉ chấp nhận các định dạng ảnh phổ biến như jpg, png, gif, webp, bmp...");
         return;
       }
       setForm({ ...form, [name]: file });
@@ -56,8 +48,6 @@ const ModelAddNewEpisode = ({ movieId, onClose, onSuccess }) => {
       episodeData.append("description", form.description);
       episodeData.append("episodeNumber", form.episodeNumber);
       episodeData.append("video", form.video);
-      if (form.thumbnail) episodeData.append("thumbnail", form.thumbnail);
-
       await EpisodeService.addEpisode(episodeData);
 
       toast.success("Thêm tập mới thành công!");
