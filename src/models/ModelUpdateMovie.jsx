@@ -8,8 +8,13 @@ import Select from "react-select";
 import { toast } from "react-toastify";
 import { FaVideo, FaImage, FaClock, FaGlobe, FaTags, FaLink } from "react-icons/fa";
 import "../css/ModelUpdateMovie.css";
+import SeasonService from "../services/SeasonService";
+import EpisodeService from "../services/EpisodeService";
 
 export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
+
+  const [initialStatus, setInitialStatus] = useState("UPCOMING");
+  const [contentMode, setContentMode] = useState("file"); 
   const [form, setForm] = useState({
     title: "",
     originalTitle: "",
@@ -88,10 +93,13 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
           authorIds: m.authorIds || [],
           thumbnail: null,
           banner: null,
-          trailerVideo: m.trailerUrl || "",
+          trailerUrl: m.trailerUrl || "", 
+          trailerVideo: null,
+          contentVideo: null,
         }));
         setThumbnailPreview(m.thumbnailUrl || "");
         setBannerPreview(m.bannerUrl || "");
+        setInitialStatus(m.status || "UPCOMING");
 
         // Tất cả tác giả (để chọn)
         const listAll = await AuthorService.getAllAuthors();
@@ -132,11 +140,12 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
         setBannerPreview(URL.createObjectURL(file));
       } else if (name === "trailerVideo") {
         setForm((f) => ({ ...f, trailerVideo: file }));
-      }
+      }else if (name === "contentVideo") {
+        setForm(f => ({ ...f, contentVideo: file }));
+      }      
       return; 
     }
 
-    
     setForm((f) => ({ ...f, [name]: value }));
   };
 
@@ -159,47 +168,67 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
       return n;
     });
 
-  const handleSubmit = async (e) => {
+
+  async function ensureSeasonAndCreateEp1() {
+    // 1) lấy / tạo season 1
+    let seasons = await SeasonService.getSeasonsByMovie(movieId);
+    let season = seasons?.[0];
+    if (!season) {
+      season = await SeasonService.createSeason({
+        movieId,
+        seasonNumber: 1,
+        title: "Phần 1",
+        releaseYear: form.releaseYear || null,
+        posterUrl: ""
+      });
+    }
+
+    // 2) số tập kế tiếp
+    const count = await EpisodeService.countEpisodesBySeasonId(season.seasonId);
+    const epNo = (Number(count) || 0) + 1;
+
+    // 3) tạo tập
+    const epFd = new FormData();
+    epFd.append("movieId", movieId);
+    epFd.append("seasonId", season.seasonId);
+    epFd.append("title", `${form.title} - Tập ${epNo}`);
+    epFd.append("episodeNumber", epNo);
+    epFd.append("video", form.contentVideo); // ở UI bạn đang chỉ dùng file
+    await EpisodeService.addEpisode(epFd);
+  }
+    const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title) return toast.error("Vui lòng nhập tiêu đề");
 
+    const switchingToCompleted = initialStatus !== "COMPLETED" && form.status === "COMPLETED";
+    if (switchingToCompleted && !form.contentVideo) {
+      return toast.error("Hãy chọn file video Tập 1 khi chuyển sang ĐÃ CÔNG CHIẾU");
+    }
+
     setLoading(true);
     try {
-      // 1) tạo tác giả mới (giữ nguyên như bạn đang làm)
+      // 1) tạo tác giả mới (như cũ)
       let createdIds = [];
       if (isNewAuthor) {
         const payloads = newAuthors
-          .map((a) => ({ name: a.name?.trim(), authorRole: a.authorRole }))
-          .filter((a) => a.name);
+          .map(a => ({ name: a.name?.trim(), authorRole: a.authorRole }))
+          .filter(a => a.name);
         if (payloads.length) {
-          const created = await Promise.all(payloads.map((p) => AuthorService.createAuthor(p)));
-          createdIds = created.map((x) => x.authorId);
+          const created = await Promise.all(payloads.map(p => AuthorService.createAuthor(p)));
+          createdIds = created.map(x => x.authorId);
         }
       }
       const allIds = Array.from(new Set([...(form.authorIds || []), ...createdIds]));
 
-      // 2) FormData: ✅ append đủ field
+      // 2) cập nhật movie
       const fd = new FormData();
-      [
-        "title",
-        "originalTitle",
-        "description",
-        "country",
-        "topic",
-        "status",
-        "minVipLevel",
-        "releaseYear",
-        "duration",
-        "movieType",
-        "slug",
-      ].forEach((k) => {
+      ["title","originalTitle","description","country","topic","status","minVipLevel",
+      "releaseYear","duration","movieType","slug"].forEach(k => {
         const v = form[k];
         if (v !== undefined && v !== null && `${v}` !== "") fd.append(k, v);
       });
-
-      (form.genres || []).forEach((g) => fd.append("genres", g));
-      (allIds || []).forEach((id) => fd.append("authorIds", id));
-
+      (form.genres || []).forEach(g => fd.append("genres", g));
+      (allIds || []).forEach(id => fd.append("authorIds", id));
       if (form.thumbnail) fd.append("thumbnail", form.thumbnail);
       if (form.banner) fd.append("banner", form.banner);
       if (form.trailerVideo && form.status === "UPCOMING") {
@@ -208,10 +237,13 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
 
       await MovieService.updateMovie(movieId, fd);
 
-      // 3) Link movie vào tác giả (nếu BE cần)
-      if (allIds.length) {
-        await AuthorService.addMovieToMultipleAuthors(allIds, movieId);
+      // 3) nếu vừa chuyển sang COMPLETED → tạo Season/Episode ngay
+      if (switchingToCompleted) {
+        await ensureSeasonAndCreateEp1();
       }
+
+      // 4) liên kết movie vào tác giả
+      if (allIds.length) await AuthorService.addMovieToMultipleAuthors(allIds, movieId);
 
       toast.success("Cập nhật thành công");
       onSuccess?.();
@@ -223,6 +255,7 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
       setLoading(false);
     }
   };
+
 
 
   return (
@@ -287,6 +320,19 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
                   <option key={i} value={c}>{c}</option>
                 ))}
               </select>
+            </div>
+             
+             <div className="col-md-4">
+              <label className="form-label"><FaClock /> Thời lượng</label>
+              <input
+                type="text"
+                className="form-control"
+                name="duration"
+                value={form.duration}
+                onChange={handleChange}
+                placeholder='VD: 120p (phút)'
+              />
+              <div className="form-text">Định dạng đề nghị: <code>120p</code> (phút).</div>
             </div>
           </div>
 
@@ -393,6 +439,14 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
                           style={{ maxHeight: 200, borderRadius: 6 }}
                         />
                       )}
+                    </div>
+                  )}
+                  {/* Khi publish (COMPLETED) cho phép nhập tập 1 ngay */}
+                  {form.status === "COMPLETED" && (
+                    <div className="col-12 mt-3">
+                      <label className="form-label"><FaVideo /> Tập 1 (khi chuyển sang đã công chiếu)</label>
+                      <input type="file" className="form-control" name="contentVideo" accept="video/*" onChange={handleChange} />
+                      <div className="form-text">Nếu phim đã có season/tập, hệ thống sẽ tiếp tục theo số tập kế tiếp.</div>
                     </div>
                   )}
 

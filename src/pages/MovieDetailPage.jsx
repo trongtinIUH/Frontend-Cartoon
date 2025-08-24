@@ -411,7 +411,7 @@ useEffect(() => {
                     
                     <div className="detail-item mb-2">
                       <span className="detail-label fw-bold">Thời lượng:</span>{" "}
-                      <span className="detail-value">{movie.duration ? `${movie.duration}m` : "-"}</span>
+                      <span className="detail-value">{movie.duration ? `${movie.duration}` : "-"}</span>
                     </div>
                     
                     <div className="detail-item mb-2">

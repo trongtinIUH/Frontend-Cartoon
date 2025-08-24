@@ -35,13 +35,6 @@
   font-weight: 500;
 }
 
-.model-add-movie .form-control{
-  border-radius: 6px;
-  box-shadow: none;
-  border: 1px solid #d1d5db;
-}
-
-
 .model-add-movie .form-check {
  
   min-width: 100px;
@@ -113,7 +106,7 @@
 .model-add-movie textarea {
   color: #212529 !important;
   background-color: #ffffff !important;
-  border: 1px solid #d1d5db;
+  border: 1px solid #bdbdbd !important;
 }
 
 .model-add-movie .form-control:focus,
@@ -121,4 +114,6 @@
 .model-add-movie textarea:focus {
   color: #212529 !important;
   background-color: #ffffff !important;
+  border: 1px solid #bdbdbd !important;
+  box-shadow: none !important;
 }

@@ -299,6 +299,19 @@ const authorOptions = authors.map(a => ({
               placeholder="VD: 2025"
             />
           </div>
+          
+          <div className="col-md-4">
+            <label className="form-label"><FaClock /> Thời lượng</label>
+            <input
+              type="text"
+              className="form-control"
+              name="duration"
+              value={form.duration}
+              onChange={handleChange}
+              placeholder='VD: 120p (phút)'
+            />
+            <div className="form-text">Định dạng đề nghị: <code>120p</code> (phút).</div>
+          </div>
 
           <div className="col-md-6">
             <label className="form-label">Tên gốc (Original Title)</label>
