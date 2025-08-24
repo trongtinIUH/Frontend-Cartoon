@@ -28,6 +28,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./css/toastCSS/toast.css";
 import CustomToastCloseButton from "./utils/CustomToastCloseButton";
 import FavoritesPage from './pages/FavoritesPage';
+import PromotionManagementPage from './pages/admin/PromotionManagementPage';
 
 
 function App() {
@@ -78,6 +79,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                   </Route>
                     <Route path="/admin-dashboard" element={<DashboardPage />} />
                     <Route path="/admin-movie" element={<MovieManagementPage />} />
+                    <Route path="/admin-promotion" element={<PromotionManagementPage />} />
                 </Routes>
 
                 {/* Thêm ToastContainer để hiển thị thông báo toast */}

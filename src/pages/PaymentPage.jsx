@@ -75,6 +75,7 @@ const PaymentPage = () => {
       setShowModal(true);
     } catch (err) {
       console.error("Lỗi khi tạo thanh toán:", err.response?.data || err.message);
+      toast.error("Lỗi khi tạo thanh toán. Vui lòng thử lại.");
     }
   };
 
@@ -108,9 +109,6 @@ const PaymentPage = () => {
                     const amount = pkg?.amount ?? 0;
                     const discounted = pkg?.discountedAmount ?? null;
                     const hasDiscount = discounted != null && amount > 0 && discounted < amount;
-                    const percentOff = hasDiscount
-                      ? Math.round(((amount - discounted) / amount) * 100)
-                      : 0;
 
                     return (
                       <div
@@ -133,7 +131,7 @@ const PaymentPage = () => {
                               <span
                                 className="badge rounded-pill bg-danger"
                               >
-                                Giảm {percentOff}%
+                                Giảm {pkg.appliedDiscountPercent}%
                               </span>
                             )}
                             <span className="ms-3 fw-semibold">

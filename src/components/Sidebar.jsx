@@ -69,7 +69,7 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <Link
-              to="#"
+              to="/admin-promotion"
               className={`nav-link text-white hover-bg ${location.pathname === '/admin-promotion' ? 'active' : ''}`}
             >
               <i className="fas fa-percent me-2"></i> Quản lý khuyến mãi
