@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import ChatBox from "../components/ChatBox";
 import { Outlet } from "react-router-dom";
 import MovieService from "../services/MovieService";
+import ScrollManager from "./ScrollManager.jsx"
 
 const Layout = () => {
   const [movies, setMovies] = useState([]);
@@ -28,6 +29,7 @@ const Layout = () => {
   return (
     <>
       <Header fetchMovies={fetchMovies} setFilteredMovies={setFilteredMovies} />
+      <ScrollManager /> 
       <Outlet context={{ movies, setMovies }} />
       <Footer />
       <ChatBox />

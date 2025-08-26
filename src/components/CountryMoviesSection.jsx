@@ -33,18 +33,17 @@ const CountryMoviesSection = ({ title, country, link, gradient }) => {
             background: gradient,
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            width:"150px"
           }}
             >
             {title}
           </h3>
-          <a
-            href={link}
+          <Link
+            to={link}
             className="view-all-btn text-decoration-none d-flex align-items-center"
           >
             <span className="me-2">Xem toàn bộ</span>
             <i className="fas fa-chevron-right"></i>
-          </a>
+          </Link>
         </div>
 
         {/* Movies Slider - bên phải, chiếm phần còn lại */}
@@ -82,12 +81,14 @@ const CountryMoviesSection = ({ title, country, link, gradient }) => {
                         </div>
                       </div>
                       
-                      {/* Episode Badge */}
-                      <div className="episode-badge">
-                        <span className="episode-number">
-                          Tập {movie.currentEpisode || 1}
-                        </span>
-                      </div>
+                      {/* Episode Badge - chỉ hiển thị cho SERIES */}
+                      {movie.movieType === "SERIES" && (
+                        <div className="episode-badge">
+                          <span className="episode-number">
+                            Tập {movie.currentEpisode || 1}
+                          </span>
+                        </div>
+                      )}
 
                       {/* Quality Badge */}
                       <div className="quality-badge">

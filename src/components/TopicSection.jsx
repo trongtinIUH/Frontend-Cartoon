@@ -1,9 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import TOPICS from "../constants/topics";
+import MovieService from "../services/MovieService";
+import showToast from "../utils/AppUtils";
 import "../css/componentsCSS/TopicSection.css";
 
-const TopicSection = () => {
+const TopicSection = ({ setFilteredMovies }) => {
   const visibleTopics = TOPICS.slice(0, 6);
   const hiddenTopics = TOPICS.slice(6);
 
@@ -22,6 +24,21 @@ const TopicSection = () => {
   const getRandomGradient = () => {
     return gradients[Math.floor(Math.random() * gradients.length)];
   }; 
+
+  // Tìm phim theo chủ đề
+  const handleTopicSearch = async (topic) => {
+    try {
+      const movies = await MovieService.getMovieByTopic(topic);
+      if (typeof setFilteredMovies === "function" && Array.isArray(movies)) {
+        setFilteredMovies(movies);
+        showToast(`Tìm thấy ${movies.length} phim với chủ đề "${topic}"`, "success");
+        // Scroll to top để xem kết quả
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } catch (error) {
+      showToast(`Không thể tìm phim với chủ đề "${topic}"`, "error");
+    }
+  }; 
   return (
     <div className="topics-section container mb-5">
       <h2 className="section-title"><span role="img"></span> Bạn đang quan tâm gì?</h2>
@@ -30,7 +47,19 @@ const TopicSection = () => {
           <div className="col-6 col-sm-4 col-md-2" key={index}>
             <div className="topic-card" style={{ backgroundImage: getRandomGradient() }}>
               <h5>{topic}</h5>
-              <Link to={`/chu-de/${topic}`}>Xem chủ đề &rsaquo;</Link>
+              <Link 
+                to={`/danh-muc/chu-de/${encodeURIComponent(topic)}`}
+                onClick={(e) => {
+                  // Nếu có hàm setFilteredMovies (đang ở trang main), tìm phim luôn
+                  if (typeof setFilteredMovies === "function") {
+                    e.preventDefault(); // Ngăn navigate
+                    handleTopicSearch(topic);
+                  }
+                  // Nếu không có setFilteredMovies, navigate bình thường
+                }}
+              >
+                Xem chủ đề &rsaquo;
+              </Link>
             </div>
           </div>
         ))}

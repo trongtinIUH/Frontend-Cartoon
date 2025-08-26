@@ -3,7 +3,23 @@
   color: white;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+.genre-menu-wrapper,
+.topic-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Hover effect cho desktop */
+.genre-menu-wrapper:hover .genres-dropdown,
+.topic-menu-wrapper:hover .topics-dropdown {
+  opacity: 1; 
+  visibility: visible; 
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  transition-delay: 0s;
+}
+
+/* Mega menu – căn giữa dưới "Thể loại" và "Chủ đề" */n-items: center;
   padding: 12px 24px;
   box-shadow: none; /* Bỏ đổ bóng khi trong suốt */
   position: fixed; /* Đổi từ sticky thành fixed để luôn ở trên cùng */
@@ -144,53 +160,94 @@
 
 
 
-.genre-menu-wrapper {
+.genre-menu-wrapper,
+.topic-menu-wrapper {
   position: relative;
   display: inline-block;
 }
-
-.genres-dropdown {
+/* Mega menu – căn giữa dưới “Thể loại” */
+.genres-dropdown,
+.topics-dropdown{
   position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 10px 0;
-  list-style: none;
-  min-width: 100px;
-  max-height: 300px;
-  overflow-y: auto;
-  font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  z-index: 1000;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  width: clamp(560px, 60vw, 820px);
+  padding: 12px 14px;
+  border-radius: 14px;
+
+  background: rgba(16,19,27,0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+  backdrop-filter: blur(10px);
+
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+  z-index: 1250;        /* cao hơn header (1200) */
 }
 
-.genres-dropdown ul {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 2px 16px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  
+/* Arrow chỉ lên trigger */
+.genres-dropdown::before,
+.topics-dropdown::before{
+  content:"";
+  position:absolute;
+  top:-8px; left:50%;
+  transform: translateX(-50%) rotate(45deg);
+  width:16px; height:16px;
+  background: rgba(16,19,27,0.95);
+  border-left:1px solid rgba(255,255,255,0.08);
+  border-top:1px solid rgba(255,255,255,0.08);
 }
 
-.genres-dropdown li {
-  padding: 8px 16px;
-  white-space: nowrap;
-  transition: background 0.2s;
+/* Hiện menu */
+.genres-dropdown.open,
+.topics-dropdown.open{
+  opacity:1; visibility:visible; pointer-events:auto;
+  transform: translateX(-50%) translateY(0);
 }
 
-.genres-dropdown li:hover {
-  background-color: #f0f0f0;
+/* Lưới thể loại và chủ đề */
+.genres-dropdown ul,
+.topics-dropdown ul{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 8px 22px;
+  list-style:none;
+  margin:0;
+  padding: 2px;            /* đừng dính sát viền */
+  max-height: min(60vh, 480px);
+  overflow-y:auto;
+  overscroll-behavior: contain;
 }
-.genres-dropdown a {
-  color: #000 !important;      /* Đảm bảo màu đen */
-  text-decoration: none;
-  font-weight: 500;
-  display: block;
+
+/* Item */
+.genres-dropdown li,
+.topics-dropdown li{ list-style:none; }
+.genres-dropdown a,
+.topics-dropdown a{
+  display:block;
+  text-decoration:none;
+  color:#d8e1f0;
+  font-weight:600;
+  font-size:14px;
+  padding:8px 10px;
+  border-radius:10px;
+  transition: background .15s ease, color .15s ease, transform .08s ease;
 }
+.genres-dropdown a:hover,
+.topics-dropdown a:hover{
+  background: rgba(255,255,255,0.06);
+  color:#fff;
+  transform: translateY(-1px);
+}
+
+/* Scrollbar gọn */
+.genres-dropdown ul::-webkit-scrollbar,
+.topics-dropdown ul::-webkit-scrollbar{ width:8px; }
+.genres-dropdown ul::-webkit-scrollbar-thumb,
+.topics-dropdown ul::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.12); border-radius:999px; }
+.genres-dropdown ul::-webkit-scrollbar-track,
+.topics-dropdown ul::-webkit-scrollbar-track{ background: transparent; }
 
 
 
@@ -564,21 +621,20 @@
   .genre-menu-wrapper {
     width: 100%;
   }
-  .genres-dropdown {
+  .genres-dropdown, .topics-dropdown {
     position: static !important;
+    transform: none !important;
+    width: 100%;
+    border-radius: 10px;
     box-shadow: none;
-    background: #232f3e;
-    padding: 5px 0;
-    border: none;
-    border-radius: 0;
-    max-height: 250px;
-    margin-top: 5px;
+    margin-top: 6px;
+    opacity: 1; visibility: visible; pointer-events: auto;
   }
-  .genres-dropdown ul {
+  .genres-dropdown ul, .topics-dropdown ul {
     grid-template-columns: repeat(2, 1fr);
     gap: 0;
   }
-  .genres-dropdown li {
+  .genres-dropdown li, .topics-dropdown li {
     padding: 6px 12px;
   }
   .mobile-menu-toggle {
@@ -645,7 +701,8 @@
 .header-left,
 .header-right,
 .nav-links,
-.genres-dropdown {
+.genres-dropdown,
+.topics-dropdown {
   z-index: 1200;
 }
 /* vị trí chứa avatar + username */

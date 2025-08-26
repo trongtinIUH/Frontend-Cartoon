@@ -7,7 +7,6 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import ControlPanelPage from './pages/ControlPanelPage';
 import ManageMoviePage from './pages/ManageMoviePage';
-import GenreMoviesPage from './pages/GenreMoviesPage';
 import SearchResultPage from './pages/SearchResultPage';  
 import ProfilePage from './pages/ProfilePage';
 import WatchPage from "./pages/WatchPage";
@@ -22,6 +21,7 @@ import DashboardPage from './pages/admin/DashboardPage';
 import MovieManagementPage from './pages/admin/MovieManagementPage';
 import PaymentPage from './pages/PaymentPage';
 import PurchaseHistoryPage from './pages/PurchaseHistoryPage';
+import BrowseMoviesPage from "./pages/BrowseMoviesPage";
 
 
 import "react-toastify/dist/ReactToastify.css";
@@ -30,6 +30,7 @@ import CustomToastCloseButton from "./utils/CustomToastCloseButton";
 import FavoritesPage from './pages/FavoritesPage';
 import PromotionManagementPage from './pages/admin/PromotionManagementPage';
 
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const navigate = useNavigate();
@@ -67,8 +68,8 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/movie/:id" element={<MovieDetailPage />} />
                     <Route path="/control-panel" element={<ControlPanelPage />} />
                     <Route path="/manage-movie" element={<ManageMoviePage />} />
-                    <Route path="/the-loai/:genre" element={<GenreMoviesPage />} />
                     <Route path="/tim-kiem/:title" element={<SearchResultPage />} />
+                    <Route path="/danh-muc/:kind/:value" element={<BrowseMoviesPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
                     <Route path="/favorites" element={<FavoritesPage />} />
@@ -77,9 +78,11 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/all-topics" element={<AllTopicsPage />} />
                   </Route>
+                  <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
                     <Route path="/admin-dashboard" element={<DashboardPage />} />
                     <Route path="/admin-movie" element={<MovieManagementPage />} />
                     <Route path="/admin-promotion" element={<PromotionManagementPage />} />
+                  </Route>
                 </Routes>
 
                 {/* Thêm ToastContainer để hiển thị thông báo toast */}

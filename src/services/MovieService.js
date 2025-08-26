@@ -1,5 +1,6 @@
 import axios from "axios";
 import axiosInstance from "../api/axiosInstance";
+import { get } from "lodash";
 const API_BASE_URL = 'http://localhost:8080/movies';
 
 
@@ -119,6 +120,33 @@ const MovieService = {
             throw error.response ? error.response.data : error;
         }
     },
+    //tìm phim theo quốc gia
+    getMoviesByCountry: async (country) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/country/${encodeURIComponent(country)}`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+    //tìm phim theo movieType
+    getMoviesByType: async (type) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/type/${encodeURIComponent(type)}`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+    //tìm phim theo topic
+    getMovieByTopic: async (topic) => {
+        try{
+            const response = await axios.get(`${API_BASE_URL}/topic/${encodeURIComponent(topic)}`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
 
     //tăng view count
     incrementViewCount: async (movieId) => {
@@ -134,18 +162,6 @@ const MovieService = {
     getPopularMovies: async () => {
         try {
             const response = await axios.get(`${API_BASE_URL}/popular`);
-            return response.data;
-        } catch (error) {
-            throw error.response ? error.response.data : error;
-        }
-    },
-    //top nhưng phim mới nhất ... chưa làm BE FE
-
-
-    //tìm phim theo quốc gia
-    getMoviesByCountry: async (country) => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/country/${encodeURIComponent(country)}`);
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;

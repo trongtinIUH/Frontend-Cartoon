@@ -149,7 +149,7 @@ const MovieSlider = () => {
                   <div className="hl-tags mb-4"
                        style={{display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 12}}>
                     {movie.genres?.map((genre, idx) => (
-                      <Link key={idx} to={`/genre/${genre.slug || genre}`}
+                      <Link key={idx} to={`/danh-muc/the-loai/${genre.slug || genre}`}
                             className="tag-topic"
                             style={{
                               padding: '2px 12px',

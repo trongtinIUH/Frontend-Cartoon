@@ -46,50 +46,64 @@ const MainPage = () => {
         title="Phim Hàn Quốc mới"
         country="South Korea"
         gradient="linear-gradient(235deg, #fff 30%, rgb(103, 65, 150) 130%)"
-        link="/quoc-gia/han-quoc"
+       link={`/danh-muc/quoc-gia/${encodeURIComponent("South Korea")}`}
       />
 
       <CountryMoviesSection
         title="Phim Việt Nam mới"
         country="Vietnam"
         gradient="linear-gradient(235deg, #fff 30%, rgb(247, 161, 11) 130%)"
-        link="/quoc-gia/viet-nam"
+        link={`/danh-muc/quoc-gia/${encodeURIComponent("Vietnam")}`}
       />
 
       <CountryMoviesSection
         title="Phim US-UK mới"
         country="United Kingdom"
         gradient="linear-gradient(235deg, #fff 30%, rgb(255, 0, 153) 130%)"
-        link="/quoc-gia/us-uk"
+        link={`/danh-muc/quoc-gia/${encodeURIComponent("United Kingdom")}`}
       />
-      <div className="main-page container">
-        <h2 className="section-title">🎬 Danh sách phim mới</h2>
-        <div className="row">
-          {currentMovies.map((movie) => (
-            <div className="col-6 col-sm-4 col-md-3 col-lg-2 mb-4" key={movie.movieId}>
+      <div className="main-page container-xl">
+        <h2 className="section-title">Danh sách phim mới trong tháng</h2>
+          <div className="newlist">
+        <div className="movie-grid">
+          {currentMovies.map((movie) => {
+            const poster =
+              movie.thumbnailUrl ||
+              "https://placehold.co/400x600/0b1220/8aa0b6?text=No+Poster";
+            const isPremium = (movie.minVipLevel || "FREE") !== "FREE";
+
+            return (
               <Link
+                key={movie.movieId}
                 to={`/movie/${movie.movieId}`}
                 onClick={() => MovieService.incrementViewCount(movie.movieId)}
-                className="movie-card-link"
+                className="poster-card"
               >
-                <div className="movie-card">
+                <div className="poster-wrap">
                   <img
-                    src={
-                      movie.thumbnailUrl ||
-                      "https://th.bing.com/th/id/OIP.044hbqIQlG5Al-y5ADrlHQHaEK?rs=1&pid=ImgDetMain"
-                    }
+                    className="poster-img"
+                    src={poster}
                     alt={movie.title}
-                    className="movie-thumbnail"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://placehold.co/400x600/0b1220/8aa0b6?text=No+Poster";
+                    }}
                   />
-                  <div className="movie-info">
-                    <div className="movie-title" style={{color:"white"}}>{movie.title}</div>
-                  </div>
+                  {isPremium && <span className="vip-badge">P.ĐỀ</span>}
+                </div>
+
+                <div className="poster-meta">
+                  <h3 className="title-vn">{movie.title}</h3>
+                  <p className="title-en">
+                    {movie.originalTitle || movie.slug || "\u00A0"}
+                  </p>
                 </div>
               </Link>
-            </div>
-          ))}
+            );
+          })}
         </div>
-
+    </div>
         <nav className="pagination-nav mt-4">
           <ul className="pagination justify-content-center">
             <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>

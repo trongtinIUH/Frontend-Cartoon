@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import "../css/Header.css";
 import showToast from "../utils/AppUtils";
 import GENRES from "../constants/genres";
+import TOPICS from "../constants/topics";
 import ModelAddMovie from "../models/ModelAddMovie";
 import MovieService from "../services/MovieService";
 import { debounce } from "lodash";
@@ -38,6 +39,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
   const isUser = MyUser?.my_user?.role === "USER";
   const isLoggedIn = Boolean(MyUser?.my_user?.userId || MyUser?.idToken);
   const [showGenres, setShowGenres] = useState(false);
+  const [showTopics, setShowTopics] = useState(false);
 
   //set cho mobie 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -67,6 +69,24 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
   const reloadMainPage = () => {
     if (typeof fetchMovies === "function") {
       fetchMovies();
+    }
+    // Scroll to top khi về trang chủ
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Tìm phim theo chủ đề
+  const handleTopicSearch = async (topic) => {
+    try {
+      const movies = await MovieService.getMovieByTopic(topic);
+      if (typeof setFilteredMovies === "function" && Array.isArray(movies)) {
+        setFilteredMovies(movies);
+        showToast(`Tìm thấy ${movies.length} phim với chủ đề "${topic}"`, "success");
+      }
+      // Đóng dropdown
+      setShowTopics(false);
+      setIsMobileMenuOpen(false);
+    } catch (error) {
+      showToast(`Không thể tìm phim với chủ đề "${topic}"`, "error");
     }
   };
 
@@ -182,24 +202,37 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
 
             {/* Main Nav */}
             <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
-              <Link to="/main" onClick={reloadMainPage}>
-                Chủ đề
-              </Link>
-              <Link to="/main" onClick={reloadMainPage}>
+              {/* CHỦ ĐỀ dropdown (PC hover, mobile click) */}
+              <div
+                className="topic-menu-wrapper"
+                onMouseEnter={() => !isMobileMenuOpen && setShowTopics(true)}
+                onMouseLeave={() => !isMobileMenuOpen && setShowTopics(false)}
+                onClick={() => isMobileMenuOpen && setShowTopics((prev) => !prev)}
+              >
+                <span style={{ fontWeight: 500, cursor: "pointer" }}>Chủ đề</span>
+                {showTopics && (
+                  <div className={`topics-dropdown ${showTopics ? "open" : ""}`} onClick={(e) => e.stopPropagation()}>
+                    <ul>
+                      {TOPICS.map((topic, i) => (
+                        <li key={i}>
+                          <Link to={`/danh-muc/chu-de/${encodeURIComponent(topic)}`} onClick={() => setIsMobileMenuOpen(false)}>
+                            {topic}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <Link to="/danh-muc/type/SINGLE" onClick={() => setIsMobileMenuOpen(false)}>
                 Phim lẻ
               </Link>
-              <Link to="/main" onClick={reloadMainPage}>
+              <Link to="/danh-muc/type/SERIES" onClick={() => setIsMobileMenuOpen(false)}>
                 Phim bộ
               </Link>
-              <Link to="/main" onClick={reloadMainPage}>
+              <Link to="/main" onClick={() => setIsMobileMenuOpen(false)}>
                 Xem chung
-              </Link>
-              <Link
-                to="/buy-package"
-                className="menu-cta"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Mua gói
               </Link>
 
               {/* Thể loại dropdown (PC hover, mobile click) */}
@@ -207,29 +240,27 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                 className="genre-menu-wrapper"
                 onMouseEnter={() => !isMobileMenuOpen && setShowGenres(true)}
                 onMouseLeave={() => !isMobileMenuOpen && setShowGenres(false)}
-                onClick={() =>
-                  isMobileMenuOpen && setShowGenres((prev) => !prev)
-                }
+                onClick={() => isMobileMenuOpen && setShowGenres((prev) => !prev)}
               >
-                <span style={{ fontWeight: 500, cursor: "pointer" }}>
-                  Thể loại
-                </span>
-
+                <span style={{ fontWeight: 500, cursor: "pointer" }}>Thể loại</span>
                 {showGenres && (
-                  <div
-                    className="genres-dropdown"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className={`genres-dropdown ${showGenres ? "open" : ""}`} onClick={(e) => e.stopPropagation()}>
                     <ul>
-                      {GENRES.map((genre, index) => (
-                        <li key={index}>
-                          <Link to={`/the-loai/${genre}`}>{genre}</Link>
-                        </li>
+                      {GENRES.map((genre, i) => (
+                        <li key={i}><Link to={`/danh-muc/the-loai/${genre}`} onClick={() => setIsMobileMenuOpen(false)}>{genre}</Link></li>
                       ))}
                     </ul>
                   </div>
                 )}
               </div>
+
+              <Link
+                to="/buy-package"
+                className="menu-cta"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Mua gói
+              </Link>
             </nav>
           </div>
 
