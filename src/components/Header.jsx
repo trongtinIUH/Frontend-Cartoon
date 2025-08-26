@@ -20,6 +20,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Logo from "./Logo";
 import default_avatar from "../image/default_avatar.jpg"
+import { COUNTRIES } from "../constants/countries";
 
 
 const Header = ({ fetchMovies, setFilteredMovies }) => {
@@ -40,6 +41,8 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
   const isLoggedIn = Boolean(MyUser?.my_user?.userId || MyUser?.idToken);
   const [showGenres, setShowGenres] = useState(false);
   const [showTopics, setShowTopics] = useState(false);
+  const [showCountries, setShowCountries] = useState(false);
+
 
   //set cho mobie 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -234,7 +237,34 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
               <Link to="/main" onClick={() => setIsMobileMenuOpen(false)}>
                 Xem chung
               </Link>
-
+             {/* QUỐC GIA dropdown (PC hover, mobile click) */}
+              <div
+                className="country-menu-wrapper"
+                onMouseEnter={() => !isMobileMenuOpen && setShowCountries(true)}
+                onMouseLeave={() => !isMobileMenuOpen && setShowCountries(false)}
+                onClick={() => isMobileMenuOpen && setShowCountries(prev => !prev)}
+              >
+                <span style={{ fontWeight: 500, cursor: "pointer" }}>Quốc gia</span>
+                {showCountries && (
+                  <div
+                    className={`countries-dropdown ${showCountries ? "open" : ""}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ul>
+                      {COUNTRIES.map((c, i) => (
+                        <li key={i}>
+                          <Link
+                            to={`/danh-muc/quoc-gia/${encodeURIComponent(c.value)}`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {c.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
               {/* Thể loại dropdown (PC hover, mobile click) */}
               <div
                 className="genre-menu-wrapper"

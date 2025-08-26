@@ -161,13 +161,15 @@
 
 
 .genre-menu-wrapper,
-.topic-menu-wrapper {
+.topic-menu-wrapper,
+.country-menu-wrapper {
   position: relative;
   display: inline-block;
 }
 /* Mega menu – căn giữa dưới “Thể loại” */
 .genres-dropdown,
-.topics-dropdown{
+.topics-dropdown,
+.countries-dropdown{
   position: absolute;
   top: calc(100% + 12px);
   left: 50%;
@@ -188,7 +190,8 @@
 
 /* Arrow chỉ lên trigger */
 .genres-dropdown::before,
-.topics-dropdown::before{
+.topics-dropdown::before,
+.countries-dropdown::before {
   content:"";
   position:absolute;
   top:-8px; left:50%;
@@ -201,14 +204,16 @@
 
 /* Hiện menu */
 .genres-dropdown.open,
-.topics-dropdown.open{
+.topics-dropdown.open,
+.countries-dropdown.open {
   opacity:1; visibility:visible; pointer-events:auto;
   transform: translateX(-50%) translateY(0);
 }
 
 /* Lưới thể loại và chủ đề */
 .genres-dropdown ul,
-.topics-dropdown ul{
+.topics-dropdown ul,
+.countries-dropdown ul {
   display:grid;
   grid-template-columns: repeat(4, minmax(140px, 1fr));
   gap: 8px 22px;
@@ -219,12 +224,22 @@
   overflow-y:auto;
   overscroll-behavior: contain;
 }
+.countries-dropdown ul {
+  scrollbar-width: none;         /* Firefox */
+  -ms-overflow-style: none;      /* IE & Edge */
+}
+
+.countries-dropdown ul::-webkit-scrollbar {
+  display: none;                 /* Chrome, Safari */
+}
 
 /* Item */
 .genres-dropdown li,
-.topics-dropdown li{ list-style:none; }
+.topics-dropdown li,
+.countries-dropdown li{ list-style:none; }
 .genres-dropdown a,
-.topics-dropdown a{
+.topics-dropdown a,
+.countries-dropdown a{
   display:block;
   text-decoration:none;
   color:#d8e1f0;
@@ -235,7 +250,8 @@
   transition: background .15s ease, color .15s ease, transform .08s ease;
 }
 .genres-dropdown a:hover,
-.topics-dropdown a:hover{
+.topics-dropdown a:hover,
+.countries-dropdown a:hover {
   background: rgba(255,255,255,0.06);
   color:#fff;
   transform: translateY(-1px);
@@ -247,7 +263,10 @@
 .genres-dropdown ul::-webkit-scrollbar-thumb,
 .topics-dropdown ul::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.12); border-radius:999px; }
 .genres-dropdown ul::-webkit-scrollbar-track,
-.topics-dropdown ul::-webkit-scrollbar-track{ background: transparent; }
+.topics-dropdown ul::-webkit-scrollbar-track,
+.countries-dropdown ul::-webkit-scrollbar-track,
+
+
 
 
 
@@ -621,7 +640,8 @@
   .genre-menu-wrapper {
     width: 100%;
   }
-  .genres-dropdown, .topics-dropdown {
+  .genres-dropdown, .topics-dropdown,
+  .countries-dropdown {
     position: static !important;
     transform: none !important;
     width: 100%;
@@ -630,11 +650,11 @@
     margin-top: 6px;
     opacity: 1; visibility: visible; pointer-events: auto;
   }
-  .genres-dropdown ul, .topics-dropdown ul {
+  .genres-dropdown ul, .topics-dropdown ul, .countries-dropdown ul {
     grid-template-columns: repeat(2, 1fr);
     gap: 0;
   }
-  .genres-dropdown li, .topics-dropdown li {
+  .genres-dropdown li, .topics-dropdown li, .countries-dropdown li {
     padding: 6px 12px;
   }
   .mobile-menu-toggle {
