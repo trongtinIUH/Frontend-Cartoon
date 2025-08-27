@@ -15,8 +15,8 @@ const defaultFilters = { status: "", movieType: "", year: "", genre: "" };
 
 
 const statusBadge = (status) => {
-  const map = { UPCOMING: "warning", COMPLETED: "primary", ACTIVE: "success", INACTIVE: "secondary" };
-  const label = status || "ACTIVE";
+  const map = { UPCOMING: "warning", COMPLETED: "primary" };
+  const label = status || "UPCOMING";
   return <span className={`badge bg-${map[label] || "secondary"}`}>{label}</span>;
 };
 

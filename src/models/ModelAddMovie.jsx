@@ -72,16 +72,10 @@ const authorOptions = authors.map(a => ({
     // media
     thumbnail: null,
     banner: null,
-   
-    //trailer phim nếu sắp ra
     trailerVideo: null,
-   
-    // completed-only (nội dung phim)
     contentVideo: null,
-  
-
     authorIds: [],
-  slug: ""
+    slug: ""
   });
 
   const [loading, setLoading] = useState(false);
@@ -125,97 +119,56 @@ const authorOptions = authors.map(a => ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title) {
-      toast.error("Vui lòng nhập tiêu đề!");
-      return;
-    }
-    // Validate trailer tối thiểu cho UPCOMING
+    if (!form.title) return toast.error("Vui lòng nhập tiêu đề!");
+
+    // Yêu cầu file tương ứng theo status
     if (form.status === "UPCOMING" && !form.trailerVideo) {
-      toast.error("UPCOMING cần trailer (file)");
-      return;
+      return toast.error("UPCOMING cần trailer (file)");
+    }
+    if (form.status === "COMPLETED" && !form.contentVideo) {
+      return toast.error("COMPLETED cần video tập 1 (file)");
     }
 
-    // Validate COMPLETED: cần nội dung tập 1 (file hoặc link)
-    if (form.status === "COMPLETED" && !form.contentVideo ) {
-      toast.error("COMPLETED cần video tập 1 (file)");
-      return;
-    }
     setLoading(true);
     try {
-       // 0) TẠO TÁC GIẢ MỚI (nếu có) -> gom full authorIds trước khi tạo Movie
-    // =========================================================
-    let allAuthorIds = Array.isArray(form.authorIds) ? [...form.authorIds] : [];
+      // gom authorIds
+      let allAuthorIds = Array.isArray(form.authorIds) ? [...form.authorIds] : [];
+      for (const a of (isNewAuthor ? newAuthor : [])) {
+        const name = (a?.name || "").trim();
+        if (!name) continue;
+        const created = await AuthorService.createAuthor({ name, authorRole: a.authorRole || "DIRECTOR", movieId: [] });
+        const newId = created?.authorId || created?.id;
+        if (newId) allAuthorIds.push(newId);
+      }
 
-    // newAuthor là mảng các tác giả “tạo mới” (name + authorRole)
-    for (const author of newAuthor || []) {
-      const name = (author?.name || "").trim();
-      if (!name) continue;
-
-      const created = await AuthorService.createAuthor({
-        name,
-        authorRole: author.authorRole || "DIRECTOR",
-        movieId: [] // để trống, sẽ gán sau
-      });
-
-      const newId = created?.authorId || created?.id;
-      if (newId) allAuthorIds.push(newId);
-    }
-
-      // 1. Tạo phim mới
+      // 1) Tạo Movie (chỉ metadata + ảnh). KHÔNG gửi trailer/content để tránh upload 2 lần
       const fd = new FormData();
-      [
-        "title","originalTitle","description","country","topic",
-        "movieType","minVipLevel","status","releaseYear","slug","duration"
-      ].forEach(k => form[k] != null && fd.append(k, form[k]));
-
-      // genres[]
+      ["title","originalTitle","description","country","topic","movieType","minVipLevel","status","releaseYear","slug","duration"]
+        .forEach(k => form[k] != null && fd.append(k, form[k]));
       (form.genres || []).forEach(g => fd.append("genres", g));
-      // authorIds[]
       (allAuthorIds || []).forEach(id => fd.append("authorIds", id));
-
-
       if (form.thumbnail) fd.append("thumbnail", form.thumbnail);
       if (form.banner) fd.append("banner", form.banner);
-      if (form.trailerVideo) fd.append("trailerVideo", form.trailerVideo);
-
       fd.append("role", "ADMIN");
 
       const movie = await MovieService.createMovie(fd);
 
-      //gán quyền tác giả/diễn viên cho movie
-      if (allAuthorIds.length > 0) {
-      await AuthorService.addMovieToMultipleAuthors(allAuthorIds, movie.movieId);
-    }
+      // 2) gán movie vào tác giả
+      if (allAuthorIds.length) {
+        await AuthorService.addMovieToMultipleAuthors(allAuthorIds, movie.movieId);
+      }
 
-
-    // 2) Nếu COMPLETED: tạo Season 1 + Episode 1
-  if (form.status === "COMPLETED") {
-      // tạo Season 1
-      const season = await SeasonService.createSeason({
-        movieId: movie.movieId,
-        seasonNumber: 1,
-        title: "Phần 1",
-        description: "",
-        releaseYear: form.releaseYear || null,
-        posterUrl: "" // nếu có URL thì truyền
+      // 3) Publish theo status (gửi file bắt buộc)
+      await MovieService.publish(movie.movieId, form.status, {
+        trailerVideo: form.status === "UPCOMING"   ? form.trailerVideo : null,
+        episode1Video: form.status === "COMPLETED" ? form.contentVideo : null,
       });
 
-      // tạo Episode 1
-      const epFd = new FormData();
-      epFd.append("movieId", movie.movieId);
-      epFd.append("seasonId", season.seasonId);
-      epFd.append("title", `${form.title} - Tập 1`);
-      epFd.append("episodeNumber", 1);
-      if (form.contentVideo) epFd.append("video", form.contentVideo);
-
-      await EpisodeService.addEpisode(epFd);
-    }
-
-    toast.success("✅ Tạo phim thành công!");
-    onSuccess?.();
-     
+      toast.success("Tạo phim & publish thành công!");
+      onSuccess?.();
     } catch (err) {
-      toast.error("❌ Lỗi: " + (err.message || "Không thể thêm phim."));
+      console.error(err);
+      toast.error("❌ Lỗi: " + (err?.message || "Không thể thêm phim."));
     } finally {
       setLoading(false);
     }

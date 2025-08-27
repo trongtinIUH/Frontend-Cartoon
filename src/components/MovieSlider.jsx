@@ -6,23 +6,24 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faHeart } from "@fortawesome/free-solid-svg-icons";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+const AGE_SET = new Set(["T13+","T18+"]);
+
 const MovieSlider = () => {
   const [featuredMovies, setFeaturedMovies] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    async function fetchFeaturedMovies() {
+    (async () => {
       try {
         const movies = await MovieService.getPopularMovies();
-        setFeaturedMovies(movies.slice(0, 6));
-      } catch (error) {
-        console.error("Error fetching featured movies:", error);
+        setFeaturedMovies((movies || []).slice(0, 6));
+      } catch (e) {
+        console.error("Error fetching featured movies:", e);
       }
-    }
-    fetchFeaturedMovies();
+    })();
   }, []);
 
-  if (featuredMovies.length === 0) return null;
+  if (!featuredMovies?.length) return null;
 
   return (
     <div id="top_slide" style={{position: 'relative', minHeight: 500, paddingTop: 5}}>
@@ -36,176 +37,136 @@ const MovieSlider = () => {
           interval={5000}
           className="top-slide-main"
         >
-          {featuredMovies.map((movie, idx) => (
-            <Carousel.Item key={movie.movieId} style={{height: 600, position: "relative"}}>
-              {/* Background blur */}
-              <div
-                className="background-fade"
-                style={{
-                  backgroundImage: `url(${movie.bannerUrl || movie.thumbnailUrl})`,
-                  position: 'absolute',
-                  top: 0, left: 0, width: '100%', height: '100%',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  filter: 'brightness(0.6)',
-                  zIndex: 1,
-                  transition: 'background-image 0.5s'
-                }}
-              />
-              {/* Gradient overlay for better text contrast */}
-              <div style={{
-                position: 'absolute',
-                top: 0, left: 0, width: '100%', height: '100%',
-                 background: 'linear-gradient(90deg, rgba(20,20,20,0.38) 20%, rgba(20,20,20,0.01) 88%)',
-                zIndex: 2
-              }} />
+          {featuredMovies.map((movie, idx) => {
+            // --- chuẩn hoá dữ liệu rating ---
+            const ratingCount = Number(movie?.ratingCount || 0);
+            const avgRating = Number(movie?.avgRating || 0);
 
-              {/* Slide Content */}
-              <div className="safe-area"
-                   style={{
-                     position: 'relative', zIndex: 3, height: '100%',
-                     display: 'flex', alignItems: 'center', paddingLeft: 18
-                   }}>
-                <div className="slide-content" style={{maxWidth: 580, color: 'white'}}>
-                  {/* Logo/title image */}
-                  <div className="media-title-image" style={{marginBottom: 15}}>
-                    {movie.titleImageUrl ? (
-                      <img alt={movie.title} src={movie.titleImageUrl}
-                           style={{maxWidth: 350, maxHeight: 120}} />
-                    ) : (
-                      <h3 style={{
-                        fontSize: 25,
-                        fontWeight: 800,
-                        textShadow: '2px 2px 6px #000'
-                      }}>{movie.title}</h3>
-                    )}
-                  </div>
-                  <h3 className="media-alias-title"
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 500,
-                        marginBottom: 10,
-                        letterSpacing: 1
-                      }}>
-                    <Link to={`/movie/${movie.movieId}`}
-                          style={{color: '#fff', textDecoration: 'none', textShadow: '1px 1px 5px #000'}}>
-                       {movie.originalTitle|| movie.title}
-                    </Link>
-                  </h3>
-                  {/* Tag row */}
-                  <div className="hl-tags mb-3"
-                       style={{display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 14}}>
-                    {movie.avgRating && (
-                      <div className="tag-imdb"
-                           style={{
-                             padding: '2px 8px', background: '#f5c518',
-                             color: '#222', borderRadius: 4, fontWeight: 700, fontSize: '1rem'
-                           }}>
-                        IMDb <span>{movie.avgRating}</span>
-                      </div>
-                    )}
-                    {movie.age && (
-                      <div className="tag-model"
-                           style={{
-                             padding: '2px 8px',
-                             background: 'rgba(255,255,255,0.10)', color: '#fff',
-                             borderRadius: 4
-                           }}>
-                        <span className="last"><strong>{movie.age}</strong></span>
-                      </div>
-                    )}
-                    {movie.releaseYear && (
-                      <div className="tag-classic"
-                           style={{
-                             padding: '2px 8px',
-                             background: 'rgba(255,255,255,0.10)', color: '#fff',
-                             borderRadius: 4
-                           }}>
-                        <span>{movie.releaseYear}</span>
-                      </div>
-                    )}
-                    {movie.season && (
-                      <div className="tag-classic"
-                           style={{
-                             padding: '2px 8px',
-                             background: 'rgba(255,255,255,0.10)', color: '#fff',
-                             borderRadius: 4
-                           }}>
-                        <span>{movie.season}</span>
-                      </div>
-                    )}
-                    {movie.episode && (
-                      <div className="tag-classic"
-                           style={{
-                             padding: '2px 8px',
-                             background: 'rgba(255,255,255,0.10)', color: '#fff',
-                             borderRadius: 4
-                           }}>
-                        <span>{movie.episode}</span>
-                      </div>
-                    )}
-                  </div>
-                  {/* Thể loại row */}
-                  <div className="hl-tags mb-4"
-                       style={{display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 12}}>
-                    {movie.genres?.map((genre, idx) => (
-                      <Link key={idx} to={`/danh-muc/the-loai/${genre.slug || genre}`}
-                            className="tag-topic"
-                            style={{
-                              padding: '2px 12px',
-                              background: 'rgba(255,255,255,0.08)',
-                              color: '#fff', borderRadius: 5,
-                              textDecoration: 'none', fontSize: 12, marginBottom: 4,
-                              transition: 'background 0.2s'
-                            }}>
-                        {genre.name || genre}
+            // --- lấy tag tuổi từ genres ---
+            const genresArr = Array.isArray(movie?.genres) ? movie.genres : [];
+            const normalize = g => (typeof g === "string" ? g : (g?.name || g?.slug || ""));
+            const ageTag = genresArr.map(normalize).find(s => AGE_SET.has(String(s)));
+            const displayGenres = genresArr.filter(g => !AGE_SET.has(normalize(g)));
+
+            return (
+              <Carousel.Item key={movie.movieId} style={{height: 600, position: "relative"}}>
+                <div
+                  className="background-fade"
+                  style={{
+                    backgroundImage: `url(${movie.bannerUrl || movie.thumbnailUrl})`,
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundSize: 'cover', backgroundPosition: 'center',
+                    filter: 'brightness(0.6)', zIndex: 1, transition: 'background-image 0.5s'
+                  }}
+                />
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                  background: 'linear-gradient(90deg, rgba(20,20,20,0.38) 20%, rgba(20,20,20,0.01) 88%)',
+                  zIndex: 2
+                }} />
+
+                <div className="safe-area"
+                     style={{ position: 'relative', zIndex: 3, height: '100%',
+                              display: 'flex', alignItems: 'center', paddingLeft: 18 }}>
+                  <div className="slide-content" style={{maxWidth: 580, color: 'white'}}>
+                    <div className="media-title-image" style={{marginBottom: 15}}>
+                      {movie.titleImageUrl ? (
+                        <img alt={movie.title} src={movie.titleImageUrl}
+                             style={{maxWidth: 350, maxHeight: 120}} />
+                      ) : (
+                        <h3 style={{ fontSize: 25, fontWeight: 800, textShadow: '2px 2px 6px #000' }}>
+                          {movie.title}
+                        </h3>
+                      )}
+                    </div>
+
+                    <h3 className="media-alias-title"
+                        style={{ fontSize: 12, fontWeight: 500, marginBottom: 10, letterSpacing: 1 }}>
+                      <Link to={`/movie/${movie.movieId}`}
+                            style={{color: '#fff', textDecoration: 'none', textShadow: '1px 1px 5px #000'}}>
+                        {movie.originalTitle || movie.title}
                       </Link>
-                    ))}
-                  </div>
-                  {/* Mô tả */}
-                  <div className="description lim-3"
-                       style={{
-                         fontSize: 12, lineHeight: 1.6,
-                         marginBottom: 24, opacity: 0.94,
-                         display: '-webkit-box',
-                         WebkitLineClamp: 3,
-                         WebkitBoxOrient: 'vertical',
-                         overflow: 'hidden',
-                         textShadow: '1px 1px 7px #111'
-                       }}>
-                    {movie.description || "Không có mô tả cho phim này."}
-                  </div>
-                  {/* Button & action */}
-                  <div className="touch" style={{display: 'flex', alignItems: 'center', gap: 24}}>
-                    <Link className="button-play"
-                          to={`/movie/${movie.movieId}`}
-                          style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            width: 54, height: 54, fontSize: 28,
-                            backgroundColor: '#4bc1fa', borderRadius: '50%',
-                            color: 'white', boxShadow: '0 4px 18px #000a', transition: 'transform 0.23s'
-                          }}>
-                      <FontAwesomeIcon icon={faPlay}/>
-                    </Link>
-                    <button className="btn btn-icon" style={{
-                      background: 'rgba(255,255,255,0.09)', border: 'none', color: '#fff',
-                      width: 45, height: 45, borderRadius: '50%', fontSize: 22
-                    }}>
-                      <FontAwesomeIcon icon={faHeart}/>
-                    </button>
+                    </h3>
+
+                    {/* Tag row */}
+                    <div className="hl-tags mb-3" style={{display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 14}}>
+                      {/* IMDb chỉ hiện khi đã có lượt đánh giá */}
+                      {ratingCount > 0 && (
+                        <div className="tag-imdb"
+                             style={{ padding: '2px 8px', background: '#f5c518',
+                                      color: '#222', borderRadius: 4, fontWeight: 700, fontSize: '1rem' }}>
+                          IMDb <span>{avgRating.toFixed(1)}</span>
+                        </div>
+                      )}
+
+                      {/* Tuổi lấy từ genres (T13+, T18+) */}
+                      {ageTag && (
+                        <div className="tag-model"
+                             style={{ padding: '2px 8px', background: 'rgba(255,255,255,0.10)',
+                                      color: '#fff', borderRadius: 4 }}>
+                          <span className="last"><strong>{ageTag}</strong></span>
+                        </div>
+                      )}
+
+                      {movie.releaseYear && (
+                        <div className="tag-classic"
+                             style={{ padding: '2px 8px', background: 'rgba(255,255,255,0.10)',
+                                      color: '#fff', borderRadius: 4 }}>
+                          <span>{movie.releaseYear}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Thể loại – đã loại trừ tag tuổi */}
+                    <div className="hl-tags mb-4" style={{display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 12}}>
+                      {displayGenres.map((g, i) => {
+                        const name = typeof g === "string" ? g : (g?.name || g?.slug || "");
+                        const slug = typeof g === "string" ? g : (g?.slug || g?.name || "");
+                        return (
+                          <Link key={`${slug}-${i}`} to={`/danh-muc/the-loai/${slug}`}
+                                className="tag-topic"
+                                style={{ padding: '2px 12px', background: 'rgba(255,255,255,0.08)',
+                                         color: '#fff', borderRadius: 5, textDecoration: 'none',
+                                         fontSize: 12, marginBottom: 4, transition: 'background 0.2s' }}>
+                            {name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+
+                    {/* Mô tả */}
+                    <div className="description lim-3"
+                         style={{ fontSize: 12, lineHeight: 1.6, marginBottom: 24, opacity: 0.94,
+                                  display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden', textShadow: '1px 1px 7px #111' }}>
+                      {movie.description || "Không có mô tả cho phim này."}
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="touch" style={{display: 'flex', alignItems: 'center', gap: 24}}>
+                      <Link className="button-play" to={`/movie/${movie.movieId}`}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                     width: 54, height: 54, fontSize: 28, backgroundColor: '#4bc1fa',
+                                     borderRadius: '50%', color: 'white', boxShadow: '0 4px 18px #000a',
+                                     transition: 'transform 0.23s' }}>
+                        <FontAwesomeIcon icon={faPlay}/>
+                      </Link>
+                      <button className="btn btn-icon"
+                              style={{ background: 'rgba(255,255,255,0.09)', border: 'none', color: '#fff',
+                                       width: 45, height: 45, borderRadius: '50%', fontSize: 22 }}>
+                        <FontAwesomeIcon icon={faHeart}/>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Carousel.Item>
-          ))}
+              </Carousel.Item>
+            );
+          })}
         </Carousel>
+
         {/* Thumbnail navigation */}
         <div className="top-slide-small"
-             style={{
-               display: 'flex',
-               position: 'absolute', bottom: 16, right: 40, zIndex: 30,
-               gap: 8
-             }}>
+             style={{ display: 'flex', position: 'absolute', bottom: 16, right: 40, zIndex: 30, gap: 8 }}>
           {featuredMovies.map((movie, idx) => (
             <img
               key={movie.movieId}
@@ -214,8 +175,7 @@ const MovieSlider = () => {
               src={movie.thumbnailSmallUrl || movie.thumbnailUrl}
               onClick={() => setActiveIndex(idx)}
               style={{
-                width: 65, height: 45, objectFit: 'cover',
-                borderRadius: 6, cursor: 'pointer',
+                width: 65, height: 45, objectFit: 'cover', borderRadius: 6, cursor: 'pointer',
                 border: activeIndex === idx ? '2.5px solid #fff' : '2.5px solid transparent',
                 opacity: activeIndex === idx ? 1 : 0.7,
                 boxShadow: activeIndex === idx ? '0 0 10px #fff7' : undefined,

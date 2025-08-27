@@ -191,7 +191,23 @@ const MovieService = {
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
-    }
+    },
+
+    //logic phát hành phim
+        publish: async (movieId, target, { trailerVideo, episode1Video } = {}) => {
+        const token = localStorage.getItem("idToken");
+        const form = new FormData();
+        if (trailerVideo)  form.append("trailerVideo", trailerVideo);
+        if (episode1Video) form.append("episode1Video", episode1Video);
+
+        const res = await axios.post(
+            `${API_BASE_URL}/${movieId}/publish`,
+            form,
+            { params: { target }, headers: { Authorization: `Bearer ${token}` } }
+        );
+        return res.data;
+        },
+
 
 }
 

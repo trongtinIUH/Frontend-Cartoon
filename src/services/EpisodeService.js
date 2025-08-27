@@ -38,15 +38,20 @@ const EpisodeService = {
     return res.data; // { count }
   },
 
-  /* Các hàm dưới đây hiện BE bạn CHƯA có endpoint:
-     - DELETE /episodes/{episodeId}
-     - PUT    /episodes/{episodeId}
-     - GET    /episodes/count/{movieId}
-     Nếu chưa dùng thì nên bỏ/đừng gọi để tránh 404.
-  */
-  // deleteEpisode: ...
-  // updateEpisode: ...
-  // countEpisodesByMovieId: ...
+
+  updateEpisode: async (seasonId, episodeNumber, formData) => {
+    const res = await axios.put(
+      `${API_BASE_URL}/season/${seasonId}/ep/${episodeNumber}`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return res.data;
+  },
+
+  deleteEpisode: async (seasonId, episodeNumber) => {
+    const res = await axios.delete(`${API_BASE_URL}/season/${seasonId}/ep/${episodeNumber}`);
+    return res.data;
+  },
 };
 
 export default EpisodeService;
