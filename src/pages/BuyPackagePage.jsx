@@ -30,7 +30,7 @@ const BuyPackagePage = () => {
         // Nhóm theo loại VIP, chọn gói có thời hạn ngắn nhất cho mỗi loại
         const grouped = {};
         data.forEach(pkg => {
-          const level = pkg.applicableVipLevel;
+          const level = pkg.applicablePackageType;
           if (!grouped[level] || pkg.durationInDays < grouped[level].durationInDays) {
             grouped[level] = pkg;
           }

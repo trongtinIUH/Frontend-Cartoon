@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SubscriptionPackageService from "../services/SubscriptionPackageService";
 import PromotionService from "../services/PromotionService";
-import { set } from "lodash";
 import { toast } from "react-toastify";
+import Select from "react-select";
 
 const PromotionDetailModal = ({ open, onClose, promotion, packages, onAdd, loading, error }) => {
   const [picking, setPicking] = useState(false);
   const [allPkgs, setAllPkgs] = useState([]);
   const [loadingAll, setLoadingAll] = useState(false);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
   const [discount, setDiscount] = useState("");
   const [saving, setSaving] = useState(false);
 
   const startPick = async () => {
     setPicking(true);
-    setSelectedId("");
+    setSelectedIds([]);
     setDiscount("");
     if (allPkgs.length === 0) {
       try {
@@ -31,19 +31,56 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages, onAdd, loadi
     }
   };
 
+  const appliedIds = useMemo(() => {
+    const s = new Set();
+    (packages || []).forEach(p => {
+      if (Array.isArray(p.packageId)) {
+        p.packageId.forEach(id => id && s.add(id));
+      } else if (p.packageId) {
+        s.add(p.packageId);
+      }
+    });
+    return s;
+  }, [packages]);
+
+  const availableOptions = useMemo(() => {
+    return (allPkgs || [])
+      .filter(pkg => pkg?.packageId && !appliedIds.has(pkg.packageId))
+      .map(pkg => ({ value: pkg.packageId, label: pkg.packageId }));
+  }, [allPkgs, appliedIds]);
+
+  // 3) Nếu appliedIds/allPkgs thay đổi, dọn selectedIds cho hợp lệ
+  useEffect(() => {
+    setSelectedIds(prev => prev.filter(id => !appliedIds.has(id)));
+  }, [appliedIds]);
+
   const handleSave = async () => {
-    if (!selectedId || !discount) return;
+    if (!selectedIds.length) {
+      toast.error("Vui lòng chọn gói.");
+      return;
+    }
+
+    if (!discount) {
+      toast.error("Vui lòng nhập % giảm.");
+      return;
+    }
+
+    if (discount < 1 || discount > 100) {
+      toast.error("Giảm giá phải từ 1% đến 100%");
+      return;
+    }
 
     setSaving(true);
     try {
       await PromotionService.createPromotionPackage({
         promotionId: promotion.promotionId,
-        packageId: selectedId,
+        packageId: selectedIds,
         discountPercent: discount,
       });
-      setSelectedId("");
+      setSelectedIds([]);
       setDiscount("");
       setPicking(false);
+      onAdd();
       toast.success("Thêm gói khuyến mãi thành công!");
     } catch (e) {
       console.error("Save promotion failed:", e);
@@ -78,7 +115,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages, onAdd, loadi
                     {packages && packages.length > 0 ? (
                       packages.map((pkg) => (
                         <tr key={pkg.id}>
-                          <td>{pkg.packageId}</td>
+                          <td>{Array.isArray(pkg.packageId) ? pkg.packageId.join(", ") : pkg.packageId}</td>
                           <td>{pkg.discountPercent?.toLocaleString()} %</td>
                           <td className="d-flex">
                             <span className="btn btn-sm btn-primary me-2">
@@ -114,24 +151,28 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages, onAdd, loadi
           {picking && (
             <div className="modal-body">
               <div className="mb-3">
-                <label className="form-label">Gói</label>
-                <select
-                  className="form-select"
-                  value={selectedId}
-                  onChange={(e) => setSelectedId(e.target.value)}
-                >
-                  <option value="">Chọn gói</option>
-                  {allPkgs.map((pkg) => (
-                    <option key={pkg.packageId} value={pkg.packageId}>
-                      {pkg.packageId}
-                    </option>
-                  ))}
-                </select>
+                <label className="form-label">Gói <span className="text-danger">*</span></label>
+                <Select
+                  isMulti
+                  isDisabled={loadingAll || availableOptions.length === 0}
+                  options={availableOptions} // <-- dùng danh sách đã lọc
+                  value={availableOptions.filter(opt => selectedIds.includes(opt.value))}
+                  onChange={(selected) => {
+                    setSelectedIds((selected || []).map(opt => opt.value));
+                  }}
+                  placeholder={
+                    availableOptions.length ? "Chọn gói..." : "Tất cả gói đã được áp dụng"
+                  }
+                  noOptionsMessage={() =>
+                    availableOptions.length ? "Không còn gói phù hợp" : "Không còn gói để chọn"
+                  }
+                />
               </div>
               <div className="mb-3">
-                <label className="form-label">Giảm giá (%)</label>
+                <label className="form-label">Giảm giá (%) <span className="text-danger">*</span></label>
                 <input
                   type="number"
+                  max={100} min={1}
                   className="text-black form-control"
                   value={discount}
                   onChange={(e) => setDiscount(e.target.value)}
@@ -143,7 +184,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages, onAdd, loadi
                   Thêm
                 </button>
                 <button className="btn btn-secondary ms-2" onClick={() => setPicking(false)}>
-                  Hủy
+                  Hủy chọn gói
                 </button>
               </div>
             </div>

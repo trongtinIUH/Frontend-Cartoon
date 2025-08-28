@@ -38,7 +38,7 @@ const PaymentPage = () => {
         }));
 
         const filtered = normalized
-          .filter(pkg => pkg.applicableVipLevel === selectedPackage.applicableVipLevel)
+          .filter(pkg => pkg.applicablePackageType === selectedPackage.applicablePackageType)
           .sort((a, b) => (a.durationInDays ?? 0) - (b.durationInDays ?? 0));
 
         setPackagesByVip(filtered);
@@ -180,7 +180,7 @@ const PaymentPage = () => {
                   </div> <hr />
                   <div className="d-flex justify-content-between bg-black">
                     <p>Tên gói</p>
-                    <p className="fw-bold">{selectedDurationPackage?.applicableVipLevel}</p>
+                    <p className="fw-bold">{selectedDurationPackage?.applicablePackageType}</p>
                   </div>
                   <div className="d-flex justify-content-between bg-black">
                     <p>Thời hạn</p>
@@ -197,8 +197,22 @@ const PaymentPage = () => {
                   <div className="d-flex justify-content-between bg-black">
                     <p>Giảm giá</p>
                     <p className="fw-bold">0 VNĐ</p>
-                  </div> <hr />
-
+                  </div>
+                  <div className="d-flex bg-black w-100">
+                    <div className="col-8">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nhập mã giảm giá"
+                      />
+                    </div>
+                    <div className="col-4 ms-2">
+                      <button type="button" className="btn btn-secondary">
+                        Áp dụng
+                      </button>
+                    </div>
+                  </div>
+                  <hr />
                   <div className="d-flex justify-content-between bg-black">
                     <p>Tổng thanh toán</p>
                     <h3 className="fw-bold text-warning">

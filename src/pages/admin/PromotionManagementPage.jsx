@@ -26,8 +26,9 @@ const PromotionManagementPage = () => {
     fetchPromotions();
   }, [fetchPromotions]);
 
-  const ensurePackagesLoaded = async (promotionId) => {
-    if (promotionPackages[promotionId] !== undefined) return; // đã cache
+  const ensurePackagesLoaded = async (promotionId, force = false) => {
+    if (!promotionId) return;
+    if (!force && promotionPackages[promotionId] !== undefined) return;
     try {
       setLoadingPkg((p) => ({ ...p, [promotionId]: true }));
       setErrorPkg((p) => ({ ...p, [promotionId]: null }));
@@ -130,8 +131,7 @@ const PromotionManagementPage = () => {
         <PromotionCreateModal
           open={createPromotionOpen}
           onClose={() => setCreatePromotionOpen(false)}
-          onCreated={fetchPromotions
-          }
+          onCreated={fetchPromotions}
         />
 
         <PromotionDetailModal
@@ -143,6 +143,10 @@ const PromotionManagementPage = () => {
               ? promotionPackages[selectedPromotion.promotionId || selectedPromotion.id]
               : undefined
           }
+          onAdd={() => {
+            const id = selectedPromotion?.promotionId || selectedPromotion?.id;
+            if (id) ensurePackagesLoaded(id, true); // force reload sau khi thêm
+          }}
         />
       </div>
     </div>
