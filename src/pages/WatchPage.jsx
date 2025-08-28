@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState, useMemo,useCallback } from "react";
 import { Link, useLocation, useNavigate,useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; 
+
+import RatingModal from "../components/RatingModal";
+import AuthorService from "../services/AuthorService";
+import EpisodeService from "../services/EpisodeService";
+import MovieService from "../services/MovieService";
+
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import "videojs-contrib-quality-levels";
@@ -21,6 +27,9 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
 
+
+
+
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
 
@@ -33,12 +42,96 @@ export default function WatchPage() {
   const episode  = state?.episode;             // { id,title,videoUrl,number,season }
   const movie    = state?.movie;               // { id, title, year, genres[], alias, poster, ... }
   const episodes = state?.episodes || [];  
-  const authors  = state?.authors || [];       // list cùng season
 
 
   const movieId = movie?.movieId; // dùng cho bình luận
   const { MyUser } = useAuth();
   const userId = MyUser?.my_user?.userId ?? null;
+
+  const [seasons, setSeasons] = useState(state?.seasons || []);
+  const [selectedSeason, setSelectedSeason] = useState(seasons[0] || null);
+  const [epsOfSeason, setEpsOfSeason] = useState(state?.episodes || []);
+
+  const [authors, setAuthors] = useState(state?.authors || []);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratings, setRatings] = useState([]);
+  const totalRatings = ratings.length;
+  const avgRating = totalRatings
+    ? ratings.reduce((s, r) => s + (Number(r.rating) || 0), 0) / totalRatings
+    : 0;
+
+    // tải cast
+  useEffect(() => {
+    (async () => {
+      if (!movie?.movieId) return;
+      if (!authors?.length) {
+        try {
+          const list = await AuthorService.getAuthorsByMovieId(movie.movieId);
+          setAuthors(Array.isArray(list) ? list : []);
+        } catch {}
+      }
+    })();
+  }, [movie?.movieId]);
+
+// tải ratings
+  useEffect(() => {
+    (async () => {
+      if (!movie?.movieId) return;
+      try {
+        const list = await MovieService.getAllMovieRatings(movie.movieId);
+        setRatings(Array.isArray(list) ? list : []);
+      } catch {}
+    })();
+  }, [movie?.movieId]);
+
+// tải seasons + episodes theo season (nếu không được truyền qua state)
+  useEffect(() => {
+    (async () => {
+      if (!movie?.movieId) return;
+      try {
+        if (!seasons.length) {
+          const detail = await MovieService.getMovieDetail(movie.movieId);
+          const arr = Array.isArray(detail?.seasons) ? detail.seasons : [];
+          setSeasons(arr);
+          const first = arr[0] || null;
+          setSelectedSeason(first);
+          if (first?.seasonId) {
+            const eps = await EpisodeService.getEpisodesBySeasonId(first.seasonId);
+            setEpsOfSeason(Array.isArray(eps) ? eps : []);
+          } else {
+            setEpsOfSeason([]);
+          }
+        } else if (!epsOfSeason.length && selectedSeason?.seasonId) {
+          const eps = await EpisodeService.getEpisodesBySeasonId(selectedSeason.seasonId);
+          setEpsOfSeason(Array.isArray(eps) ? eps : []);
+        }
+      } catch {}
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movie?.movieId]);
+
+  const handlePickSeason = async (s) => {
+    setSelectedSeason(s);
+    try {
+      const eps = await EpisodeService.getEpisodesBySeasonId(s.seasonId);
+      setEpsOfSeason(Array.isArray(eps) ? eps : []);
+    } catch {
+      setEpsOfSeason([]);
+    }
+  };
+
+  const handleRateSubmit = async (value) => {
+  try {
+    await MovieService.saveMovieRating(movie.movieId, value, userId);
+    const list = await MovieService.getAllMovieRatings(movie.movieId);
+    setRatings(Array.isArray(list) ? list : []);
+    setShowRatingModal(false);
+  } catch (e) {
+    toast.error("Đánh giá thất bại");
+  }
+};
+
+
 
 
   const [comment, setComment] = useState("");
@@ -69,6 +162,7 @@ export default function WatchPage() {
   const [sticky, setSticky]       = useState(false);
   const [liked, setLiked]         = useState(false);
   const [inList, setInList]       = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   // Init video.js
   useEffect(() => {
@@ -355,55 +449,114 @@ useEffect(() => {
           <div className="info-card">
             <div className="poster">
               <img src={movie?.poster||movie?.thumbnailUrl} alt={movie?.title} />
+              <div className="quality-badge">HD</div>
             </div>
             <div className="meta">
-              <h2 className="name">
-                <Link to={`/movie/${movie?.id}`}>{movie?.title}</Link>
+              <h2 className="movie-title">
+                <Link to={`/movie/${movie?.movieId || movie?.id}`}>{movie?.title}</Link>
               </h2>
-              {movie?.alias && <div className="alias">{movie.alias}</div>}
+              {movie?.topic && <div className="topic-badge">{movie.topic}</div>}
+              
               <div className="tags">
-                {movie?.year && <span className="chip">{movie.year}</span>}
-                {movie?.genres?.slice(0, 4).map(g => <span key={g} className="chip ghost">{g}</span>)}
+                {movie?.releaseYear && <span className="chip year">{movie.releaseYear}</span>}
+                {movie?.genres?.slice(0, 4).map(g => <span key={g} className="chip genre">{g}</span>)}
               </div>
-              {movie?.description && <p className="desc">{movie.descriptions}</p>}
+
+              {movie?.description && (
+                <div className="description-section">
+                  <p className={`description ${showFullDescription ? 'expanded' : 'collapsed'}`}>
+                    {movie.description}
+                  </p>
+                  {movie.description.length > 150 && (
+                    <button 
+                      className="toggle-description"
+                      onClick={() => setShowFullDescription(!showFullDescription)}
+                    >
+                      {showFullDescription ? 'Thu gọn' : 'Xem thêm'}
+                      <span className={`arrow ${showFullDescription ? 'up' : 'down'}`}>
+                        {showFullDescription ? '▲' : '▼'}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="movie-stats">
+                <div className="stat-item">
+                  <span className="stat-icon">⭐</span>
+                  <span className="stat-value">{avgRating.toFixed(1)}</span>
+                  <span className="stat-label">({totalRatings} đánh giá)</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-icon">👁</span>
+                  <span className="stat-value">{movie?.viewCount || 0}</span>
+                  <span className="stat-label">lượt xem</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="episodes-box">
             <div className="eb-head">
-              <div className="tabs">
-                <button className="tab active">Phần {episode.season || 1}</button>
+              <div className="season-bar">
+                {seasons.map((s) => (
+                  <button
+                    key={s.seasonId}
+                    className={`btn-season ${selectedSeason?.seasonId === s.seasonId ? "is-active" : ""}`}
+                    onClick={() => handlePickSeason(s)}
+                  >
+                    Season {s.seasonNumber}
+                    {Number(s.episodesCount) ? <span className="mini-badge">{s.episodesCount}</span> : null}
+                  </button>
+                ))}
+                {seasons.length === 0 && <span className="text-muted">Chưa có season.</span>}
               </div>
+
               <div className="right-tools"><Funnel size={18} /><span>Lọc</span></div>
             </div>
+
             <div className="eb-grid">
-              {episodes.map(ep => (
-                <button
-                  key={ep.id}
-                  className={`ep-card ${ep.id === episode.id ? "active" : ""}`}
-                  onClick={() => navigate(`/watch/${movie?.id}/${ep.id}`, { state: { episode: ep, movie, episodes } })}
-                >
-                 
-                  <div className="ep-meta">
-                    <span className="ep-no">Tập {ep.number}</span>
-                    <span className="ep-title">{ep.title || ""}</span>
-                  </div>
-                </button>
-              ))}
+              {epsOfSeason.length > 0 ? (
+                epsOfSeason.map((ep) => {
+                  const epId = ep.episodeId || ep.id;
+                  const epNo = ep.episodeNumber || ep.number;
+                  return (
+                    <button
+                      key={epId}
+                      className={`ep-card ${epId === (episode.episodeId || episode.id) ? "active" : ""}`}
+                      onClick={() =>
+                        navigate(`/watch/${movie?.movieId}/${epId}`, {
+                          state: { episode: ep, movie, episodes: epsOfSeason, authors, seasons },
+                        })
+                      }
+                    >
+                      <div className="ep-meta">
+                        <span className="ep-no">Tập {epNo}</span>
+                        <span className="ep-title">{ep.title || ""}</span>
+                      </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="text-muted" style={{padding:"10px"}}>Season này chưa có tập.</div>
+              )}
             </div>
           </div>
+
 
           <div className="container mt-4">
             <h5 className="text-white">
               <i className="fa-regular fa-comment-dots me-2" /> Bình luận
             </h5>
-            <small className="text-white mb-3">
-              Vui lòng{" "}
-              <a href="/" style={{ color: '#4bc1fa', textDecoration: 'none' }} className="fw-bold">
-                đăng nhập
-              </a>{" "}
-              để tham gia bình luận.
-            </small>
+            {!userId && (
+              <small className="text-white mb-3">
+                Vui lòng{" "}
+                <a href="/" style={{ color: '#4bc1fa', textDecoration: 'none' }} className="fw-bold">
+                  đăng nhập
+                </a>{" "}
+                để tham gia bình luận.
+              </small>
+            )}
 
             <div className="card bg-black border-0 mb-3 mt-3">
               <div className="card-body">
@@ -414,15 +567,20 @@ useEffect(() => {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   maxLength={1000}
-                  style={{ height: '100px', resize: 'none' }}
-                  disabled={submitting}
+                  style={{ 
+                    height: '100px', 
+                    resize: 'none',
+                    color: '#ffffff !important',
+                    backgroundColor: '#343a40 !important'
+                  }}
+                  disabled={submitting || !userId}
                 />
                 <div className="d-flex justify-content-between align-items-center mt-2 bg-black">
                   <small className="text-white">{comment.length} / 1000</small>
                   <i
                     role="button"
-                    aria-disabled={submitting || !comment.trim()}
-                    className={`btn-rate ms-1 ${submitting || !comment.trim() ? "opacity-50 pe-none" : ""}`}
+                    aria-disabled={submitting || !comment.trim() || !userId}
+                    className={`btn-rate ms-1 ${submitting || !comment.trim() || !userId ? "opacity-50 pe-none" : ""}`}
                     onClick={handleFeedbackSubmit}
                   >
                     {submitting ? "Đang gửi..." : "Gửi"} <i className="fa-solid fa-paper-plane ms-1" />
@@ -491,26 +649,42 @@ useEffect(() => {
         {/* RIGHT */}
         <aside className="wg-side">
           <div className="rate-box">
-            <div className="score">9.0</div>
+            <div className="score">{avgRating.toFixed(1)}</div>
             <div className="act">
-              <button>Đánh giá</button>
-              <button>Bình luận</button>
+              <button onClick={() => setShowRatingModal(true)}>Đánh giá</button>
+              <button onClick={() => document.querySelector(".comments-top")?.scrollIntoView({behavior:"smooth"})}>Bình luận</button>
             </div>
           </div>
 
-          <div className="actors-box">
-            <div className="box-head">Diễn viên</div>
-            <div className="actors">
-              {authors
-              .filter(a => a.authorRole === "PERFORMER")
-              .map(a => (
-                <Link key={a.authorId} className="actor" to={`/author/${a.authorId}`}>
-                  <img src={a.photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} alt={a.name} />
-                  <span>{a.name}</span>
-                </Link>
-              ))}
-            </div>
+
+        <div className="actors-box">
+          <div className="box-head">Đạo diễn</div>
+          <div className="actors">
+            {authors.filter(a => a.authorRole === "DIRECTOR").map(a => (
+              <Link key={a.authorId} className="actor" to={`/author/${a.authorId}`}>
+                <img src={a.avatarUrl || a.photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} alt={a.name} />
+                <span>{a.name}</span>
+              </Link>
+            ))}
+            {authors.filter(a => a.authorRole === "DIRECTOR").length === 0 && (
+              <div className="text-muted" style={{padding:"0 12px 10px"}}>Chưa có dữ liệu</div>
+            )}
           </div>
+
+          <div className="box-head">Diễn viên</div>
+          <div className="actors">
+            {authors.filter(a => a.authorRole === "PERFORMER").map(a => (
+              <Link key={a.authorId} className="actor" to={`/author/${a.authorId}`}>
+                <img src={a.avatarUrl || a.photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} alt={a.name} />
+                <span>{a.name}</span>
+              </Link>
+            ))}
+            {authors.filter(a => a.authorRole === "PERFORMER").length === 0 && (
+              <div className="text-muted" style={{padding:"0 12px 10px"}}>Chưa có dữ liệu</div>
+            )}
+          </div>
+        </div>
+
 
           <div className="suggest-box">
             <div className="box-head">Đề xuất cho bạn</div>
@@ -533,6 +707,15 @@ useEffect(() => {
           </div>
         </aside>
       </div>
+      <RatingModal
+        show={showRatingModal}
+        movieTitle={movie?.title}
+        average={avgRating}
+        total={totalRatings}
+        onClose={() => setShowRatingModal(false)}
+        onSubmit={handleRateSubmit}
+      />
+
     </div>
   );
 }

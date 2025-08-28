@@ -393,12 +393,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                       
                         {isAdmin && (
                           <>
-                            <li
-                              onClick={() => setShowAddMovie(true)}
-                              style={{ color: "var(--green-400,#22c55e)" }}
-                            >
-                              Thêm phim
-                            </li>
+                            
                             <li onClick={() => go('/admin-dashboard')}>
                               Bảng điều khiển
                             </li>

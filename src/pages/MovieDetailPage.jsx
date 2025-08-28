@@ -324,6 +324,77 @@ useEffect(() => {
 
   const directors = authors.filter((a) => a.authorRole === "DIRECTOR");
   const performers = authors.filter((a) => a.authorRole === "PERFORMER");
+// Card hiển thị 1 người (đạo diễn/diễn viên)
+function PersonCard({ p }) {
+  return (
+    <div className="col-6 col-sm-4 col-md-3 col-lg-3 mb-3">
+      <div className="person-card h-100">
+        <div className="ratio ratio-3x4 person-avatar-wrap">
+        </div>
+        <div className="person-name text-truncate" title={p?.name || ""}>
+          {p?.name || "Chưa rõ tên"}
+        </div>
+        <span className={`role-badge ${p?.authorRole === "DIRECTOR" ? "role-director" : "role-performer"}`}>
+          {p?.authorRole === "DIRECTOR" ? "Đạo diễn" : "Diễn viên"}
+        </span>
+      </div>
+    </div>
+  );
+}
+function SeasonBar({ seasons, selected, onSelect }) {
+  const scrollerRef = React.useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const update = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 0);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
+  useEffect(() => {
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const scrollByPx = (dx) => scrollerRef.current?.scrollBy({ left: dx, behavior: "smooth" });
+
+  return (
+    <div className="season-bar">
+      {canLeft && (
+        <button className="season-arrow left" onClick={() => scrollByPx(-280)} aria-label="Trước">
+          ‹
+        </button>
+      )}
+
+      <div className="season-scroll" ref={scrollerRef} onScroll={update}>
+        {seasons.map((s) => (
+          <button
+            key={s.seasonId}
+            className={`season-chip ${selected?.seasonId === s.seasonId ? "active" : ""}`}
+            onClick={() => onSelect(s)}
+            title={`Season ${s.seasonNumber}`}
+          >
+            <span className="label">Season {s.seasonNumber}</span>
+            {typeof s.episodesCount !== "undefined" && (
+              <span className="count">{s.episodesCount}</span>
+            )}
+          </button>
+        ))}
+        {seasons.length === 0 && <span className="text-muted">Chưa có season nào</span>}
+      </div>
+
+      {canRight && (
+        <button className="season-arrow right" onClick={() => scrollByPx(280)} aria-label="Sau">
+          ›
+        </button>
+      )}
+    </div>
+  );
+}
+
 
   return (
     <div className="min-vh-100 bg-dark text-white" style={{ paddingTop: '100px', paddingBottom: '100px' }}>
@@ -420,55 +491,6 @@ useEffect(() => {
                     </div>
 
                   </div>
-
-                  {/* Cast & Crew */}
-                  {(directors.length > 0 || performers.length > 0) && (
-                    <div className="cast-crew">
-                      <div className="row g-2">
-                        {/* Đạo diễn */}
-                        {directors.length > 0 && (
-                          <div className="col-md-6">
-                            <div className="crew-section p-2 rounded" style={{ background: "rgba(245,158,11,0.1)" }}>
-                              <div className="d-flex align-items-center mb-2">
-                                <i className="fas fa-video text-warning me-2"></i>
-                                <span className="text-white fw-bold small">Đạo diễn</span>
-                              </div>
-                              <div className="crew-list">
-                                {directors.map((d) => (
-                                  <div key={d.authorId} className="crew-member text-warning small">
-                                    • {d.name}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Diễn viên */}
-                        {performers.length > 0 && (
-                          <div className="col-md-6">
-                            <div className="cast-section p-2 rounded" style={{ background: "rgba(139,92,246,0.1)" }}>
-                              <div className="d-flex align-items-center mb-2">
-                                <i className="fas fa-users text-info me-2"></i>
-                                <span className="text-white fw-bold small">Diễn viên</span>
-                              </div>
-                              <div className="cast-list">
-                                {performers.slice(0, 3).map((p) => (
-                                  <div key={p.authorId} className="cast-member text-info small">
-                                    • {p.name}
-                                  </div>
-                                ))}
-                                {performers.length > 3 && (
-                                  <div className="text-muted small">... và {performers.length - 3} người khác</div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
                 </div>
               </div>
             </div>
@@ -615,6 +637,7 @@ useEffect(() => {
                       Diễn viên
                     </i>
                   </li>
+                  
                 </ul>
                 <hr />
 
@@ -627,27 +650,19 @@ useEffect(() => {
                       {movie.status === "COMPLETED" && (
                         <>
                           {/* Season tabs */}
-                          <div className="d-flex flex-wrap gap-2 mb-3"  style={{borderRadius:"50px"}}>
-                            {seasons.map(s => (
-                              <button
-                                key={s.seasonId}
-                                className={`btn btn-sm btn-season ${selectedSeason?.seasonId === s.seasonId ? "is-active" : ""}`}
-                                onClick={async () => {
-                                  setSelectedSeason(s);
-                                  try {
-                                    const eps = await EpisodeService.getEpisodesByMovieId(s.seasonId); // (nên rename: getEpisodesBySeasonId)
-                                    setEpisodes(Array.isArray(eps) ? eps : []);
-                                  } catch {
-                                    setEpisodes([]);
-                                  }
-                                }}
-                              >
-                                Season {s.seasonNumber}{s.episodesCount ? ` (${s.episodesCount})` : ""}
-                              </button>
-                            ))}
-                            {seasons.length === 0 && <span className="text-muted">Chưa có season nào</span>}
-                          </div>
-
+                        <SeasonBar
+                          seasons={seasons}
+                          selected={selectedSeason}
+                          onSelect={async (s) => {
+                            setSelectedSeason(s);
+                            try {
+                              const eps = await EpisodeService.getEpisodesByMovieId(s.seasonId);
+                              setEpisodes(Array.isArray(eps) ? eps : []);
+                            } catch {
+                              setEpisodes([]);
+                            }
+                          }}
+                        />
                           {/* Episode list */}
                           <div className="row">
                             {episodes.map(ep => (
@@ -680,28 +695,32 @@ useEffect(() => {
 
 
                   {/* Tab: Diễn viên */}
-                  {tab === "cast" && (
-                    <div className="tab-pane fade show active">
-                      {/* <div className="row g-3">
-                        {cast.map((c) => (
-                          <div className="col-6 col-md-4 col-lg-3" key={c.id}>
-                            <div className="card h-100 bg-dark-subtle bg-opacity-10 border-0">
-                              <div className="card-body text-center ratio ratio-1x1">
-                                <img
-                                  src={c.avatar}
-                                  alt={c.name}
-                                  className="rounded-top object-fit-cover"
-                                />
-                                <div className="fw-semibold text-white text-truncate align-self-center">
-                                  {c.name}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div> */}
-                    </div>
-                  )}
+                {tab === "cast" && (
+                  <div className="tab-pane fade show active">
+                    {(directors.length + performers.length === 0) && (
+                      <div className="text-muted">Chưa có thông tin diễn viên/đạo diễn.</div>
+                    )}
+
+                    {directors.length > 0 && (
+                      <>
+                        <h6 className="section-heading mb-2">Đạo diễn</h6>
+                        <div className="row g-3 cast-grid">
+                          {directors.map((d) => <PersonCard key={d.authorId} p={d} />)}
+                        </div>
+                      </>
+                    )}
+
+                    {performers.length > 0 && (
+                      <>
+                        <h6 className="section-heading mt-3 mb-2">Diễn viên</h6>
+                        <div className="row g-3 cast-grid">
+                          {performers.map((p) => <PersonCard key={p.authorId} p={p} />)}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 </div>
               </div>
               <div className="container mt-4">
