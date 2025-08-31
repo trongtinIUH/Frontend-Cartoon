@@ -63,13 +63,13 @@ const TopicSection = ({ setFilteredMovies }) => {
             </div>
           </div>
         ))}
-        {hiddenTopics.length > 0 && (
+        {/* {hiddenTopics.length > 0 && (
           <div className="col-6 col-sm-4 col-md-2">
             <div className="topic-card see-more">
               <Link to="/all-topics">+{hiddenTopics.length} chủ đề</Link>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import PaymentQRCodeModal from "../models/PaymentQRCodeModal";
 import PaymentService from "../services/PaymentService";
 import { toast } from "react-toastify";
+import PromotionService from "../services/PromotionService";
+import axios from "axios";
 
 const PaymentPage = () => {
   const location = useLocation();
@@ -18,12 +20,25 @@ const PaymentPage = () => {
   const [qrData, setQrData] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
+  const [voucherCode, setVoucherCode] = useState("");
+  const [appliedPromotion, setAppliedPromotion] = useState(null);
+  const [voucherInfo, setVoucherInfo] = useState(null);
+
   useEffect(() => {
     if (!MyUser?.my_user) {
       navigate('/');
       return;
     }
   }, [MyUser, navigate]);
+
+  useEffect(() => {
+    // mỗi lần đổi gói → xoá voucher đang áp
+    setVoucherCode("");
+    setVoucherInfo(null);
+    setQrData(null);
+    setShowModal(false);
+  }, [selectedDurationPackage?.packageId]);
+
 
   useEffect(() => {
     const fetchSameVipPackages = async () => {
@@ -38,7 +53,7 @@ const PaymentPage = () => {
         }));
 
         const filtered = normalized
-          .filter(pkg => pkg.applicableVipLevel === selectedPackage.applicableVipLevel)
+          .filter(pkg => pkg.applicablePackageType === selectedPackage.applicablePackageType)
           .sort((a, b) => (a.durationInDays ?? 0) - (b.durationInDays ?? 0));
 
         setPackagesByVip(filtered);
@@ -68,6 +83,7 @@ const PaymentPage = () => {
       const res = await PaymentService.createPayment({
         userId: MyUser.my_user.userId,
         packageId: selectedDurationPackage.packageId,
+        voucherCode: voucherInfo?.voucherCode || "", // Mã giảm giá nếu có
         returnUrl: "/main#/main",
         cancelUrl: "/main#/payment"
       });
@@ -90,6 +106,59 @@ const PaymentPage = () => {
       setQrData(null);
     } catch (err) {
       console.error("Lỗi khi hủy thanh toán:", err.response?.data || err.message);
+    }
+  };
+
+  // lay thong tin voucher
+  const fetchVoucherInfo = async () => {
+    if (!voucherCode.trim()) return null;
+    try {
+      const info = await PromotionService.getVoucherInfo(voucherCode.trim().toUpperCase());
+      setVoucherInfo(info);
+      return info;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setVoucherInfo(null);
+        toast.error("Mã voucher không tồn tại hoặc đã hết hiệu lực.");
+        return null;
+      }
+      console.error("Lỗi khi lấy thông tin voucher:", error);
+      toast.error("Lỗi khi lấy thông tin voucher.");
+      return null;
+    }
+  };
+
+  const handleApplyVoucher = async () => {
+    if (!voucherCode.trim()) {
+      toast.error("Vui lòng nhập mã giảm giá.");
+      return;
+    }
+    if (!selectedDurationPackage) return;
+    const info = await fetchVoucherInfo();
+    if (!info) return;
+
+    if (info?.minOrderAmount > selectedDurationPackage.discountedAmount) {
+      toast.error(`Mã giảm giá không đủ điều kiện.`);
+      return;
+    }
+
+    if (info?.usedCount >= info?.maxUsedCount) {
+      toast.error(`Mã giảm giá đã hết lượt sử dụng.`);
+      return;
+    }
+
+    try {
+      const result = await PromotionService.applyVoucherCode({
+        voucherCode: voucherCode.trim(),
+        userId: MyUser.my_user.userId,
+        packageId: selectedDurationPackage.packageId,
+        orderAmount: selectedDurationPackage.discountedAmount,
+      });
+      console.log(result);
+      setVoucherInfo(result);
+      toast.success("Áp dụng mã giảm giá thành công.");
+    } catch (error) {
+      toast.error("Lỗi khi áp dụng mã giảm giá.");
     }
   };
 
@@ -180,7 +249,7 @@ const PaymentPage = () => {
                   </div> <hr />
                   <div className="d-flex justify-content-between bg-black">
                     <p>Tên gói</p>
-                    <p className="fw-bold">{selectedDurationPackage?.applicableVipLevel}</p>
+                    <p className="fw-bold">{selectedDurationPackage?.applicablePackageType}</p>
                   </div>
                   <div className="d-flex justify-content-between bg-black">
                     <p>Thời hạn</p>
@@ -196,13 +265,36 @@ const PaymentPage = () => {
                   </div>
                   <div className="d-flex justify-content-between bg-black">
                     <p>Giảm giá</p>
-                    <p className="fw-bold">0 VNĐ</p>
-                  </div> <hr />
-
+                    {voucherInfo ? (voucherInfo.discountAmount ?? 0).toLocaleString() : "0"} VNĐ
+                  </div>
+                  <div className="d-flex bg-black w-100 text-white">
+                    <div className="col-8">
+                      <input
+                        type="text"
+                        className="form-control text-white"
+                        value={voucherCode}
+                        onChange={(e) => {
+                          setVoucherCode(e.target.value.toUpperCase());
+                          setVoucherInfo(null);
+                        }}
+                        placeholder="Nhập mã giảm giá"
+                      />
+                    </div>
+                    <div className="col-4 ms-2">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={handleApplyVoucher}
+                      >
+                        Áp dụng
+                      </button>
+                    </div>
+                  </div>
+                  <hr />
                   <div className="d-flex justify-content-between bg-black">
                     <p>Tổng thanh toán</p>
                     <h3 className="fw-bold text-warning">
-                      {selectedDurationPackage?.discountedAmount?.toLocaleString() || selectedDurationPackage?.amount?.toLocaleString()} VND
+                      {voucherInfo?.finalAmount?.toLocaleString() || selectedDurationPackage?.discountedAmount?.toLocaleString()} VND
                     </h3>
                   </div>
                   <div className="text-center mt-3">

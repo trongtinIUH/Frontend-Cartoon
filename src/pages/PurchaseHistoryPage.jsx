@@ -51,7 +51,7 @@ const PurchaseHistoryPage = () => {
                                 packages.map((pkg, index) => (
                                     <tr key={pkg.id}>
                                         <th scope="row">{index + 1}</th>
-                                        <td>{pkg.vipLevel}</td>
+                                        <td>{pkg.packageType}</td>
                                         <td>{new Date(pkg.startDate).toLocaleDateString()}</td>
                                         <td>{new Date(pkg.endDate).toLocaleDateString()}</td>
                                         <td>{pkg.status}</td>

@@ -26,16 +26,30 @@ const PromotionManagementPage = () => {
     fetchPromotions();
   }, [fetchPromotions]);
 
-  const ensurePackagesLoaded = async (promotionId) => {
-    if (promotionPackages[promotionId] !== undefined) return; // đã cache
+  // PromotionManagementPage.jsx
+
+  const ensureItemsLoaded = async (promotion, force = false) => {
+    if (!promotion) return;
+    const promotionId = promotion.promotionId || promotion.id;
+    if (!promotionId) return;
+
+    if (!force && promotionPackages[promotionId] !== undefined) return;
+
     try {
       setLoadingPkg((p) => ({ ...p, [promotionId]: true }));
       setErrorPkg((p) => ({ ...p, [promotionId]: null }));
-      const data = await PromotionService.getPromotionPackage(promotionId);
+
+      let data = [];
+      if (promotion.promotionType === "PACKAGE") {
+        data = await PromotionService.getPromotionPackages(promotionId);
+      } else {
+        data = await PromotionService.getPromotionVouchers(promotionId);
+      }
+
       setPromotionPackages((p) => ({ ...p, [promotionId]: Array.isArray(data) ? data : [] }));
     } catch (e) {
-      console.error("Failed to fetch promotion packages:", e);
-      setErrorPkg((p) => ({ ...p, [promotionId]: "Không tải được danh sách gói" }));
+      console.error("Failed to fetch promotion items:", e);
+      setErrorPkg((p) => ({ ...p, [promotionId]: "Không tải được danh sách" }));
       setPromotionPackages((p) => ({ ...p, [promotionId]: [] }));
     } finally {
       setLoadingPkg((p) => ({ ...p, [promotionId]: false }));
@@ -43,9 +57,10 @@ const PromotionManagementPage = () => {
   };
 
   const handleOpenDetail = async (promotion) => {
+    await ensureItemsLoaded(promotion);
     setSelectedPromotion(promotion);
-    await ensurePackagesLoaded(promotion.promotionId);
   };
+
 
   return (
     <div className="d-flex">
@@ -97,25 +112,28 @@ const PromotionManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {promotions.map((promotion) => (
-                  <tr key={promotion.id}>
-                    <td>{promotion.promotionName}</td>
-                    <td>{promotion.description}</td>
-                    <td>{promotion.promotionType}</td>
-                    <td>{promotion.startDate}</td>
-                    <td>{promotion.endDate}</td>
-                    <td>
-                      <span className={`badge ${promotion.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'}`}>
-                        {promotion.status === 'ACTIVE' ? 'Hoạt động' : 'Hết hạn'}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn btn-sm btn-warning me-2" onClick={() => handleOpenDetail(promotion)}>
-                        <i className="fa fa-eye"></i> Xem chi tiết
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {promotions.map((promotion) => {
+                  const pid = promotion.promotionId;
+                  return (
+                    <tr key={pid}>
+                      <td>{promotion.promotionName}</td>
+                      <td>{promotion.description}</td>
+                      <td>{promotion.promotionType}</td>
+                      <td>{promotion.startDate}</td>
+                      <td>{promotion.endDate}</td>
+                      <td>
+                        <span className={`badge ${promotion.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'}`}>
+                          {promotion.status === 'ACTIVE' ? 'Hoạt động' : 'Hết hạn'}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="btn btn-sm btn-warning me-2" onClick={() => handleOpenDetail(promotion)}>
+                          <i className="fa fa-eye"></i> Xem chi tiết
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
                 {promotions.length === 0 && (
                   <tr>
                     <td colSpan={7} className="text-center text-muted">
@@ -130,8 +148,7 @@ const PromotionManagementPage = () => {
         <PromotionCreateModal
           open={createPromotionOpen}
           onClose={() => setCreatePromotionOpen(false)}
-          onCreated={fetchPromotions
-          }
+          onCreated={fetchPromotions}
         />
 
         <PromotionDetailModal
@@ -140,9 +157,12 @@ const PromotionManagementPage = () => {
           promotion={selectedPromotion}
           packages={
             selectedPromotion
-              ? promotionPackages[selectedPromotion.promotionId || selectedPromotion.id]
+              ? promotionPackages[selectedPromotion.promotionId]
               : undefined
           }
+          onAdd={() => {
+            if (selectedPromotion) ensureItemsLoaded(selectedPromotion, true); // reload sau khi thêm
+          }}
         />
       </div>
     </div>
