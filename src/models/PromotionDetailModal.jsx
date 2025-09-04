@@ -13,6 +13,8 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
   const [saving, setSaving] = useState(false);
   const isVoucher = promotion?.promotionType === "VOUCHER";
   const [savingVoucher, setSavingVoucher] = useState(false);
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [tempPercentPackage, setTempPercentPackage] = useState('');
 
   const [voucherForm, setVoucherForm] = useState({
     voucherCode: "",
@@ -20,11 +22,119 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
     discountValue: "",
     maxDiscountAmount: "",
     maxUsage: "",
-    usedCount: 0,
     maxUsagePerUser: "",
     minOrderAmount: ""
   });
 
+  // ---- EDIT VOUCHER ----
+  const [editingVoucherCode, setEditingVoucherCode] = useState(null);
+  const [editForm, setEditForm] = useState({
+    discountType: "PERCENTAGE",      // "PERCENTAGE" | "FIXED_AMOUNT"
+    discountValue: "",
+    maxDiscountAmount: "",
+    maxUsage: "",
+    maxUsagePerUser: "",
+    minOrderAmount: ""
+  });
+
+  // bắt đầu sửa 1 voucher
+  const startEditVoucher = (v) => {
+    setEditingVoucherCode(v.voucherCode);
+    setEditForm({
+      discountType: (v.discountType || "PERCENTAGE").toUpperCase(),
+      discountValue: Number(v.discountValue ?? 0),
+      // FIXED_AMOUNT => maxDiscountAmount phải = discountValue (disable input)
+      maxDiscountAmount: Number(
+        (v.discountType || "").toUpperCase() === "FIXED_AMOUNT"
+          ? v.discountValue ?? 0
+          : v.maxDiscountAmount ?? 0
+      ),
+      maxUsage: Number(v.maxUsage ?? 0),
+      maxUsagePerUser: Number(v.maxUsagePerUser ?? 0),
+      minOrderAmount: Number(v.minOrderAmount ?? 0),
+    });
+  };
+
+  const cancelEditVoucher = () => {
+    setEditingVoucherCode(null);
+    setEditForm({
+      discountType: "PERCENTAGE",
+      discountValue: "",
+      maxDiscountAmount: "",
+      maxUsage: "",
+      maxUsagePerUser: "",
+      minOrderAmount: ""
+    });
+  };
+
+  // lưu cập nhật voucher
+  const saveEditVoucher = async (v) => {
+    // v là row hiện tại (voucher)
+    const payload = {
+      discountType: editForm.discountType,
+      discountValue: Number(editForm.discountValue || 0),
+      maxDiscountAmount: Number(
+        editForm.discountType === "FIXED_AMOUNT"
+          ? editForm.discountValue || 0
+          : editForm.maxDiscountAmount || 0
+      ),
+      maxUsage: Number(editForm.maxUsage || 0),
+      maxUsagePerUser: Number(editForm.maxUsagePerUser || 0),
+      minOrderAmount: Number(editForm.minOrderAmount || 0),
+    };
+
+    console.log("Saving voucher edit:", v.voucherCode, payload);
+
+    // validate
+    if (!payload.discountValue || payload.discountValue <= 0) {
+      toast.error("Giá trị giảm phải > 0.");
+      return;
+    }
+    if (payload.discountType === "PERCENTAGE" && (payload.discountValue < 1 || payload.discountValue > 100)) {
+      toast.error("Phần trăm giảm phải từ 1 đến 100.");
+      return;
+    }
+    if (payload.maxDiscountAmount < 0) {
+      toast.error("Giảm tối đa phải ≥ 0.");
+      return;
+    }
+    if (payload.maxUsage <= 0) {
+      toast.error("Tổng lượt sử dụng phải > 0.");
+      return;
+    }
+    if (payload.maxUsagePerUser < 0) {
+      toast.error("Tối đa/user phải ≥ 0.");
+      return;
+    }
+    if (payload.maxUsagePerUser && payload.maxUsage && payload.maxUsagePerUser > payload.maxUsage) {
+      toast.error("Tối đa/user phải ≤ Tổng lượt sử dụng.");
+      return;
+    }
+    if (payload.minOrderAmount < 0) {
+      toast.error("Đơn tối thiểu phải ≥ 0.");
+      return;
+    }
+
+    try {
+      setSavingVoucher(true);
+      await PromotionService.updatePromotionVoucher(
+        promotion.promotionId,
+        v.voucherCode,
+        payload
+      );
+      toast.success("Cập nhật voucher thành công!");
+      setEditingVoucherCode(null);
+      onAdd(); // reload danh sách
+    } catch (e) {
+      console.error("Update voucher failed:", e);
+      toast.error(e?.response?.data || "Cập nhật voucher thất bại!");
+    } finally {
+      setSavingVoucher(false);
+    }
+  };
+
+
+  // bat dau tao voucher
   const startCreateVoucher = () => {
     setPicking(true);
     setVoucherForm({
@@ -33,19 +143,24 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
       discountValue: "",
       maxDiscountAmount: "",
       maxUsage: "",
-      usedCount: 0,
       maxUsagePerUser: "",
       minOrderAmount: ""
     });
   };
 
+  // tao voucher 
   const handleSaveVoucher = async () => {
     // validate cơ bản
     if (!voucherForm.voucherCode.trim()) return toast.error("Vui lòng nhập mã voucher.");
     if (!voucherForm.discountType) return toast.error("Vui lòng chọn loại giảm.");
-    const dv = voucherForm.discountValue;
-    if (!dv || dv <= 0) return toast.error("Giá trị giảm phải > 0.");
-    if (voucherForm.discountType === "PERCENTAGE" && (dv < 1 || dv > 100))
+    if (!voucherForm.maxUsage || voucherForm.maxUsage <= 0) return toast.error("Tổng lượt sử dụng phải > 0.");
+    if (!voucherForm.discountValue || voucherForm.discountValue <= 0) return toast.error("Giá trị giảm phải > 0.");
+    if (!voucherForm.minOrderAmount || voucherForm.minOrderAmount < 0) return toast.error("Đơn tối thiểu phải >= 0.");
+    // if(!voucherForm.maxUsagePerUser || voucherForm.maxUsagePerUser <= 0) return toast.error("Tối đa/user phải > 0.");
+    // if(voucherForm.maxUsage && voucherForm.maxUsagePerUser && Number(voucherForm.maxUsagePerUser) > Number(voucherForm.maxUsage))
+    //   return toast.error("Tối đa/user phải nhỏ hơn hoặc bằng Tổng lượt sử dụng.");
+    if (voucherForm.maxDiscountAmount && voucherForm.maxDiscountAmount <= 0) return toast.error("Giảm tối đa phải >= 0.");
+    if (voucherForm.discountType === "PERCENTAGE" && (voucherForm.discountValue < 1 || voucherForm.discountValue > 100))
       return toast.error("Phần trăm giảm phải từ 1 đến 100.");
 
     setSavingVoucher(true);
@@ -68,7 +183,6 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
         discountValue: "",
         maxDiscountAmount: "",
         maxUsage: "",
-        usedCount: 0,
         maxUsagePerUser: "",
         minOrderAmount: ""
       });
@@ -80,11 +194,19 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
     }
   };
 
-  const fmtVND = (num) => {
-    if (!num) return "0 đ";
-    return `${num.toLocaleString()} đ`;
+  // xoa voucher
+  const handleDeleteVoucher = async (promotionId, voucherCode) => {
+    try {
+      await PromotionService.deletePromotionVoucher(promotionId, voucherCode);
+      toast.success("Xóa voucher thành công!");
+      onAdd();
+    } catch (e) {
+      console.error("Delete voucher failed:", e);
+      toast.error("Xóa voucher thất bại!");
+    }
   };
 
+  // bat dau chon goi ap dung khuyen mai
   const startPick = async () => {
     setPicking(true);
     setSelectedIds([]);
@@ -92,7 +214,6 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
     if (allPkgs.length === 0) {
       try {
         setLoadingAll(true);
-        // Đổi tên hàm cho đúng service của bạn (getAll / getAllPackages)
         const data = await SubscriptionPackageService.getAllPackages();
         setAllPkgs(data);
       } catch (e) {
@@ -122,10 +243,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
       .map(pkg => ({ value: pkg.packageId, label: pkg.packageId }));
   }, [allPkgs, appliedIds]);
 
-  // useEffect(() => {
-  //   setSelectedIds(prev => prev.filter(id => !appliedIds.has(id)));
-  // }, [appliedIds]);
-
+  // luu gói khuyến mãi
   const handleSave = async () => {
     if (!selectedIds.length) {
       toast.error("Vui lòng chọn gói.");
@@ -162,9 +280,71 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
     }
   };
 
+  // xoa promotion package
+  const handleDeletePromotionPackage = async (id, packageId) => {
+    try {
+      await PromotionService.deletePromotionPackage(id, packageId);
+      toast.success("Xóa gói khuyến mãi thành công!");
+      onAdd();
+    } catch (e) {
+      console.error("Delete promotion failed:", e);
+      toast.error("Xóa gói khuyến mãi thất bại!");
+    }
+  };
+
+  const rowKey = (x) =>
+    `${x.promotionId}__${Array.isArray(x.packageId) ? x.packageId.join('|') : x.packageId}`;
+
+  const startEditPackage = (row) => {
+    setEditingRowId(rowKey(row));
+    setTempPercentPackage(row.discountPercent ?? 0);
+  };
+
+  const cancelEditPackage = () => {
+    setEditingRowId(null);
+    setTempPercentPackage('');
+  };
+
+  // cap nhat gói khuyến mãi gói
+  const saveEdit = async (row) => {
+    try {
+      const percentNum = Number(tempPercentPackage);
+      if (!Number.isFinite(percentNum) || percentNum < 1 || percentNum > 100) {
+        toast.error("Giảm giá phải từ 1% đến 100%");
+        return;
+      }
+      setSaving(true);
+
+      const pkgs = Array.isArray(row.packageId) ? row.packageId : [row.packageId];
+      console.log("Updating promotionId:", row.promotionId, "packages:", pkgs, "to percent:", percentNum);
+
+      await PromotionService.updatePromotionPackage(row.promotionId, pkgs, percentNum);
+
+      toast.success("Cập nhật gói khuyến mãi thành công!");
+      setEditingRowId(null);
+      setTempPercentPackage('');
+      onAdd();
+    } catch (e) {
+      console.error("Update promotion failed:", e);
+      toast.error("Cập nhật gói khuyến mãi thất bại!");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onPercentKeyDown = (e, row) => {
+    if (e.key === 'Enter') saveEdit(row);
+    if (e.key === 'Escape') cancelEditPackage();
+  };
+
+  const fmtVND = (num) => {
+    if (!num) return "0 đ";
+    return `${num.toLocaleString()} đ`;
+  };
+
   if (!open) return null;
   return (
-    <div className="modal fade show" style={{ display: "block"}}>
+    <div className="modal fade show" style={{ display: "block" }}>
       <div className="modal-dialog modal-lg">
         <div className="modal-content">
           <div className="modal-header">
@@ -203,38 +383,227 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
                         if (isVoucher) {
                           const type = (item.discountType || "").toUpperCase();
                           const isPercent = type === "PERCENTAGE";
-                          const isFixed = type === "AMOUNT" || type === "FIXED_AMOUNT";
                           const key = item.voucherCode || item.sk || item.id;
+                          const isEditing = editingVoucherCode === item.voucherCode;
+
                           return (
                             <tr key={key}>
+                              {/* Mã voucher */}
                               <td className="fw-semibold">{item.voucherCode}</td>
-                              <td><span className="badge bg-info">{item.discountType}</span></td>
+
+                              {/* Loại giảm */}
                               <td>
-                                {isPercent
-                                  ? `${item.discountValue ?? 0}%`
-                                  : `${fmtVND(item.discountValue)}`}
+                                {isEditing ? (
+                                  <select
+                                    className="form-select form-select-sm text-black"
+                                    value={editForm.discountType}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setEditForm(s => ({
+                                        ...s,
+                                        discountType: val,
+                                        maxDiscountAmount: val === "FIXED_AMOUNT" ? Number(s.discountValue || 0) : s.maxDiscountAmount
+                                      }));
+                                    }}
+                                  >
+                                    <option value="PERCENTAGE">PERCENT (%)</option>
+                                    <option value="FIXED_AMOUNT">AMOUNT (VND)</option>
+                                  </select>
+                                ) : (
+                                  <span className="badge bg-info">{type}</span>
+                                )}
                               </td>
-                              <td>{fmtVND(item.maxDiscountAmount)}</td>
-                              <td>{(item.usedCount ?? 0)}{item.maxUsage != null ? ` / ${item.maxUsage}` : ""}</td>
-                              <td>{fmtVND(item.minOrderAmount)}</td>
+
+                              {/* Giá trị giảm */}
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="number"
+                                    className="form-control form-control-sm text-black"
+                                    value={editForm.discountValue}
+                                    onChange={(e) => {
+                                      const val = Number(e.target.value || 0);
+                                      setEditForm(s => ({
+                                        ...s,
+                                        discountValue: val,
+                                        maxDiscountAmount: s.discountType === "FIXED_AMOUNT" ? val : s.maxDiscountAmount
+                                      }));
+                                    }}
+                                    placeholder={editForm.discountType === "PERCENTAGE" ? "VD: 15" : "VD: 50000"}
+                                    min={0}
+                                  />
+                                ) : (
+                                  isPercent ? `${item.discountValue ?? 0}%` : fmtVND(Number(item.discountValue || 0))
+                                )}
+                              </td>
+
+                              {/* Giảm tối đa */}
+                              <td>
+                                {isEditing ? (
+                                  editForm.discountType === "PERCENTAGE" ? (
+                                    <input
+                                      type="number"
+                                      className="form-control form-control-sm text-black"
+                                      value={editForm.maxDiscountAmount}
+                                      onChange={(e) => setEditForm(s => ({ ...s, maxDiscountAmount: Number(e.target.value || 0) }))}
+                                      placeholder="VD: 50000"
+                                      min={0}
+                                    />
+                                  ) : (
+                                    <input
+                                      type="number"
+                                      className="form-control form-control-sm text-black"
+                                      value={editForm.maxDiscountAmount}
+                                      disabled
+                                      title="Với AMOUNT, Giảm tối đa = Giá trị giảm"
+                                    />
+                                  )
+                                ) : (
+                                  fmtVND(Number(item.maxDiscountAmount || 0))
+                                )}
+                              </td>
+
+                              {/* Tổng lượt dùng */}
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="number"
+                                    className="form-control form-control-sm text-black"
+                                    value={editForm.maxUsage}
+                                    onChange={(e) => setEditForm(s => ({ ...s, maxUsage: Number(e.target.value || 0) }))}
+                                    min={0}
+                                  />
+                                ) : (
+                                  Number(item.maxUsage || 0).toLocaleString()
+                                )}
+                              </td>
+
+                              {/* Tối đa/user */}
+                              {/* <td>
+                                {isEditing ? (
+                                  <input
+                                    type="number"
+                                    className="form-control form-control-sm text-black"
+                                    value={editForm.maxUsagePerUser}
+                                    onChange={(e) => setEditForm(s => ({ ...s, maxUsagePerUser: Number(e.target.value || 0) }))}
+                                    min={0}
+                                  />
+                                ) : (
+                                  Number(item.maxUsagePerUser || 0).toLocaleString()
+                                )}
+                              </td> */}
+
+                              {/* Đơn tối thiểu */}
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="number"
+                                    className="form-control form-control-sm text-black"
+                                    value={editForm.minOrderAmount}
+                                    onChange={(e) => setEditForm(s => ({ ...s, minOrderAmount: Number(e.target.value || 0) }))}
+                                    min={0}
+                                  />
+                                ) : (
+                                  fmtVND(Number(item.minOrderAmount || 0))
+                                )}
+                              </td>
+
+                              {/* Hành động */}
                               <td className="d-flex">
-                                <button className="btn btn-sm btn-primary me-2" onClick={() => console.log("edit voucher", item)}>
-                                  <i className="fa fa-pencil" /> Sửa
-                                </button>
-                                <button className="btn btn-sm btn-danger" onClick={() => console.log("delete voucher", item)}>
-                                  <i className="fa fa-trash" /> Xóa
-                                </button>
+                                {isEditing ? (
+                                  <>
+                                    <button
+                                      className="btn btn-sm btn-success me-2"
+                                      onClick={() => saveEditVoucher(item)}
+                                      disabled={savingVoucher}
+                                    >
+                                      {savingVoucher ? <i className="fa fa-spinner fa-spin" /> : <i className="fa fa-check" />} Lưu
+                                    </button>
+                                    <button
+                                      className="btn btn-sm btn-secondary"
+                                      onClick={cancelEditVoucher}
+                                      disabled={savingVoucher}
+                                    >
+                                      <i className="fa fa-times" /> Huỷ
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      className="btn btn-sm btn-primary me-2"
+                                      onClick={() => startEditVoucher(item)}
+                                    >
+                                      <i className="fa fa-pencil" /> Sửa
+                                    </button>
+                                    <button
+                                      className="btn btn-sm btn-danger"
+                                      onClick={() => handleDeleteVoucher(promotion.promotionId, item.voucherCode)}
+                                    >
+                                      <i className="fa fa-trash" /> Xóa
+                                    </button>
+                                  </>
+                                )}
                               </td>
                             </tr>
                           );
                         }
                         return (
-                          <tr key={item.id}>
+                          <tr key={rowKey(item)}>
                             <td>{Array.isArray(item.packageId) ? item.packageId.join(", ") : item.packageId}</td>
-                            <td>{(item.discountPercent ?? 0).toLocaleString()} %</td>
+                            <td>
+                              {editingRowId === rowKey(item) ? (
+                                <div className="d-flex align-items-center gap-2">
+                                  <input
+                                    type="number"
+                                    className="form-control form-control-sm"
+                                    min={1}
+                                    max={100}
+                                    value={tempPercentPackage}
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      setTempPercentPackage(v === '' ? '' : Number(v));
+                                    }}
+                                    onKeyDown={(e) => onPercentKeyDown(e, item)}
+                                    style={{ width: 100 }}
+                                    autoFocus
+                                  />
+                                  <span>%</span>
+                                </div>
+                              ) : (
+                                <span>{(item.discountPercent ?? 0).toLocaleString()} %</span>
+                              )}
+                            </td>
                             <td className="d-flex">
-                              <span className="btn btn-sm btn-primary me-2"><i className="fa fa-pencil"></i> Sửa</span>
-                              <span className="btn btn-sm btn-danger me-2"><i className="fa fa-trash"></i> Xóa</span>
+                              {editingRowId === rowKey(item) ? (
+                                <>
+                                  <button
+                                    className="btn btn-sm btn-success me-2"
+                                    onClick={() => saveEdit(item)}
+                                    disabled={saving}
+                                  >
+                                    {saving ? <i className="fa fa-spinner fa-spin" /> : <i className="fa fa-check" />} Lưu
+                                  </button>
+                                  <button className="btn btn-sm btn-secondary" onClick={cancelEditPackage} disabled={saving}>
+                                    <i className="fa fa-times" /> Huỷ
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <span
+                                    className="btn btn-sm btn-primary me-2"
+                                    onClick={() => startEditPackage(item)}
+                                  >
+                                    <i className="fa fa-pencil"></i> Sửa
+                                  </span>
+
+                                  <span
+                                    className="btn btn-sm btn-danger me-2"
+                                    onClick={() => handleDeletePromotionPackage(item.promotionId, item.packageId)}
+                                  >
+                                    <i className="fa fa-trash"></i> Xóa
+                                  </span>
+                                </>
+                              )}
                             </td>
                           </tr>
                         );
@@ -293,7 +662,18 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
                     <select
                       className="form-select text-black"
                       value={voucherForm.discountType}
-                      onChange={e => setVoucherForm(s => ({ ...s, discountType: e.target.value }))}
+                      onChange={e =>
+                        setVoucherForm(s => {
+                          const type = e.target.value;
+                          return {
+                            ...s,
+                            discountType: type,
+                            // nếu là FIXED_AMOUNT => max = discountValue hiện tại (ép số)
+                            maxDiscountAmount:
+                              type === "FIXED_AMOUNT" ? Number(s.discountValue || 0) : s.maxDiscountAmount,
+                          };
+                        })
+                      }
                     >
                       <option value="PERCENTAGE">PERCENT (%)</option>
                       <option value="FIXED_AMOUNT">AMOUNT (VND)</option>
@@ -306,24 +686,38 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
                       type="number"
                       className="form-control text-black"
                       value={voucherForm.discountValue}
-                      onChange={e => setVoucherForm(s => ({ ...s, discountValue: e.target.value }))}
+                      onChange={e =>
+                        setVoucherForm(s => {
+                          const val = Number(e.target.value || 0);
+                          return {
+                            ...s,
+                            discountValue: val,
+                            // nếu FIXED_AMOUNT thì maxDiscountAmount bám theo discountValue
+                            maxDiscountAmount: s.discountType === "FIXED_AMOUNT" ? val : s.maxDiscountAmount,
+                          };
+                        })
+                      }
                       placeholder={voucherForm.discountType === "PERCENTAGE" ? "Ví dụ: 10" : "Ví dụ: 50000"}
                     />
                   </div>
 
-                  <div className="col-md-4">
-                    <label className="form-label">Giảm tối đa</label>
-                    <input
-                      type="number"
-                      className="form-control text-black"
-                      value={voucherForm.maxDiscountAmount}
-                      onChange={e => setVoucherForm(s => ({ ...s, maxDiscountAmount: e.target.value }))}
-                      placeholder="VD: 100000"
-                    />
-                  </div>
+                  {voucherForm.discountType === "PERCENTAGE" && (
+                    <div className="col-md-4">
+                      <label className="form-label">Giảm tối đa</label>
+                      <input
+                        type="number"
+                        className="form-control text-black"
+                        value={voucherForm.maxDiscountAmount}
+                        onChange={e =>
+                          setVoucherForm(s => ({ ...s, maxDiscountAmount: Number(e.target.value || 0) }))
+                        }
+                        placeholder="VD: 100000"
+                      />
+                    </div>
+                  )}
 
                   <div className="col-md-4">
-                    <label className="form-label">Tổng lượt (maxUsage)</label>
+                    <label className="form-label">Tổng lượt sử dụng</label>
                     <input
                       type="number"
                       className="form-control text-black"
@@ -333,7 +727,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
                     />
                   </div>
 
-                  <div className="col-md-4">
+                  {/* <div className="col-md-4">
                     <label className="form-label">Tối đa/user</label>
                     <input
                       type="number"
@@ -342,9 +736,9 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
                       onChange={e => setVoucherForm(s => ({ ...s, maxUsagePerUser: e.target.value }))}
                       placeholder="VD: 2"
                     />
-                  </div>
+                  </div> */}
 
-                  <div className="col-md-6">
+                  <div className="col-md-4 mb-3">
                     <label className="form-label">Đơn tối thiểu</label>
                     <input
                       type="number"

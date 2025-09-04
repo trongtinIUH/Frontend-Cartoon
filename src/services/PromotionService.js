@@ -69,6 +69,52 @@ const PromotionService = {
       throw error;
     }
   },
+  // xoa package khoi promotion
+  deletePromotionPackage: async (id, packages) => {
+    try {
+      const response = await axiosInstance.delete(
+        `${API_BASE_URL}/packages`,
+        {
+          params: {
+            promotionId: id,
+            packageId: packages, // tên key phải trùng BE: packageId
+          },
+          paramsSerializer: (params) => {
+            // ép axios serialize array thành ?packageId=a&packageId=b
+            return new URLSearchParams(params).toString();
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+  // cap nhat package trong promotion
+  updatePromotionPackage: async (id, packages, newPercent) => {
+    const pkgs = Array.isArray(packages) ? packages : [packages];
+
+    return axiosInstance.put(
+      `${API_BASE_URL}/packages`,
+      null,                                 
+      {
+        params: {
+          promotionId: id,
+          packageId: pkgs,            
+          newPercent: newPercent,
+        },
+        paramsSerializer: (params) => {
+          const usp = new URLSearchParams();
+          usp.append('promotionId', params.promotionId);
+          (params.packageId || []).forEach((p) => usp.append('packageId', p));
+          usp.append('newPercent', String(params.newPercent));
+          return usp.toString();
+        },
+      }
+    ).then(res => res.data);
+  },
+
   // ap dung ma khuyen mai cho order
   applyVoucherCode: async (data) => {
     try {
@@ -104,6 +150,27 @@ const PromotionService = {
   getPromotionVouchers: async (promotionId) => {
     try {
       const response = await axiosInstance.get(`${API_BASE_URL}/vouchers?promotionId=${promotionId}`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  // xoa voucher
+  deletePromotionVoucher: async (id, voucherCode) => {
+    try {
+      const response = await axiosInstance.delete(`${API_BASE_URL}/vouchers?promotionId=${id}&voucherCode=${voucherCode}`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+  // cap nhat voucher
+  updatePromotionVoucher: async (id, voucherCode, data) => {
+    try {
+      const response = await axiosInstance.put(`${API_BASE_URL}/vouchers?promotionId=${id}&voucherCode=${voucherCode}`, data);
       return response.data;
     } catch (error) {
       console.error(error);
