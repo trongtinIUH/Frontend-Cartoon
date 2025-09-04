@@ -21,8 +21,9 @@ const PaymentPage = () => {
   const [showModal, setShowModal] = useState(false);
 
   const [voucherCode, setVoucherCode] = useState("");
-  const [appliedPromotion, setAppliedPromotion] = useState(null);
   const [voucherInfo, setVoucherInfo] = useState(null);
+
+  const [promotions, setPromotions] = useState([]);
 
   useEffect(() => {
     if (!MyUser?.my_user) {
@@ -76,7 +77,14 @@ const PaymentPage = () => {
     try {
       const token = localStorage.getItem("idToken"); // token bạn lưu khi login
       if (!token) {
-        alert("Vui lòng đăng nhập trước khi thanh toán!");
+        toast.error("Vui lòng đăng nhập trước khi thanh toán!");
+        return;
+      }
+
+      // đơn hàng phải lớn hơn 0
+      const effectivePrice = getEffectivePrice(selectedDurationPackage);
+      if (effectivePrice <= 0 || (voucherInfo?.finalAmount ?? effectivePrice) <= 0) {
+        toast.error("Giá trị đơn hàng phải lớn hơn 0.");
         return;
       }
 
@@ -113,9 +121,14 @@ const PaymentPage = () => {
   const fetchVoucherInfo = async () => {
     if (!voucherCode.trim()) return null;
     try {
+      const promos = await PromotionService.getAllPromotions();
+      setPromotions(promos);
+
+      const promo = promos.find(p => p.promotionType === "VOUCHER");
+
       const info = await PromotionService.getVoucherInfo(voucherCode.trim().toUpperCase());
-      setVoucherInfo(info);
-      return info;
+      setVoucherInfo({ ...info, promoStatus: promo?.status });
+      return { ...info, promoStatus: promo?.status };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         setVoucherInfo(null);
@@ -128,6 +141,8 @@ const PaymentPage = () => {
     }
   };
 
+  const getEffectivePrice = (pkg) => pkg?.discountedAmount ?? pkg?.amount ?? 0;
+
   const handleApplyVoucher = async () => {
     if (!voucherCode.trim()) {
       toast.error("Vui lòng nhập mã giảm giá.");
@@ -137,12 +152,18 @@ const PaymentPage = () => {
     const info = await fetchVoucherInfo();
     if (!info) return;
 
-    if (info?.minOrderAmount > selectedDurationPackage.discountedAmount) {
+    if (info?.promoStatus !== "ACTIVE") {
+      toast.error("Mã giảm giá không còn hiệu lực.");
+      return;
+    }
+
+    const effectivePrice = getEffectivePrice(selectedDurationPackage);
+    if (info?.minOrderAmount > effectivePrice) {
       toast.error(`Mã giảm giá không đủ điều kiện.`);
       return;
     }
 
-    if (info?.usedCount >= info?.maxUsedCount) {
+    if (info?.usedCount >= info?.maxUsage) {
       toast.error(`Mã giảm giá đã hết lượt sử dụng.`);
       return;
     }
@@ -152,9 +173,8 @@ const PaymentPage = () => {
         voucherCode: voucherCode.trim(),
         userId: MyUser.my_user.userId,
         packageId: selectedDurationPackage.packageId,
-        orderAmount: selectedDurationPackage.discountedAmount,
+        orderAmount: effectivePrice,
       });
-      console.log(result);
       setVoucherInfo(result);
       toast.success("Áp dụng mã giảm giá thành công.");
     } catch (error) {
@@ -294,7 +314,7 @@ const PaymentPage = () => {
                   <div className="d-flex justify-content-between bg-black">
                     <p>Tổng thanh toán</p>
                     <h3 className="fw-bold text-warning">
-                      {voucherInfo?.finalAmount?.toLocaleString() || selectedDurationPackage?.discountedAmount?.toLocaleString()} VND
+                      {voucherInfo?.finalAmount?.toLocaleString() || selectedDurationPackage?.discountedAmount?.toLocaleString() || selectedDurationPackage?.amount?.toLocaleString()} VND
                     </h3>
                   </div>
                   <div className="text-center mt-3">

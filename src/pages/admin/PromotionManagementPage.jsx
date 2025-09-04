@@ -26,8 +26,6 @@ const PromotionManagementPage = () => {
     fetchPromotions();
   }, [fetchPromotions]);
 
-  // PromotionManagementPage.jsx
-
   const ensureItemsLoaded = async (promotion, force = false) => {
     if (!promotion) return;
     const promotionId = promotion.promotionId || promotion.id;
