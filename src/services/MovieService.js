@@ -29,6 +29,26 @@ const MovieService = {
             }
     },
 
+    // Get movie detail by slug
+    getMovieDetailBySlug: async (slug) => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/slug/${slug}/detail`);
+            return res.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
+    // Get movie by slug (basic info)
+    getMovieBySlug: async (slug) => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/slug/${slug}`);
+            return res.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
 
     //get movie by id
     getMovieById: async (id) => {

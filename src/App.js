@@ -73,7 +73,12 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
                     <Route path="/favorites" element={<FavoritesPage />} />
-                    <Route path="/watch" element={<WatchPage />} />
+                 
+                    {/* New slug-based watch route */}
+                    <Route path="/watch/:movieSlug/:episodeSlug" element={<WatchPage />} />
+                  {/* Backward compatibility for old ID-based URLs */}
+                    <Route path="/watch/:movieId/:episodeId" element={<WatchPage />} />
+                    
                     <Route path="/buy-package" element={<BuyPackagePage />} />
                     <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/all-topics" element={<AllTopicsPage />} />

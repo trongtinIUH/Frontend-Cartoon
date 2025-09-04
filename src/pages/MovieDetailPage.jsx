@@ -16,6 +16,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
 import WishlistService from "../services/WishlistService";
+import { createSecureWatchUrl } from "../utils/urlUtils";
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
@@ -150,9 +151,15 @@ useEffect(() => {
 
 
 
-  const handleWatch = (episode) => {
-    navigate("/watch", { state: { episode, movie, authors, episodes } });
-  };
+// Thay đổi navigate trong MovieDetailPage
+const handleWatch = (episode) => {
+  console.log("handleWatch called with:", { movie, episode });
+  const secureUrl = createSecureWatchUrl(movie, episode);
+  console.log("Generated URL:", secureUrl);
+  navigate(secureUrl, { 
+    state: { episode, movie, authors, episodes, seasons } 
+  });
+};
 
 
   const handleWatchFirst = () => {
@@ -172,7 +179,13 @@ useEffect(() => {
     toast.warn("Chưa có tập nào trong season này.");
     return;
   }
-  navigate("/watch", { state: { episode: episodes[0], movie, seasons, episodes } });
+  
+  console.log("handleWatchFirst called with:", { movie, firstEpisode: episodes[0] });
+  const secureUrl = createSecureWatchUrl(movie, episodes[0]);
+  console.log("Generated URL for first episode:", secureUrl);
+  navigate(secureUrl, { 
+    state: { episode: episodes[0], movie, seasons, episodes } 
+  });
 };
 
 

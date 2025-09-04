@@ -12,6 +12,17 @@ const EpisodeService = {
     EpisodeService.getEpisodesBySeasonId(seasonId),
 
   // --- GET ONE ---
+  getEpisodeById: async (episodeId) => {
+    const res = await axios.get(`${API_BASE_URL}/${episodeId}`);
+    return res.data;
+  },
+
+  // Get episode by movie slug and episode number
+  getEpisodeByMovieSlugAndNumber: async (movieSlug, episodeNumber) => {
+    const res = await axios.get(`${API_BASE_URL}/movie-slug/${movieSlug}/episode/${episodeNumber}`);
+    return res.data;
+  },
+  
   getEpisodeBySeasonAndNumber: async (seasonId, episodeNumber) => {
     const res = await axios.get(`${API_BASE_URL}/season/${seasonId}/ep/${episodeNumber}`);
     return res.data;
