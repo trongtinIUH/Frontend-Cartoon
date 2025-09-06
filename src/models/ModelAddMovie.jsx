@@ -220,8 +220,11 @@ const authorOptions = authors.map(a => ({
               onChange={handleChange}
             >
               <option value="FREE">FREE</option>
-              <option value="SILVER">SILVER</option>
-              <option value="GOLD">GOLD</option>
+              <option value="NoAds">NoAds</option>
+              <option value="Premium">Premium</option>
+              <option value="MegaPlus">MegaPlus</option>
+              <option value="ComboPremiumMegaPlus">ComboPremiumMegaPlus</option>
+
             </select>
           </div>
         </div>

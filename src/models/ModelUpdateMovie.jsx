@@ -216,9 +216,10 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
               <label className="form-label">VIP tối thiểu</label>
               <select className="form-select" name="minVipLevel" value={form.minVipLevel} onChange={handleChange}>
                 <option value="FREE">FREE</option>
-                <option value="VIP1">VIP1</option>
-                <option value="VIP2">VIP2</option>
-                <option value="VIP3">VIP3</option>
+                <option value="NoAds">NoAds</option>
+                <option value="Premium">Premium</option>
+                <option value="MegaPlus">MegaPlus</option>
+                <option value="ComboPremiumMegaPlus">ComboPremiumMegaPlus</option>
               </select>
             </div>
             <div className="col-md-4">
