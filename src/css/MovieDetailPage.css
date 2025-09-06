@@ -145,20 +145,49 @@
 }
 
 .btn-xem-ngay {
-  background: linear-gradient(90deg, #ffecb4, #ffcc70 70%);
-  color: #3c2c08;
-  font-size: 1.1rem;
+  background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 50%, #0288d1 100%);
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 600;
   border: none;
-  border-radius: 2rem;
-  transition: background 0.3s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px #ffcc7042;
+  border-radius: 12px;
+  padding: 12px 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(41, 182, 246, 0.25);
   outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
 }
+
+.btn-xem-ngay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.6s ease;
+}
+
 .btn-xem-ngay:hover {
-  background: linear-gradient(90deg, #ffe082 10%, #ffc107 100%);
-  color: #262628;
-  box-shadow: 0 2px 18px #ffcc7066;
+  background: linear-gradient(135deg, #29b6f6 0%, #0288d1 50%, #0277bd 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 24px rgba(41, 182, 246, 0.4);
+  transform: translateY(-2px);
 }
+
+.btn-xem-ngay:hover::before {
+  left: 100%;
+}
+
+.btn-xem-ngay:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(41, 182, 246, 0.3);
+}
+
 .play-icon {
   display: flex;
   align-items: center;
@@ -563,4 +592,92 @@
 
 @media (max-width: 575px) {
   .person-name { font-size: .9rem; }
+}
+
+.detail-hero{
+  position: relative;
+  height: clamp(300px, 40vw, 460px);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Hero banner rõ nét như RoPhim */
+.hero-bg{
+  position: absolute; 
+  inset: -32px;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  filter: blur(1px) brightness(.92) saturate(1.2) contrast(1.05);
+  transform: scale(1.04);
+  animation: hero-kenburns 35s ease-in-out infinite alternate;
+  transition: filter 0.3s ease;
+}
+
+/* Hiệu ứng hover để làm rõ hoàn toàn */
+.detail-hero:hover .hero-bg {
+  filter: blur(1px) brightness(.95) saturate(1.25) contrast(1.1);
+}
+
+/* Banner rõ nét ở giữa khi không có landscape */
+.hero-center{ 
+  position: absolute; 
+  inset: 0; 
+  z-index: 2; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  pointer-events: none; 
+}
+.hero-center img{ 
+  max-height: 100%; 
+  max-width: 92%; 
+  width: auto; 
+  height: auto; 
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
+  border-radius: 12px;
+}
+
+.mode-landscape .hero-center{ display: none; }
+
+/* Vignette nhẹ nhàng như RoPhim */
+.hero-vignette{ 
+  position: absolute; 
+  inset: 0; 
+  z-index: 3;
+  background:
+    radial-gradient(100% 70% at 50% 20%, rgba(0,0,0,0) 0%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.6) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,.15) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,.45) 85%, #0a0c12 100%);
+}
+
+/* Texture grain nhẹ nhàng */
+.hero-grain{ 
+  position: absolute; 
+  inset: 0; 
+  z-index: 4; 
+  pointer-events: none; 
+  opacity: .12; 
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1.5px);
+  background-size: 4px 4px;
+}
+
+/* Content overlay với gradient đẹp */
+.content-over-hero{ 
+  position: relative; 
+  z-index: 5; 
+  margin-top: clamp(-120px, -12vw, -160px); 
+  padding-bottom: 80px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(11,13,19,.3) 60%, rgba(11,13,19,.8) 100%);
+}
+
+/* Animation mượt mà hơn */
+@keyframes hero-kenburns{ 
+  0% { transform: scale(1.03) rotate(0deg); }
+  50% { transform: scale(1.08) rotate(0.2deg); }
+  100% { transform: scale(1.05) rotate(-0.1deg); }
+}
+@media (prefers-reduced-motion: reduce){
+  .hero-bg{ animation: none; transform: none; }
 }

@@ -408,12 +408,36 @@ function SeasonBar({ seasons, selected, onSelect }) {
   );
 }
 
+//hiện ảnh poster
+const banner = movie?.bannerUrl?.trim();
+const fallback = movie?.thumbnailUrl || "";      // khi thiếu banner
+const heroImg = banner || fallback;
+const heroMode = banner ? "landscape" : "portrait";
+
 
   return (
-    <div className="min-vh-100 bg-dark text-white" style={{ paddingTop: '100px', paddingBottom: '100px' }}>
+        <div className="movie-detail-page text-white">
+    {/* HERO ở đầu trang */}
+ <section className={`detail-hero ${heroMode}`}>
+      {/* lớp nền lấp đầy (cover) */}
+      <div className="hero-bg" style={{ backgroundImage: `url("${heroImg}")` }} />
+
+      {/* chỉ hiện khi KHÔNG có banner (ảnh poster dọc) để khỏi méo */}
+      {!banner && (
+        <div className="hero-center">
+          <img src={heroImg} alt={movie.title} />
+        </div>
+      )}
+
+      <div className="hero-vignette" />
+      <div className="hero-grain" />
+    </section>
+
+    {/* BODY trồi lên hero */}
+    <div className="detail-content content-over-hero">
       <div className="container py-5">
         <div className="row gx-5">
-          {/* Cột trái: Thông tin phim */}
+            {/* Cột trái: Thông tin phim */}
           <div className="col-lg-4 mb-4">
             <div className="movie-info-card glassmorphism p-4 shadow-lg rounded-4">
               <div className="align-items-center">
@@ -740,7 +764,16 @@ function SeasonBar({ seasons, selected, onSelect }) {
                 <h5 className="text-white">
                   <i className="fa-regular fa-comment-dots me-2" /> Bình luận
                 </h5>
-                <small className="text-white mb-3">Vui lòng <a href="/" style={{ color: '#4bc1fa', textDecoration: 'none' }} className="fw-bold">đăng nhập</a> để tham gia bình luận.</small>
+               {!userId && (
+              <small className="text-white mb-3">
+                Vui lòng{" "}
+                <a href="/" style={{ color: "#4bc1fa", textDecoration: "none" }} className="fw-bold">
+                  đăng nhập
+                </a>{" "}
+                để tham gia bình luận.
+              </small>
+            )}
+
                 {/* Ô nhập bình luận */}
                 <div className="card bg-black border-0 mb-3 mt-3">
                   <div className="card-body">
@@ -840,6 +873,9 @@ function SeasonBar({ seasons, selected, onSelect }) {
         </div>
       </div>
     </div>
+  </div>
+
+
   );
 };
 
