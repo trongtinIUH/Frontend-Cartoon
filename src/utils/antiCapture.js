@@ -1,5 +1,7 @@
 // utils/antiCapture.js
 export function initAntiCapture(player) {
+  console.log("🔒 initAntiCapture called with player:", player);
+  
   // tạo CSS 1 lần
   if (!document.getElementById("anti-capture-style")) {
     const style = document.createElement("style");
@@ -25,8 +27,9 @@ export function initAntiCapture(player) {
     overlay.innerHTML = `
       <div class="overlay-content">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Vanuatu_stop_sign.svg/600px-Vanuatu_stop_sign.svg.png" alt="warning" />
-        <h2>CÓ BIẾN RỒI</h2>
-        <p>Hãy thử refresh lại</p>
+        <h2>BẢO VỆ NỘI DUNG</h2>
+        <p>Nội dung được bảo vệ bởi hệ thống chống sao chép</p>
+        <p style="font-size: 14px; margin-top: 10px; opacity: 0.8;">Vui lòng đóng các công cụ phát triển và refresh lại trang</p>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -60,14 +63,55 @@ export function initAntiCapture(player) {
   const intervalId   = window.setInterval(detect, 500);
   const onBlur       = () => showOverlay();
   const onFocus      = () => hideOverlay();
-  const onKeyDown    = (e) => {
-    // chặn PrintScreen / Shift+S với Ctrl/Meta
-    if (
-      e.key === "PrintScreen" ||
-      (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s")
-    ) {
+  let windowsKeyPressed = false;
+  let shiftKeyPressed = false;
+  
+  const onKeyDown = (e) => {
+    console.log("🔍 Key pressed:", { 
+      key: e.key, 
+      shiftKey: e.shiftKey, 
+      metaKey: e.metaKey, 
+      ctrlKey: e.ctrlKey,
+      altKey: e.altKey
+    });
+    
+    // Track Windows key state
+    if (e.key === "Meta") {
+      windowsKeyPressed = true;
+    }
+    if (e.key === "Shift") {
+      shiftKeyPressed = true;
+    }
+    
+    // Check for Windows + Shift combination (regardless of F key)
+    if (windowsKeyPressed && shiftKeyPressed) {
+      console.log("🚫 Windows + Shift combination detected!");
       e.preventDefault();
       showOverlay();
+      return;
+    }
+    
+    // Các tổ hợp khác
+    if (
+      e.key === "PrintScreen" ||
+      (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") ||
+      (e.shiftKey && e.metaKey && e.key.toLowerCase() === "f") ||
+      (e.key === "F12") ||
+      (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i")
+    ) {
+      console.log("🚫 Blocked key combination detected!");
+      e.preventDefault();
+      showOverlay();
+    }
+  };
+  
+  const onKeyUp = (e) => {
+    // Reset key states on release
+    if (e.key === "Meta") {
+      windowsKeyPressed = false;
+    }
+    if (e.key === "Shift") {
+      shiftKeyPressed = false;
     }
   };
   const onVisibility = () => (document.hidden ? showOverlay() : hideOverlay());
@@ -75,6 +119,7 @@ export function initAntiCapture(player) {
   window.addEventListener("blur", onBlur);
   window.addEventListener("focus", onFocus);
   document.addEventListener("keydown", onKeyDown);
+  document.addEventListener("keyup", onKeyUp);
   document.addEventListener("visibilitychange", onVisibility);
 
   // cleanup đầy đủ
@@ -83,6 +128,7 @@ export function initAntiCapture(player) {
     window.removeEventListener("blur", onBlur);
     window.removeEventListener("focus", onFocus);
     document.removeEventListener("keydown", onKeyDown);
+    document.removeEventListener("keyup", onKeyUp);
     document.removeEventListener("visibilitychange", onVisibility);
   };
 }

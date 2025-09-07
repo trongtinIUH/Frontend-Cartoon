@@ -13,6 +13,14 @@ import TOPICS from "../constants/topics";
 import GENRES from "../constants/genres";
 import AuthorService from "../services/AuthorService";
 
+// Helper functions để xử lý trùng lặp tác giả
+const normalize = (s) =>
+  (s || "")
+    .normalize("NFD").replace(/\p{Diacritic}/gu, "")
+    .toLowerCase().trim().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ");
+
+const keyOf = (name, role) => `${normalize(name)}|${role}`;
+
 const ModelAddMovie = ({ onSuccess,onClose  }) => {
   const navigate = useNavigate();
   const { MyUser } = useAuth();
@@ -117,6 +125,8 @@ const authorOptions = authors.map(a => ({
     }));
   };
 
+  
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title) return toast.error("Vui lòng nhập tiêu đề!");
@@ -131,15 +141,50 @@ const authorOptions = authors.map(a => ({
 
     setLoading(true);
     try {
-      // gom authorIds
+      // gom authorIds với xử lý trùng lặp
       let allAuthorIds = Array.isArray(form.authorIds) ? [...form.authorIds] : [];
+
+      // Map hiện có từ danh sách authors đã load
+      const existingMap = new Map(
+        (authors || []).map(a => [keyOf(a.name, a.authorRole), a.authorId])
+      );
+
+      // gộp & khử trùng ngay trong form nhập mới
+      const uniqueNew = [];
+      const seenNew = new Set();
       for (const a of (isNewAuthor ? newAuthor : [])) {
         const name = (a?.name || "").trim();
+        const role = a?.authorRole || "DIRECTOR";
         if (!name) continue;
-        const created = await AuthorService.createAuthor({ name, authorRole: a.authorRole || "DIRECTOR", movieId: [] });
-        const newId = created?.authorId || created?.id;
-        if (newId) allAuthorIds.push(newId);
+        const k = keyOf(name, role);
+        if (seenNew.has(k)) {
+          toast.info(`Bỏ qua trùng: ${name} (${role})`);
+          continue;
+        }
+        seenNew.add(k);
+        uniqueNew.push({ name, authorRole: role });
       }
+
+      // 1) Map vào authorId sẵn có nếu đã tồn tại
+      for (const a of uniqueNew) {
+        const k = keyOf(a.name, a.authorRole);
+        const foundId = existingMap.get(k);
+        if (foundId) {
+          allAuthorIds.push(foundId);
+        } else {
+          // 2) gọi BE tạo (idempotent) – nếu có trùng, BE sẽ trả về author đã có
+          const created = await AuthorService.createAuthor({ name: a.name, authorRole: a.authorRole, movieId: [] });
+          const newId = created?.authorId || created?.id;
+          if (newId) {
+            allAuthorIds.push(newId);
+            // đồng bộ cache local để lần sau không gọi lại
+            existingMap.set(k, newId);
+          }
+        }
+      }
+
+      // khử trùng trong allAuthorIds (nếu người dùng vừa chọn sẵn + tạo mới)
+      allAuthorIds = Array.from(new Set(allAuthorIds));
 
       // 1) Tạo Movie (chỉ metadata + ảnh). KHÔNG gửi trailer/content để tránh upload 2 lần
       const fd = new FormData();
@@ -220,10 +265,10 @@ const authorOptions = authors.map(a => ({
               onChange={handleChange}
             >
               <option value="FREE">FREE</option>
-              <option value="NoAds">NoAds</option>
-              <option value="Premium">Premium</option>
-              <option value="MegaPlus">MegaPlus</option>
-              <option value="ComboPremiumMegaPlus">ComboPremiumMegaPlus</option>
+              <option value="NO_ADS">NoAds</option>
+              <option value="PREMIUM">Premium</option>
+              <option value="MEGA_PLUS">MegaPlus</option>
+              <option value="COMBO_PREMIUM_MEGA_PLUS">Combo Premium + Mega Plus</option>
 
             </select>
           </div>

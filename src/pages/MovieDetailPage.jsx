@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import MovieService from "../services/MovieService";
 import AuthorService from "../services/AuthorService";
 import EpisodeService from "../services/EpisodeService";
@@ -341,16 +341,37 @@ const handleWatch = (episode) => {
 function PersonCard({ p }) {
   return (
     <div className="col-6 col-sm-4 col-md-3 col-lg-3 mb-3">
-      <div className="person-card h-100">
-        <div className="ratio ratio-3x4 person-avatar-wrap">
+      <Link 
+        to={`/browse/author-id/${encodeURIComponent(p?.authorId || '')}`}
+        className="text-decoration-none"
+        title={`Xem phim của ${p?.name || 'Chưa rõ tên'}`}
+      >
+        <div 
+          className="person-card h-100" 
+          style={{ 
+            cursor: 'pointer', 
+            transition: 'all 0.3s ease',
+            '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(75, 193, 250, 0.3)' }
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(75, 193, 250, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
+          <div className="ratio ratio-3x4 person-avatar-wrap">
+          </div>
+          <div className="person-name text-truncate" title={p?.name || ""}>
+            {p?.name || "Chưa rõ tên"}
+          </div>
+          <span className={`role-badge ${p?.authorRole === "DIRECTOR" ? "role-director" : "role-performer"}`}>
+            {p?.authorRole === "DIRECTOR" ? "Đạo diễn" : "Diễn viên"}
+          </span>
         </div>
-        <div className="person-name text-truncate" title={p?.name || ""}>
-          {p?.name || "Chưa rõ tên"}
-        </div>
-        <span className={`role-badge ${p?.authorRole === "DIRECTOR" ? "role-director" : "role-performer"}`}>
-          {p?.authorRole === "DIRECTOR" ? "Đạo diễn" : "Diễn viên"}
-        </span>
-      </div>
+      </Link>
     </div>
   );
 }

@@ -375,6 +375,7 @@ export default function WatchPage() {
       preload: "auto",
       fluid: true,
       responsive: true,
+      html5: { vhs: { overrideNative: false } },
     });
 
     p.hlsQualitySelector?.({ displayCurrentQuality: true });
@@ -919,46 +920,59 @@ export default function WatchPage() {
 
         {/* RIGHT */}
         <aside className="wg-side">
-          <div className="actors-box">
-            <div className="box-head">Đạo diễn</div>
-            <div className="actors">
-              {authors
-                .filter((a) => a.authorRole === "DIRECTOR")
-                .map((a) => (
-                  <Link key={a.authorId} className="actor" to={`/author/${a.authorId}`}>
-                    <img
-                      src={a.avatarUrl || a.photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                      alt={a.name}
-                    />
-                    <span>{a.name}</span>
-                  </Link>
-                ))}
-              {authors.filter((a) => a.authorRole === "DIRECTOR").length === 0 && (
-                <div className="text-muted" style={{ padding: "0 12px 10px" }}>
-                  Chưa có dữ liệu
+          <div className="cast-crew-box">
+            <div className="box-head">Thông tin tham gia</div>
+            
+            {/* Đạo diễn */}
+            {authors.filter((a) => a.authorRole === "DIRECTOR").length > 0 && (
+              <div className="crew-section">
+                <h6 className="crew-title">Đạo diễn:</h6>
+                <div className="crew-list">
+                  {authors
+                    .filter((a) => a.authorRole === "DIRECTOR")
+                    .map((a, index, arr) => (
+                      <span key={a.authorId}>
+                        <Link 
+                          className="crew-name" 
+                          to={`/browse/author-id/${encodeURIComponent(a.authorId)}`}
+                        >
+                          {a.name}
+                        </Link>
+                        {index < arr.length - 1 && ", "}
+                      </span>
+                    ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            <div className="box-head">Diễn viên</div>
-            <div className="actors">
-              {authors
-                .filter((a) => a.authorRole === "PERFORMER")
-                .map((a) => (
-                  <Link key={a.authorId} className="actor" to={`/author/${a.authorId}`}>
-                    <img
-                      src={a.avatarUrl || a.photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                      alt={a.name}
-                    />
-                    <span>{a.name}</span>
-                  </Link>
-                ))}
-              {authors.filter((a) => a.authorRole === "PERFORMER").length === 0 && (
-                <div className="text-muted" style={{ padding: "0 12px 10px" }}>
-                  Chưa có dữ liệu
+            {/* Diễn viên */}
+            {authors.filter((a) => a.authorRole === "PERFORMER").length > 0 && (
+              <div className="crew-section">
+                <h6 className="crew-title">Diễn viên:</h6>
+                <div className="crew-list">
+                  {authors
+                    .filter((a) => a.authorRole === "PERFORMER")
+                    .map((a, index, arr) => (
+                      <span key={a.authorId}>
+                        <Link 
+                          className="crew-name" 
+                          to={`/browse/author-id/${encodeURIComponent(a.authorId)}`}
+                        >
+                          {a.name}
+                        </Link>
+                        {index < arr.length - 1 && ", "}
+                      </span>
+                    ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Trường hợp không có dữ liệu */}
+            {authors.length === 0 && (
+              <div className="text-muted" style={{ padding: "12px" }}>
+                Chưa có thông tin về đạo diễn và diễn viên
+              </div>
+            )}
           </div>
 
           <div className="suggest-box">

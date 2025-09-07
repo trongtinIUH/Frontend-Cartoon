@@ -428,6 +428,51 @@ background-color: inherit;
 .rate-box .act{ margin-top:8px; display:flex; gap:8px; }
 .rate-box .act button{ background:#1b2532; border:0; color:#cfe1ff; padding:6px 10px; border-radius:10px; font-weight:700; }
 
+/* Cast & Crew Section */
+.cast-crew-box { 
+  margin-top:12px; 
+  background:#111827; 
+  border:1px solid rgba(255,255,255,.06); 
+  border-radius:12px; 
+  padding: 16px;
+}
+
+.crew-section {
+  margin-bottom: 16px;
+}
+
+.crew-section:last-child {
+  margin-bottom: 0;
+}
+
+.crew-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #a5b4c5;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.crew-list {
+  line-height: 1.6;
+}
+
+.crew-name {
+  color: #eaf1ff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.crew-name:hover {
+  color: #4bc1fa;
+  background: rgba(75, 193, 250, 0.1);
+  text-decoration: none;
+}
+
 .actors-box,.suggest-box{ margin-top:12px; background:#111827; border:1px solid rgba(255,255,255,.06); border-radius:12px; }
 .box-head{ padding:10px 12px; font-weight:800; }
 .actors{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:10px; }
