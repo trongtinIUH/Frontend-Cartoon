@@ -76,6 +76,7 @@ export default function WatchPage() {
   const [currentEpisode, setCurrentEpisode] = useState(episodeFromState);
   const [currentMovie, setCurrentMovie] = useState(movieFromState);
   const [dataLoading, setDataLoading] = useState(!episodeFromState || !movieFromState);
+  const [suggestedMovies, setSuggestedMovies] = useState([]);
 
   // -------- computed
   const totalRatings = ratings.length;
@@ -149,6 +150,20 @@ export default function WatchPage() {
       } catch {}
     })();
   }, [movieId, authors?.length]);
+
+  // -------- tải phim đề xuất (dùng BE)
+  useEffect(() => {
+    (async () => {
+      if (!movieId) return;
+      try {
+        const recs = await MovieService.getRecommendations(movieId, 6);
+        setSuggestedMovies(Array.isArray(recs) ? recs : []);
+      } catch (err) {
+        console.error("Error fetching recommendations:", err);
+        setSuggestedMovies([]);
+      }
+    })();
+  }, [movieId]);
 
   // -------- tải ratings
   useEffect(() => {
@@ -224,6 +239,8 @@ export default function WatchPage() {
       toast.error("Thao tác thất bại");
     }
   };
+
+
 
   // -------- Bình luận
   const [comment, setComment] = useState("");
@@ -978,20 +995,27 @@ export default function WatchPage() {
           <div className="suggest-box">
             <div className="box-head">Đề xuất cho bạn</div>
             <div className="suggest">
-              {(currentMov?.suggest || []).slice(0, 6).map((s) => (
-                <Link key={s.id} className="s-item" to={`/movie/${s.id}`}>
-                  <img src={s.poster} alt={s.title} />
-                  <div className="s-meta">
-                    <div className="t">{s.title}</div>
-                    <div className="a">{s.alias}</div>
-                    <div className="line">
-                      {s.age && <span className="chip">{s.age}</span>}
-                      {s.season && <span className="chip ghost">Phần {s.season}</span>}
-                      {s.episode && <span className="chip ghost">Tập {s.episode}</span>}
+              {suggestedMovies.length > 0 ? (
+                suggestedMovies.map((movie) => (
+                  <Link key={movie.movieId || movie.id} className="s-item" to={`/movie/${movie.movieId || movie.id}`}>
+                    <img src={movie.poster || movie.thumbnailUrl} alt={movie.title} />
+                    <div className="s-meta">
+                      <div className="t">{movie.title}</div>
+                      <div className="a">{movie.alias || movie.originalTitle || ""}</div>
+                      <div className="line">
+                        {movie.releaseYear && <span className="chip">{movie.releaseYear}</span>}
+                        {movie.genres?.slice(0, 2).map(genre => (
+                          <span key={genre} className="chip ghost">{genre}</span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))
+              ) : (
+                <div className="text-muted" style={{ padding: "12px" }}>
+                  Đang tải phim đề xuất...
+                </div>
+              )}
             </div>
           </div>
         </aside>

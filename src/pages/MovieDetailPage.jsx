@@ -88,19 +88,23 @@ const MovieDetailPage = () => {
     fetchAuthors();
   }, [id]);
 
-  // Lấy top phim tuần
+  // Lấy top phim tuần (sử dụng recommendations API)
   useEffect(() => {
     const fetchTopMovies = async () => {
       try {
-        const data = await MovieService.getPopularMovies();
+        // Sử dụng API recommendations giống như WatchPage
+        const data = await MovieService.getRecommendations(id, 10);
         setTopMovies(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Lỗi khi lấy top phim tuần:", error);
         setTopMovies([]);
       }
     };
-    fetchTopMovies();
-  }, []);
+    
+    if (id) {
+      fetchTopMovies();
+    }
+  }, [id]); // Thay đổi dependency để re-fetch khi id thay đổi
 
   // nạp chi tiết (movie + seasons + count)
 useEffect(() => {
@@ -165,17 +169,24 @@ const handleWatch = (episode) => {
   const handleWatchFirst = () => {
   if (!movie) return;
 
+  // Nếu là phim sắp chiếu, chỉ hiển thị trailer
   if (movie.status === "UPCOMING") {
     if (!movie.trailerUrl) {
       toast.error("Phim sắp chiếu chưa có trailer.");
       return;
     }
-    // Có thể phát ngay trên trang, nên không navigate nữa
+    // Scroll đến trailer section
     document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" });
     return;
   }
 
+  // Với phim đã ra mắt, vẫn có thể xem trailer nếu có
   if (!episodes || episodes.length === 0) {
+    if (movie.trailerUrl) {
+      toast.info("Chưa có tập phim, bạn có thể xem trailer bên dưới.");
+      document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
     toast.warn("Chưa có tập nào trong season này.");
     return;
   }
@@ -610,8 +621,8 @@ const heroMode = banner ? "landscape" : "portrait";
           </div>
 
           <div className="col-lg-8"> 
-            {/* Trailer (UPCOMING) */}
-            {movie.status === "UPCOMING" && movie.trailerUrl && (
+            {/* Trailer - hiển thị cho tất cả phim có trailer */}
+            {movie.trailerUrl && (
               <div id="trailer-section" className="mb-4">
                 <h5 className="mb-3">Trailer</h5>
                 <TrailerPlayer src={movie.trailerUrl} poster={movie.bannerUrl || movie.thumbnailUrl} />
@@ -625,16 +636,47 @@ const heroMode = banner ? "landscape" : "portrait";
                   className="d-flex align-items-center gap-4"
                   style={{ background: "rgba(38, 38, 48, 0.88)" }}
                 >
-                  <button
-                    className="btn btn-watch w-100 d-flex align-items-center gap-2 px-4 py-2 fw-bold shadow-sm"
-                    onClick={handleWatchFirst}
-                  >
-                    <FontAwesomeIcon icon={faPlay} className="play-icon" />
-                    Xem Ngay
-                  </button>
+                  {/* Main buttons row for mobile */}
+                  <div className="main-buttons-row d-flex w-100 gap-3" style={{ background: 'transparent' }}>
+                    <button
+                      className="btn btn-watch d-flex align-items-center gap-2 px-4 py-2 fw-bold shadow-sm"
+                      onClick={handleWatchFirst}
+                      style={{ flex: movie.trailerUrl ? '1' : '1' }}
+                    >
+                      <FontAwesomeIcon icon={faPlay} className="play-icon" />
+                      Xem Ngay
+                    </button>
+                    
+                    {/* Button Xem Trailer - hiển thị cho tất cả phim có trailer */}
+                    {movie.trailerUrl && (
+                      <button
+                        className="btn d-flex align-items-center gap-2 px-4 py-2 fw-bold shadow"
+                        onClick={() => document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" })}
+                        style={{ 
+                          flex: '1',
+                          background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+                          border: 'none',
+                          color: 'white',
+                          borderRadius: '8px',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = 'translateY(-2px)';
+                          e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faPlay} className="play-icon" />
+                        Xem Trailer
+                      </button>
+                    )}
+                  </div>
 
                   <div
-                    className="action-icons d-flex align-items-center gap-4 ms-2"
+                    className="action-icons d-flex align-items-center"
                     style={{ background: "rgba(38, 38, 48, 0.88)" }}
                   >
                     <div className="action-item text-center"
