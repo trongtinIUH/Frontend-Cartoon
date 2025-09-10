@@ -34,7 +34,7 @@ const PaymentService = {
     // Cancel a payment (if applicable)
     cancelPayment: async (orderCode) => {
         try {
-            const response = await axiosInstance.put(`${API_BASE_URL}/cancel/${orderCode}`, {});
+            const response = await axiosInstance.put(`${API_BASE_URL}/cancel/${orderCode}`);
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;

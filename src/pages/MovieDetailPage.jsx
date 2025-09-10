@@ -103,38 +103,38 @@ const MovieDetailPage = () => {
   }, []);
 
   // nạp chi tiết (movie + seasons + count)
-useEffect(() => {
-  (async () => {
-    try {
-      const data = await MovieService.getMovieDetail(id); // { movie, seasons, seasonsCount?, episodesCount? }
-      setMovie(data.movie);
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await MovieService.getMovieDetail(id); // { movie, seasons, seasonsCount?, episodesCount? }
+        setMovie(data.movie);
 
-      const seasonsArr = Array.isArray(data.seasons) ? data.seasons : [];
-      setSeasons(seasonsArr);
+        const seasonsArr = Array.isArray(data.seasons) ? data.seasons : [];
+        setSeasons(seasonsArr);
 
-      // ✅ Ưu tiên dùng số BE trả về; nếu không có thì tự tính
-      const seasonsCount = data.seasonsCount ?? seasonsArr.length;
-      const episodesCount =
-        data.episodesCount ??
-        seasonsArr.reduce((sum, s) => sum + (Number(s.episodesCount) || 0), 0);
+        // ✅ Ưu tiên dùng số BE trả về; nếu không có thì tự tính
+        const seasonsCount = data.seasonsCount ?? seasonsArr.length;
+        const episodesCount =
+          data.episodesCount ??
+          seasonsArr.reduce((sum, s) => sum + (Number(s.episodesCount) || 0), 0);
 
-      setTotals({ seasonsCount, episodesCount });
+        setTotals({ seasonsCount, episodesCount });
 
-      // chọn season đầu & nạp tập như cũ
-      if (seasonsArr.length > 0) {
-        const first = seasonsArr[0];
-        setSelectedSeason(first);
-        const eps = await EpisodeService.getEpisodesByMovieId(first.seasonId);
-        setEpisodes(Array.isArray(eps) ? eps : []);
-      } else {
-        setSelectedSeason(null);
-        setEpisodes([]);
+        // chọn season đầu & nạp tập như cũ
+        if (seasonsArr.length > 0) {
+          const first = seasonsArr[0];
+          setSelectedSeason(first);
+          const eps = await EpisodeService.getEpisodesByMovieId(first.seasonId);
+          setEpisodes(Array.isArray(eps) ? eps : []);
+        } else {
+          setSelectedSeason(null);
+          setEpisodes([]);
+        }
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {
-      console.error(e);
-    }
-  })();
-}, [id]);
+    })();
+  }, [id]);
 
 
   // đổi season -> nạp tập
@@ -147,46 +147,46 @@ useEffect(() => {
       console.error(e);
       setEpisodes([]);
     }
-};
+  };
 
 
 
-// Thay đổi navigate trong MovieDetailPage
-const handleWatch = (episode) => {
-  console.log("handleWatch called with:", { movie, episode });
-  const secureUrl = createSecureWatchUrl(movie, episode);
-  console.log("Generated URL:", secureUrl);
-  navigate(secureUrl, { 
-    state: { episode, movie, authors, episodes, seasons } 
-  });
-};
+  // Thay đổi navigate trong MovieDetailPage
+  const handleWatch = (episode) => {
+    console.log("handleWatch called with:", { movie, episode });
+    const secureUrl = createSecureWatchUrl(movie, episode);
+    console.log("Generated URL:", secureUrl);
+    navigate(secureUrl, {
+      state: { episode, movie, authors, episodes, seasons }
+    });
+  };
 
 
   const handleWatchFirst = () => {
-  if (!movie) return;
+    if (!movie) return;
 
-  if (movie.status === "UPCOMING") {
-    if (!movie.trailerUrl) {
-      toast.error("Phim sắp chiếu chưa có trailer.");
+    if (movie.status === "UPCOMING") {
+      if (!movie.trailerUrl) {
+        toast.error("Phim sắp chiếu chưa có trailer.");
+        return;
+      }
+      // Có thể phát ngay trên trang, nên không navigate nữa
+      document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" });
       return;
     }
-    // Có thể phát ngay trên trang, nên không navigate nữa
-    document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" });
-    return;
-  }
 
-  if (!episodes || episodes.length === 0) {
-    toast.warn("Chưa có tập nào trong season này.");
-    return;
-  }
-  
-  console.log("handleWatchFirst called with:", { movie, firstEpisode: episodes[0] });
-  const secureUrl = createSecureWatchUrl(movie, episodes[0]);
-  console.log("Generated URL for first episode:", secureUrl);
-  navigate(secureUrl, { 
-    state: { episode: episodes[0], movie, seasons, episodes } 
-  });
-};
+    if (!episodes || episodes.length === 0) {
+      toast.warn("Chưa có tập nào trong season này.");
+      return;
+    }
+
+    console.log("handleWatchFirst called with:", { movie, firstEpisode: episodes[0] });
+    const secureUrl = createSecureWatchUrl(movie, episodes[0]);
+    console.log("Generated URL for first episode:", secureUrl);
+    navigate(secureUrl, {
+      state: { episode: episodes[0], movie, seasons, episodes }
+    });
+  };
 
 
   const handleClickTopMovie = async (mid) => {
@@ -337,76 +337,76 @@ const handleWatch = (episode) => {
 
   const directors = authors.filter((a) => a.authorRole === "DIRECTOR");
   const performers = authors.filter((a) => a.authorRole === "PERFORMER");
-// Card hiển thị 1 người (đạo diễn/diễn viên)
-function PersonCard({ p }) {
-  return (
-    <div className="col-6 col-sm-4 col-md-3 col-lg-3 mb-3">
-      <div className="person-card h-100">
-        <div className="ratio ratio-3x4 person-avatar-wrap">
+  // Card hiển thị 1 người (đạo diễn/diễn viên)
+  function PersonCard({ p }) {
+    return (
+      <div className="col-6 col-sm-4 col-md-3 col-lg-3 mb-3">
+        <div className="person-card h-100">
+          <div className="ratio ratio-3x4 person-avatar-wrap">
+          </div>
+          <div className="person-name text-truncate" title={p?.name || ""}>
+            {p?.name || "Chưa rõ tên"}
+          </div>
+          <span className={`role-badge ${p?.authorRole === "DIRECTOR" ? "role-director" : "role-performer"}`}>
+            {p?.authorRole === "DIRECTOR" ? "Đạo diễn" : "Diễn viên"}
+          </span>
         </div>
-        <div className="person-name text-truncate" title={p?.name || ""}>
-          {p?.name || "Chưa rõ tên"}
-        </div>
-        <span className={`role-badge ${p?.authorRole === "DIRECTOR" ? "role-director" : "role-performer"}`}>
-          {p?.authorRole === "DIRECTOR" ? "Đạo diễn" : "Diễn viên"}
-        </span>
       </div>
-    </div>
-  );
-}
-function SeasonBar({ seasons, selected, onSelect }) {
-  const scrollerRef = React.useRef(null);
-  const [canLeft, setCanLeft] = useState(false);
-  const [canRight, setCanRight] = useState(false);
+    );
+  }
+  function SeasonBar({ seasons, selected, onSelect }) {
+    const scrollerRef = React.useRef(null);
+    const [canLeft, setCanLeft] = useState(false);
+    const [canRight, setCanRight] = useState(false);
 
-  const update = () => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    setCanLeft(el.scrollLeft > 0);
-    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
-  };
+    const update = () => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      setCanLeft(el.scrollLeft > 0);
+      setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+    };
 
-  useEffect(() => {
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
+    useEffect(() => {
+      update();
+      window.addEventListener("resize", update);
+      return () => window.removeEventListener("resize", update);
+    }, []);
 
-  const scrollByPx = (dx) => scrollerRef.current?.scrollBy({ left: dx, behavior: "smooth" });
+    const scrollByPx = (dx) => scrollerRef.current?.scrollBy({ left: dx, behavior: "smooth" });
 
-  return (
-    <div className="season-bar">
-      {canLeft && (
-        <button className="season-arrow left" onClick={() => scrollByPx(-280)} aria-label="Trước">
-          ‹
-        </button>
-      )}
-
-      <div className="season-scroll" ref={scrollerRef} onScroll={update}>
-        {seasons.map((s) => (
-          <button
-            key={s.seasonId}
-            className={`season-chip ${selected?.seasonId === s.seasonId ? "active" : ""}`}
-            onClick={() => onSelect(s)}
-            title={`Season ${s.seasonNumber}`}
-          >
-            <span className="label">Season {s.seasonNumber}</span>
-            {typeof s.episodesCount !== "undefined" && (
-              <span className="count">{s.episodesCount}</span>
-            )}
+    return (
+      <div className="season-bar">
+        {canLeft && (
+          <button className="season-arrow left" onClick={() => scrollByPx(-280)} aria-label="Trước">
+            ‹
           </button>
-        ))}
-        {seasons.length === 0 && <span className="text-muted">Chưa có season nào</span>}
-      </div>
+        )}
 
-      {canRight && (
-        <button className="season-arrow right" onClick={() => scrollByPx(280)} aria-label="Sau">
-          ›
-        </button>
-      )}
-    </div>
-  );
-}
+        <div className="season-scroll" ref={scrollerRef} onScroll={update}>
+          {seasons.map((s) => (
+            <button
+              key={s.seasonId}
+              className={`season-chip ${selected?.seasonId === s.seasonId ? "active" : ""}`}
+              onClick={() => onSelect(s)}
+              title={`Season ${s.seasonNumber}`}
+            >
+              <span className="label">Season {s.seasonNumber}</span>
+              {typeof s.episodesCount !== "undefined" && (
+                <span className="count">{s.episodesCount}</span>
+              )}
+            </button>
+          ))}
+          {seasons.length === 0 && <span className="text-muted">Chưa có season nào</span>}
+        </div>
+
+        {canRight && (
+          <button className="season-arrow right" onClick={() => scrollByPx(280)} aria-label="Sau">
+            ›
+          </button>
+        )}
+      </div>
+    );
+  }
 
 
   return (
@@ -427,12 +427,12 @@ function SeasonBar({ seasons, selected, onSelect }) {
 
 
                 <h2 className="movie-title mb-3 mt-2" style={{ color: "#4bc1fa", fontSize: "20px", textDecoration: "none" }}
-                >{movie.title}</h2> 
+                >{movie.title}</h2>
                 {/* Tên tiếng Anh - phụ */}
                 {movie.originalTitle && (
                   <div className="original-title mb-2" style={{
                     color: "#adb5bd",
-                    fontSize: "14px", 
+                    fontSize: "14px",
                     fontStyle: "italic",
                     opacity: 0.85,
                     marginTop: "-8px" // ✅ Thay đổi từ -4px thành -8px
@@ -482,22 +482,22 @@ function SeasonBar({ seasons, selected, onSelect }) {
 
 
                 <div className="d-flex flex-wrap mb-2 small" style={{ background: "transparent" }}>
-                 <div className="movie-details mb-3">
+                  <div className="movie-details mb-3">
                     <div className="detail-item mb-2">
                       <span className="detail-label fw-bold">Năm sản xuất:</span>{" "}
                       <span className="detail-value">{movie.releaseYear || "-"}</span>
                     </div>
-                    
+
                     <div className="detail-item mb-2">
                       <span className="detail-label fw-bold">Lượt xem:</span>{" "}
                       <span className="detail-value">{(movie.viewCount || 0).toLocaleString()}</span>
                     </div>
-                    
+
                     <div className="detail-item mb-2">
                       <span className="detail-label fw-bold">Thời lượng:</span>{" "}
                       <span className="detail-value">{movie.duration ? `${movie.duration}` : "-"}</span>
                     </div>
-                    
+
                     <div className="detail-item mb-2">
                       <span className="detail-label fw-bold">Quốc gia:</span>{" "}
                       <span className="detail-value">{movie.country || "-"}</span>
@@ -507,64 +507,64 @@ function SeasonBar({ seasons, selected, onSelect }) {
                 </div>
               </div>
             </div>
-          <div className="mt-4">
-            <h5 className="mb-3 text-warning">
-              <i className="bi bi-fire me-2" /> Top phim tuần này
-            </h5>
+            <div className="mt-4">
+              <h5 className="mb-3 text-warning">
+                <i className="bi bi-fire me-2" /> Top phim tuần này
+              </h5>
 
-            <div className="list-group">
-              {(topMovies || []).slice(0, 10).map((item, idx) => {
-                const movieId = item.movieId || item.id || item._id;
-                const views = Number(item.viewCount || 0).toLocaleString("vi-VN");
+              <div className="list-group">
+                {(topMovies || []).slice(0, 10).map((item, idx) => {
+                  const movieId = item.movieId || item.id || item._id;
+                  const views = Number(item.viewCount || 0).toLocaleString("vi-VN");
 
-                return (
-                  <a
-                    key={movieId || `top-${idx}`}
-                    href="#"
-                    className="list-group-item list-group-item-action bg-dark text-white border rounded-3 px-3 py-2"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      movieId && handleClickTopMovie(movieId);
-                    }}
-                    tabIndex={-1}                 // tránh hiện focus ring (viền trắng)
-                    style={{ boxShadow: "none" }} // phòng trường hợp vẫn còn shadow
-                  >
-                    <div className="d-flex align-items-center w-100" style={{ background: "rgba(34, 36, 52, 0.7)" }}>
-                      <span className="badge bg-warning text-dark me-3">{idx + 1}</span>
+                  return (
+                    <a
+                      key={movieId || `top-${idx}`}
+                      href="#"
+                      className="list-group-item list-group-item-action bg-dark text-white border rounded-3 px-3 py-2"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        movieId && handleClickTopMovie(movieId);
+                      }}
+                      tabIndex={-1}                 // tránh hiện focus ring (viền trắng)
+                      style={{ boxShadow: "none" }} // phòng trường hợp vẫn còn shadow
+                    >
+                      <div className="d-flex align-items-center w-100" style={{ background: "rgba(34, 36, 52, 0.7)" }}>
+                        <span className="badge bg-warning text-dark me-3">{idx + 1}</span>
 
-                      <img
-                        src={item.thumbnailUrl || "https://via.placeholder.com/46x64?text=No+Img"}
-                        alt={item.title}
-                        className="rounded me-3"
-                        style={{ width: 46, height: 64, objectFit: "cover" }}
-                      />
+                        <img
+                          src={item.thumbnailUrl || "https://via.placeholder.com/46x64?text=No+Img"}
+                          alt={item.title}
+                          className="rounded me-3"
+                          style={{ width: 46, height: 64, objectFit: "cover" }}
+                        />
 
-                      <div className="flex-grow-1">
-                        <div className="fw-semibold text-truncate">
-                          {item.title && item.title.length > 20 
-                            ? `${item.title.substring(0, 20)}...` 
-                            : item.title
-                          }
+                        <div className="flex-grow-1">
+                          <div className="fw-semibold text-truncate">
+                            {item.title && item.title.length > 20
+                              ? `${item.title.substring(0, 20)}...`
+                              : item.title
+                            }
+                          </div>
+                          <div className="small text-truncate">{views} lượt xem</div>
                         </div>
-                        <div className="small text-truncate">{views} lượt xem</div>
+
+
                       </div>
+                    </a>
+                  );
+                })}
 
-                     
-                    </div>
-                  </a>
-                );
-              })}
-
-              {(!topMovies || topMovies.length === 0) && (
-                <div className="list-group-item bg-dark text-secondary border rounded-3">
-                  Chưa có dữ liệu tuần này
-                </div>
-              )}
+                {(!topMovies || topMovies.length === 0) && (
+                  <div className="list-group-item bg-dark text-secondary border rounded-3">
+                    Chưa có dữ liệu tuần này
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-          </div>
 
-          <div className="col-lg-8"> 
+          <div className="col-lg-8">
             {/* Trailer (UPCOMING) */}
             {movie.status === "UPCOMING" && movie.trailerUrl && (
               <div id="trailer-section" className="mb-4">
@@ -650,7 +650,7 @@ function SeasonBar({ seasons, selected, onSelect }) {
                       Diễn viên
                     </i>
                   </li>
-                  
+
                 </ul>
                 <hr />
 
@@ -663,19 +663,19 @@ function SeasonBar({ seasons, selected, onSelect }) {
                       {movie.status === "COMPLETED" && (
                         <>
                           {/* Season tabs */}
-                        <SeasonBar
-                          seasons={seasons}
-                          selected={selectedSeason}
-                          onSelect={async (s) => {
-                            setSelectedSeason(s);
-                            try {
-                              const eps = await EpisodeService.getEpisodesByMovieId(s.seasonId);
-                              setEpisodes(Array.isArray(eps) ? eps : []);
-                            } catch {
-                              setEpisodes([]);
-                            }
-                          }}
-                        />
+                          <SeasonBar
+                            seasons={seasons}
+                            selected={selectedSeason}
+                            onSelect={async (s) => {
+                              setSelectedSeason(s);
+                              try {
+                                const eps = await EpisodeService.getEpisodesByMovieId(s.seasonId);
+                                setEpisodes(Array.isArray(eps) ? eps : []);
+                              } catch {
+                                setEpisodes([]);
+                              }
+                            }}
+                          />
                           {/* Episode list */}
                           <div className="row">
                             {episodes.map(ep => (
@@ -708,31 +708,31 @@ function SeasonBar({ seasons, selected, onSelect }) {
 
 
                   {/* Tab: Diễn viên */}
-                {tab === "cast" && (
-                  <div className="tab-pane fade show active">
-                    {(directors.length + performers.length === 0) && (
-                      <div className="text-muted">Chưa có thông tin diễn viên/đạo diễn.</div>
-                    )}
+                  {tab === "cast" && (
+                    <div className="tab-pane fade show active">
+                      {(directors.length + performers.length === 0) && (
+                        <div className="text-muted">Chưa có thông tin diễn viên/đạo diễn.</div>
+                      )}
 
-                    {directors.length > 0 && (
-                      <>
-                        <h6 className="section-heading mb-2">Đạo diễn</h6>
-                        <div className="row g-3 cast-grid">
-                          {directors.map((d) => <PersonCard key={d.authorId} p={d} />)}
-                        </div>
-                      </>
-                    )}
+                      {directors.length > 0 && (
+                        <>
+                          <h6 className="section-heading mb-2">Đạo diễn</h6>
+                          <div className="row g-3 cast-grid">
+                            {directors.map((d) => <PersonCard key={d.authorId} p={d} />)}
+                          </div>
+                        </>
+                      )}
 
-                    {performers.length > 0 && (
-                      <>
-                        <h6 className="section-heading mt-3 mb-2">Diễn viên</h6>
-                        <div className="row g-3 cast-grid">
-                          {performers.map((p) => <PersonCard key={p.authorId} p={p} />)}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
+                      {performers.length > 0 && (
+                        <>
+                          <h6 className="section-heading mt-3 mb-2">Diễn viên</h6>
+                          <div className="row g-3 cast-grid">
+                            {performers.map((p) => <PersonCard key={p.authorId} p={p} />)}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                 </div>
               </div>
@@ -787,8 +787,15 @@ function SeasonBar({ seasons, selected, onSelect }) {
                           <p className="mb-0 text-break" style={{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                             {fb.content}
                           </p>
+                          {/* Action buttons */}
+                          <div className="align-items-center gap-3 mt-2 small">
+                           <i className="fa-regular fa-thumbs-up me-3" role="button" title="Thích"></i>
+                           <i className="fa-regular fa-thumbs-down me-3" role="button" title="Không thích"></i>
+                           <i className="fa-solid fa-reply" role="button" title="Trả lời"></i>
+                          </div>
                         </div>
-                      </div> <hr />
+                      </div>
+                      <hr />
                     </div>
                   ))}
                   {comments.length === 0 && (

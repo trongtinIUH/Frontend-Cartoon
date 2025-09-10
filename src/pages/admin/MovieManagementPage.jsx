@@ -101,7 +101,7 @@ const resetAll = useCallback((reload = false) => {
   };
 
   return (
-    <div className="d-flex">
+    <div className="d-flex bg-white min-vh-100">
       <Sidebar />
       <div className="flex-grow-1 p-4" style={{ marginLeft: 250 }}>
         {/* ===== HEADER đẹp (quick stat + refresh) ===== */}

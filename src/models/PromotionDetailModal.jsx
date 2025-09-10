@@ -197,6 +197,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
   // xoa voucher
   const handleDeleteVoucher = async (promotionId, voucherCode) => {
     try {
+      if (!window.confirm("Bạn có chắc chắn muốn xóa voucher này?")) return;
       await PromotionService.deletePromotionVoucher(promotionId, voucherCode);
       toast.success("Xóa voucher thành công!");
       onAdd();
@@ -283,6 +284,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
   // xoa promotion package
   const handleDeletePromotionPackage = async (id, packageId) => {
     try {
+      if (!window.confirm("Bạn có chắc chắn muốn xóa gói khuyến mãi này?")) return;
       await PromotionService.deletePromotionPackage(id, packageId);
       toast.success("Xóa gói khuyến mãi thành công!");
       onAdd();
@@ -513,18 +515,18 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
                                 {isEditing ? (
                                   <>
                                     <button
-                                      className="btn btn-sm btn-success me-2"
+                                      className="btn btn-primary me-2"
                                       onClick={() => saveEditVoucher(item)}
                                       disabled={savingVoucher}
                                     >
-                                      {savingVoucher ? <i className="fa fa-spinner fa-spin" /> : <i className="fa fa-check" />} Lưu
+                                      {savingVoucher ? <i className="fa fa-spinner fa-spin" /> : <i className="fa fa-check" />}
                                     </button>
                                     <button
                                       className="btn btn-sm btn-secondary"
                                       onClick={cancelEditVoucher}
                                       disabled={savingVoucher}
                                     >
-                                      <i className="fa fa-times" /> Huỷ
+                                      <i className="fa fa-times" />
                                     </button>
                                   </>
                                 ) : (
@@ -533,13 +535,13 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
                                       className="btn btn-sm btn-primary me-2"
                                       onClick={() => startEditVoucher(item)}
                                     >
-                                      <i className="fa fa-pencil" /> Sửa
+                                      <i className="fa fa-pencil" />
                                     </button>
                                     <button
                                       className="btn btn-sm btn-danger"
                                       onClick={() => handleDeleteVoucher(promotion.promotionId, item.voucherCode)}
                                     >
-                                      <i className="fa fa-trash" /> Xóa
+                                      <i className="fa fa-trash" />
                                     </button>
                                   </>
                                 )}
@@ -577,14 +579,14 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
                               {editingRowId === rowKey(item) ? (
                                 <>
                                   <button
-                                    className="btn btn-sm btn-success me-2"
+                                    className="btn btn-primary me-2"
                                     onClick={() => saveEdit(item)}
                                     disabled={saving}
                                   >
-                                    {saving ? <i className="fa fa-spinner fa-spin" /> : <i className="fa fa-check" />} Lưu
+                                    {saving ? <i className="fa fa-spinner fa-spin" /> : <i className="fa fa-check" />}
                                   </button>
                                   <button className="btn btn-sm btn-secondary" onClick={cancelEditPackage} disabled={saving}>
-                                    <i className="fa fa-times" /> Huỷ
+                                    <i className="fa fa-times" />
                                   </button>
                                 </>
                               ) : (
@@ -593,14 +595,14 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
                                     className="btn btn-sm btn-primary me-2"
                                     onClick={() => startEditPackage(item)}
                                   >
-                                    <i className="fa fa-pencil"></i> Sửa
+                                    <i className="fa fa-pencil"></i>
                                   </span>
 
                                   <span
                                     className="btn btn-sm btn-danger me-2"
                                     onClick={() => handleDeletePromotionPackage(item.promotionId, item.packageId)}
                                   >
-                                    <i className="fa fa-trash"></i> Xóa
+                                    <i className="fa fa-trash"></i>
                                   </span>
                                 </>
                               )}

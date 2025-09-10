@@ -3,7 +3,7 @@ import Sidebar from '../../components/Sidebar';
 
 const DashboardPage = () => {
   return (
-    <div className="d-flex">
+    <div className="d-flex bg-white min-vh-100">
       <Sidebar />
       <div className="flex-grow-1 ms-250 p-4" style={{ marginLeft: '250px' }}>
         <h2>Dashboard</h2>
