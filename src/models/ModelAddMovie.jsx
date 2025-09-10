@@ -87,7 +87,33 @@ const authorOptions = authors.map(a => ({
   });
 
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(""); // Để hiển thị bước đang thực hiện
   const [uploadVideo, setUploadVideo] = useState(false);
+
+  // Helper function để reset form
+  const resetForm = () => {
+    setForm({
+      title: "",
+      originalTitle: "",
+      description: "",
+      genres: [],
+      country: "",
+      topic: "",
+      movieType: "SINGLE",
+      minVipLevel: "FREE",
+      status: "UPCOMING",
+      releaseYear: "",
+      duration: "",
+      thumbnail: null,
+      banner: null,
+      trailerVideo: null,
+      contentVideo: null,
+      authorIds: [],
+      slug: ""
+    });
+    setNewAuthor([{ name: "", authorRole: "DIRECTOR" }]);
+    setIsNewAuthor(false);
+  };
 
   const VIDEO_TYPES = ["video/mp4", "video/avi", "video/mkv", "video/webm", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
   const THUMBNAIL_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp"];
@@ -140,82 +166,139 @@ const authorOptions = authors.map(a => ({
     }
 
     setLoading(true);
+    setLoadingStep("Đang chuẩn bị dữ liệu...");
+    let createdMovie = null;
+    let createdAuthorIds = [];
+    
     try {
-      // gom authorIds với xử lý trùng lặp
-      let allAuthorIds = Array.isArray(form.authorIds) ? [...form.authorIds] : [];
+      // Chuẩn bị danh sách authorIds từ authors có sẵn
+      let existingAuthorIds = Array.isArray(form.authorIds) ? [...form.authorIds] : [];
 
       // Map hiện có từ danh sách authors đã load
       const existingMap = new Map(
         (authors || []).map(a => [keyOf(a.name, a.authorRole), a.authorId])
       );
 
-      // gộp & khử trùng ngay trong form nhập mới
-      const uniqueNew = [];
+      // Chuẩn bị danh sách authors mới cần tạo (nếu có)
+      const uniqueNewAuthors = [];
       const seenNew = new Set();
-      for (const a of (isNewAuthor ? newAuthor : [])) {
-        const name = (a?.name || "").trim();
-        const role = a?.authorRole || "DIRECTOR";
-        if (!name) continue;
-        const k = keyOf(name, role);
-        if (seenNew.has(k)) {
-          toast.info(`Bỏ qua trùng: ${name} (${role})`);
-          continue;
-        }
-        seenNew.add(k);
-        uniqueNew.push({ name, authorRole: role });
-      }
-
-      // 1) Map vào authorId sẵn có nếu đã tồn tại
-      for (const a of uniqueNew) {
-        const k = keyOf(a.name, a.authorRole);
-        const foundId = existingMap.get(k);
-        if (foundId) {
-          allAuthorIds.push(foundId);
-        } else {
-          // 2) gọi BE tạo (idempotent) – nếu có trùng, BE sẽ trả về author đã có
-          const created = await AuthorService.createAuthor({ name: a.name, authorRole: a.authorRole, movieId: [] });
-          const newId = created?.authorId || created?.id;
-          if (newId) {
-            allAuthorIds.push(newId);
-            // đồng bộ cache local để lần sau không gọi lại
-            existingMap.set(k, newId);
+      
+      if (isNewAuthor) {
+        for (const a of newAuthor) {
+          const name = (a?.name || "").trim();
+          const role = a?.authorRole || "DIRECTOR";
+          if (!name) continue;
+          const k = keyOf(name, role);
+          if (seenNew.has(k)) {
+            toast.info(`Bỏ qua trùng: ${name} (${role})`);
+            continue;
+          }
+          seenNew.add(k);
+          
+          // Kiểm tra xem author này đã tồn tại chưa
+          const foundId = existingMap.get(k);
+          if (foundId) {
+            existingAuthorIds.push(foundId);
+          } else {
+            uniqueNewAuthors.push({ name, authorRole: role });
           }
         }
       }
 
-      // khử trùng trong allAuthorIds (nếu người dùng vừa chọn sẵn + tạo mới)
-      allAuthorIds = Array.from(new Set(allAuthorIds));
-
-      // 1) Tạo Movie (chỉ metadata + ảnh). KHÔNG gửi trailer/content để tránh upload 2 lần
+      // Bước 1: Tạo Movie trước (chỉ với authors có sẵn)
       const fd = new FormData();
       ["title","originalTitle","description","country","topic","movieType","minVipLevel","status","releaseYear","slug","duration"]
         .forEach(k => form[k] != null && fd.append(k, form[k]));
       (form.genres || []).forEach(g => fd.append("genres", g));
-      (allAuthorIds || []).forEach(id => fd.append("authorIds", id));
+      
+      // Chỉ thêm authors có sẵn vào Movie
+      existingAuthorIds.forEach(id => fd.append("authorIds", id));
+      
       if (form.thumbnail) fd.append("thumbnail", form.thumbnail);
       if (form.banner) fd.append("banner", form.banner);
       fd.append("role", "ADMIN");
 
-      const movie = await MovieService.createMovie(fd);
+      // Tạo Movie
+      setLoadingStep("Đang tạo phim...");
+      createdMovie = await MovieService.createMovie(fd);
+      console.log("✅ Movie created successfully:", createdMovie.movieId);
 
-      // 2) gán movie vào tác giả
-      if (allAuthorIds.length) {
-        await AuthorService.addMovieToMultipleAuthors(allAuthorIds, movie.movieId);
+      // Bước 2: Tạo authors mới (nếu có) và liên kết với movie
+      if (uniqueNewAuthors.length > 0) {
+        setLoadingStep("Đang tạo tác giả mới...");
+        for (const authorData of uniqueNewAuthors) {
+          try {
+            const created = await AuthorService.createAuthor({ 
+              name: authorData.name, 
+              authorRole: authorData.authorRole, 
+              movieId: [] 
+            });
+            const newId = created?.authorId || created?.id;
+            if (newId) {
+              createdAuthorIds.push(newId);
+              console.log(`✅ Author created: ${authorData.name} (ID: ${newId})`);
+            }
+          } catch (authorError) {
+            console.warn(`⚠️ Failed to create author ${authorData.name}:`, authorError);
+            // Tiếp tục với authors khác, không dừng toàn bộ process
+          }
+        }
+
+        // Liên kết authors mới với movie
+        if (createdAuthorIds.length > 0) {
+          setLoadingStep("Đang liên kết tác giả với phim...");
+          try {
+            await AuthorService.addMovieToMultipleAuthors(createdAuthorIds, createdMovie.movieId);
+            console.log("✅ Authors linked to movie successfully");
+          } catch (linkError) {
+            console.warn("⚠️ Failed to link some authors to movie:", linkError);
+            // Không dừng process vì movie đã tạo thành công
+          }
+        }
       }
 
-      // 3) Publish theo status (gửi file bắt buộc)
-      await MovieService.publish(movie.movieId, form.status, {
+      // Bước 3: Publish movie
+      setLoadingStep("Đang publish phim...");
+      await MovieService.publish(createdMovie.movieId, form.status, {
         trailerVideo: form.status === "UPCOMING"   ? form.trailerVideo : null,
         episode1Video: form.status === "COMPLETED" ? form.contentVideo : null,
       });
 
       toast.success("Tạo phim & publish thành công!");
+      resetForm(); // Reset form sau khi thành công
       onSuccess?.();
+      
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error in handleSubmit:", err);
+      
+      // Rollback: Xóa movie nếu đã tạo nhưng quá trình sau đó bị lỗi
+      if (createdMovie?.movieId) {
+        try {
+          setLoadingStep("Đang rollback dữ liệu...");
+          console.log("🔄 Attempting to rollback movie:", createdMovie.movieId);
+          await MovieService.deleteMovies([createdMovie.movieId]);
+          console.log("✅ Movie rollback successful");
+        } catch (rollbackError) {
+          console.error("❌ Failed to rollback movie:", rollbackError);
+          toast.error("Lỗi và không thể xóa dữ liệu đã tạo. Vui lòng liên hệ admin.");
+        }
+      }
+
+      // Rollback: Xóa authors mới đã tạo (nếu có)
+      if (createdAuthorIds.length > 0) {
+        try {
+          console.log("🔄 Attempting to rollback authors:", createdAuthorIds);
+          await AuthorService.deleteAuthors(createdAuthorIds);
+          console.log("✅ Authors rollback successful");
+        } catch (rollbackError) {
+          console.error("❌ Failed to rollback authors:", rollbackError);
+        }
+      }
+
       toast.error("❌ Lỗi: " + (err?.message || "Không thể thêm phim."));
     } finally {
       setLoading(false);
+      setLoadingStep("");
     }
   };
 
@@ -501,9 +584,9 @@ const authorOptions = authors.map(a => ({
           {/* Actions */}
           <div className="col-12 d-flex gap-2 mt-2">
             <button className="btn btn-primary flex-fill" type="submit" disabled={loading}>
-              {loading ? "Đang thêm..." : "Thêm phim"}
+              {loading ? (loadingStep || "Đang xử lý...") : "Thêm phim"}
             </button>
-            <button type="button" className="btn btn-outline-secondary flex-fill" onClick={onClose}>
+            <button type="button" className="btn btn-outline-secondary flex-fill" onClick={onClose} disabled={loading}>
               Đóng
             </button>
           </div>

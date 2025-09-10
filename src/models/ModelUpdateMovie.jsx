@@ -179,11 +179,53 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
         <h4>Cập nhật phim</h4>
 
         <form onSubmit={handleSubmit} encType="multipart/form-data">
-          {/* Title & Description */}
-          <div className="mb-3">
-            <label className="form-label">Tiêu đề</label>
-            <input className="form-control" name="title" value={form.title} onChange={handleChange}/>
+          {/* Title & Original Title */}
+          <div className="row g-3 mb-3">
+            <div className="col-md-8">
+              <label className="form-label">Tiêu đề</label>
+              <input className="form-control" name="title" value={form.title} onChange={handleChange}/>
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">Năm phát hành</label>
+              <input
+                type="number"
+                min="1900"
+                max="2100"
+                className="form-control"
+                name="releaseYear"
+                value={form.releaseYear}
+                onChange={handleChange}
+                placeholder="VD: 2025"
+              />
+            </div>
           </div>
+
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <label className="form-label">Tên gốc (Original Title)</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                name="originalTitle" 
+                value={form.originalTitle} 
+                onChange={handleChange}
+                placeholder="Tên phim gốc (nếu có)"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Slug</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                name="slug" 
+                value={form.slug} 
+                onChange={handleChange}
+                placeholder="URL slug (để trống để auto-generate)"
+              />
+            </div>
+          </div>
+
+          {/* Description */}
           <div className="mb-3">
             <label className="form-label">Mô tả</label>
             <textarea className="form-control" rows={3} name="description" value={form.description} onChange={handleChange}/>
@@ -203,38 +245,55 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Status / VIP / Country */}
-          <div className="row g-3">
-            <div className="col-md-4">
+          {/* Status / VIP / Country / Type */}
+          <div className="row g-3 mb-3">
+            <div className="col-md-3">
               <label className="form-label">Trạng thái</label>
               <select className="form-select" name="status" value={form.status} onChange={handleChange}>
                 <option value="UPCOMING">UPCOMING</option>
                 <option value="COMPLETED">COMPLETED</option>
               </select>
             </div>
-            <div className="col-md-4">
+            <div className="col-md-3">
               <label className="form-label">VIP tối thiểu</label>
               <select className="form-select" name="minVipLevel" value={form.minVipLevel} onChange={handleChange}>
                 <option value="FREE">FREE</option>
-                <option value="NoAds">NoAds</option>
-                <option value="Premium">Premium</option>
-                <option value="MegaPlus">MegaPlus</option>
-                <option value="ComboPremiumMegaPlus">ComboPremiumMegaPlus</option>
+                <option value="NO_ADS">NoAds</option>
+                <option value="PREMIUM">Premium</option>
+                <option value="MEGA_PLUS">MegaPlus</option>
+                <option value="COMBO_PREMIUM_MEGA_PLUS">Combo Premium + Mega Plus</option>
               </select>
             </div>
-            <div className="col-md-4">
+            <div className="col-md-3">
+              <label className="form-label">Loại phim</label>
+              <select name="movieType" className="form-select" value={form.movieType} onChange={handleChange}>
+                <option value="SINGLE">Phim lẻ</option>
+                <option value="SERIES">Phim bộ</option>
+              </select>
+            </div>
+            <div className="col-md-3">
               <label className="form-label"><FaGlobe /> Quốc gia</label>
               <select name="country" className="form-select" value={form.country} onChange={handleChange}>
                 <option value="">-- Chọn quốc gia --</option>
                 {countries.map((c, i) => <option key={i} value={c}>{c}</option>)}
               </select>
             </div>
+          </div>
 
-            <div className="col-md-4">
+          {/* Duration & Topic */}
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
               <label className="form-label"><FaClock /> Thời lượng</label>
               <input type="text" className="form-control" name="duration" value={form.duration}
                      onChange={handleChange} placeholder="VD: 120p (phút)"/>
               <div className="form-text">Định dạng đề nghị: <code>120p</code> (phút).</div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Chủ đề</label>
+              <select name="topic" className="form-select" value={form.topic} onChange={handleChange}>
+                <option value="">-- Chọn chủ đề --</option>
+                {TOPICS.map((t, i) => <option key={i} value={t}>{t}</option>)}
+              </select>
             </div>
           </div>
 
@@ -281,32 +340,23 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
             )}
           </div>
 
-          {/* Topic */}
-          <div className="mb-3 mt-3">
-            <label className="form-label">Chủ đề</label>
-            <select name="topic" className="form-select" value={form.topic} onChange={handleChange}>
-              <option value="">-- Chọn chủ đề --</option>
-              {TOPICS.map((t, i) => <option key={i} value={t}>{t}</option>)}
-            </select>
+          {/* Media Files */}
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <label className="form-label"><FaImage /> Thumbnail</label>
+              <input type="file" className="form-control" accept="image/*" name="thumbnail" onChange={handleChange}/>
+              {thumbnailPreview && <div className="mt-2"><img src={thumbnailPreview} alt="preview" style={{ maxHeight: 80, borderRadius: 6 }}/></div>}
+            </div>
+            <div className="col-md-6">
+              <label className="form-label"><FaImage /> Banner</label>
+              <input type="file" className="form-control" name="banner" accept="image/*" onChange={handleChange}/>
+              {bannerPreview && <div className="mt-2"><img src={bannerPreview} alt="preview" style={{ maxHeight: 80, borderRadius: 6 }}/></div>}
+            </div>
           </div>
 
-          {/* Thumbnail */}
-          <div className="mb-3">
-            <label className="form-label"><FaImage /> Thumbnail</label>
-            <input type="file" className="form-control" accept="image/*" name="thumbnail" onChange={handleChange}/>
-            {thumbnailPreview && <div className="mt-2"><img src={thumbnailPreview} alt="preview" style={{ maxHeight: 80, borderRadius: 6 }}/></div>}
-          </div>
-
-          {/* Banner */}
-          <div className="col-md-6">
-            <label className="form-label"><FaImage /> Banner</label>
-            <input type="file" className="form-control" name="banner" accept="image/*" onChange={handleChange}/>
-            {bannerPreview && <div className="mt-2"><img src={bannerPreview} alt="preview" style={{ maxHeight: 80, borderRadius: 6 }}/></div>}
-          </div>
-
-          {/* Trailer (UPCOMING only) */}
+          {/* Video Files */}
           {form.status === "UPCOMING" && (
-            <div className="col-12">
+            <div className="mb-3">
               <label className="form-label"><FaVideo /> Trailer</label>
               <input type="file" className="form-control" name="trailerVideo" accept="video/*" onChange={handleChange}/>
               {form.trailerUrl && (
@@ -315,9 +365,8 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
             </div>
           )}
 
-          {/* Ep1 (COMPLETED only) */}
           {form.status === "COMPLETED" && (
-            <div className="col-12 mt-3">
+            <div className="mb-3">
               <label className="form-label"><FaVideo /> Tập 1 (khi chuyển sang COMPLETED)</label>
               <input type="file" className="form-control" name="contentVideo" accept="video/*" onChange={handleChange}/>
               <div className="form-text">Nếu phim đã có season/tập, BE sẽ bỏ qua và giữ nguyên số tập hiện có.</div>

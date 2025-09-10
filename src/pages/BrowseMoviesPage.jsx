@@ -27,7 +27,12 @@ const BrowseMoviesPage = () => {
         return t === "SERIES" ? "Phim bộ" : t === "SINGLE" ? "Phim lẻ" : `Loại: ${prettyValue}`;
       }
       case "chu-de":     return `Chủ đề: ${prettyValue}`;
-      case "quoc-gia":   return `Quốc gia: ${prettyValue}`;
+      case "quoc-gia":   {
+        if (prettyValue.toLowerCase() === "us-uk" || prettyValue.toLowerCase() === "us uk") {
+          return "Quốc gia: US-UK";
+        }
+        return `Quốc gia: ${prettyValue}`;
+      }
       case "dien-vien":  return `Diễn viên: ${prettyValue}`;
       case "dao-dien":   return `Tác giả/Đạo diễn: ${prettyValue}`;
       case "author-id":  return `Phim của: ${authorName || `ID: ${rawValue}`}`;
@@ -52,8 +57,23 @@ const BrowseMoviesPage = () => {
       } else if (k === "chu-de") {
         res = await MovieService.getMovieByTopic(prettyValue);
       } else if (k === "quoc-gia") {
-        // Tìm phim theo quốc gia
-        res = await MovieService.getMoviesByCountry(prettyValue);
+        // Xử lý trường hợp đặc biệt cho US-UK
+        if (prettyValue.toLowerCase() === "us-uk" || prettyValue.toLowerCase() === "us uk") {
+          // Lấy phim từ cả Mỹ và Anh
+          const [usMovies, ukMovies] = await Promise.all([
+            MovieService.getMoviesByCountry("United States"),
+            MovieService.getMoviesByCountry("United Kingdom")
+          ]);
+          
+          // Gộp và loại bỏ trùng lặp
+          const combinedMovies = [...(usMovies || []), ...(ukMovies || [])];
+          res = combinedMovies.filter((movie, index, self) => 
+            index === self.findIndex(m => m.movieId === movie.movieId)
+          );
+        } else {
+          // Tìm phim theo quốc gia bình thường
+          res = await MovieService.getMoviesByCountry(prettyValue);
+        }
       } else if (k === "dien-vien") {
         // (chưa có API riêng) — fallback FE: lấy all rồi filter theo actors
         const all = await MovieService.getAllMovies();

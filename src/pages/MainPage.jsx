@@ -58,9 +58,9 @@ const MainPage = () => {
 
       <CountryMoviesSection
         title="Phim US-UK mới"
-        country="United Kingdom"
+        countries={["United States", "United Kingdom"]}
         gradient="linear-gradient(235deg, #fff 30%, rgb(255, 0, 153) 130%)"
-        link={`/danh-muc/quoc-gia/${encodeURIComponent("United Kingdom")}`}
+        link={`/danh-muc/quoc-gia/us-uk`}
       />
       <div className="main-page container-xl">
         <h2 className="section-title">Danh sách phim mới trong tháng</h2>
