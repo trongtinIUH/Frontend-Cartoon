@@ -1,0 +1,10 @@
+@media (max-width: 768px) {
+  .modal-qr img {
+    width: 160px !important;
+    height: 160px !important;
+  }
+
+  .modal-qr h6 {
+    font-size: 1rem;
+  }
+}

@@ -287,11 +287,11 @@ const PaymentPage = () => {
                     <p>Giảm giá</p>
                     {voucherInfo ? (voucherInfo.discountAmount ?? 0).toLocaleString() : "0"} VNĐ
                   </div>
-                  <div className="d-flex bg-black w-100 text-white">
+                  <div className="d-flex bg-black w-100">
                     <div className="col-8">
                       <input
                         type="text"
-                        className="form-control text-white"
+                        className="form-control bg-secondary"
                         value={voucherCode}
                         onChange={(e) => {
                           setVoucherCode(e.target.value.toUpperCase());

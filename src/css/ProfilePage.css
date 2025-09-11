@@ -1,0 +1,69 @@
+/* Desktop: cách header ra */
+@media (min-width: 992px) {
+  .profile-page {
+    margin-top: 100px;
+  }
+}
+
+body {
+  background-color: #212529;
+  /* hoặc #000 nếu bạn muốn */
+}
+
+/* Tablet & Mobile: Sidebar lên trên, content xuống dưới */
+@media (max-width: 991px) {
+  .profile-page {
+    margin-top: 20px;
+    /* cách header ít hơn cho tablet/mobile */
+  }
+
+  .profile-page .row {
+    flex-direction: column;
+    /* ép sidebar nằm trên, content dưới */
+  }
+
+  .profile-page .col-12,
+  .profile-page .col-md-4,
+  .profile-page .col-lg-3,
+  .profile-page .col-md-8,
+  .profile-page .col-lg-9 {
+    max-width: 100%;
+    flex: 0 0 100%;
+    /* chiếm full width */
+  }
+}
+
+/* Desktop modal (giữ nguyên) */
+.modal-custom .modal-content {
+  width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+/* Mobile responsive */
+@media (max-width: 576px) {
+  .modal-custom {
+    width: 100% !important;
+    margin: 0 10px;
+    /* cách mép 1 chút */
+  }
+
+  .modal-custom .modal-content {
+    width: 100% !important;
+    border-radius: 12px;
+  }
+
+  .modal-header h5 {
+    font-size: 16px;
+  }
+
+  .modal-body input {
+    font-size: 14px;
+  }
+
+  .modal-footer button {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+}

@@ -1,0 +1,39 @@
+/* Lưới phim yêu thích */
+.wishlist-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(1, 1fr); /* Mobile: 1 cột */
+}
+
+@media (min-width: 768px) {
+  .wishlist-grid {
+    grid-template-columns: repeat(3, 1fr); /* Tablet: 3 cột */
+  }
+}
+
+@media (min-width: 1200px) {
+  .wishlist-grid {
+    grid-template-columns: repeat(6, 1fr); /* Desktop: 6 cột */
+  }
+}
+
+/* Card poster */
+.wishlist-card img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.wishlist-card img:hover {
+  transform: scale(1.05);
+}
+
+/* Nút xóa */
+.remove-btn {
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  padding: 0;
+}

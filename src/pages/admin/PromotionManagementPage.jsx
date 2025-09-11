@@ -61,7 +61,7 @@ const PromotionManagementPage = () => {
 
 
   return (
-    <div className="d-flex">
+    <div className="d-flex bg-white min-vh-100">
       <Sidebar />
       <div className="flex-grow-1 ms-250 p-4" style={{ marginLeft: '250px' }}>
         <h2 className="mb-4 fw-bold">QUẢN LÝ KHUYẾN MÃI</h2>
@@ -125,7 +125,8 @@ const PromotionManagementPage = () => {
                         </span>
                       </td>
                       <td>
-                        <button className="btn btn-sm btn-warning me-2" onClick={() => handleOpenDetail(promotion)}>
+                        <button className="btn btn-sm btn-warning me-2" onClick={() => handleOpenDetail(promotion)} 
+                        style={{ borderRadius: '10px', padding: '5px 10px', fontSize: '14px' }}>
                           <i className="fa fa-eye"></i> Xem chi tiết
                         </button>
                       </td>

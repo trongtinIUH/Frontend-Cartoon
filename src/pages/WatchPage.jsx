@@ -28,6 +28,7 @@ import default_avatar from "../image/default_avatar.jpg";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
+import { buildFeedbackTree, FeedbackItem } from "../components/FeedbackItem";
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
 
@@ -202,7 +203,7 @@ export default function WatchPage() {
       try {
         const list = await AuthorService.getAuthorsByMovieId(movieId);
         setAuthors(Array.isArray(list) ? list : []);
-      } catch {}
+      } catch { }
     })();
   }, [movieId, authors?.length]);
 
@@ -227,7 +228,7 @@ export default function WatchPage() {
       try {
         const list = await MovieService.getAllMovieRatings(movieId);
         setRatings(Array.isArray(list) ? list : []);
-      } catch {}
+      } catch { }
     })();
   }, [movieId]);
 
@@ -252,7 +253,7 @@ export default function WatchPage() {
           const eps = await EpisodeService.getEpisodesBySeasonId(selectedSeason.seasonId);
           setEpsOfSeason(Array.isArray(eps) ? eps : []);
         }
-      } catch {}
+      } catch { }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [movieId]);
@@ -303,14 +304,16 @@ export default function WatchPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
-  const [size] = useState(5);
+  const size = 10;
   const [totalPages, setTotalPages] = useState(1);
+  const [replyTo, setReplyTo] = useState(null);
+  const [replyContent, setReplyContent] = useState("");
 
   const fetchFeedback = useCallback(async () => {
     if (!movieId) return;
     try {
       const { items, totalPages: tp } = await FeedbackService.getListFeedbackByIdMovie(movieId, page, size);
-      setComments(items);
+      setComments(buildFeedbackTree(items));
       setTotalPages(tp || 1);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu phản hồi:", error);
@@ -325,35 +328,67 @@ export default function WatchPage() {
     fetchFeedback();
   }, [fetchFeedback]);
 
+  React.useEffect(() => {
+    window.scrollTo({ top: 200, behavior: 'smooth' });
+  }, [page]);
+
   const goTo = (p) => {
     if (p < 0 || p >= totalPages || loading) return;
     setPage(p);
   };
 
+  // current: số trang hiện tại (0-based); total: tổng số trang; siblings: số trang mỗi bên
   const getPageItems = (total, current, siblings = 1) => {
     if (total <= 1) return [0];
     const first = 0;
     const last = total - 1;
+
     const start = Math.max(current - siblings, first + 1);
     const end = Math.min(current + siblings, last - 1);
+
     const items = [first];
-    if (start > first + 1) items.push("ellipsis-left");
+
+    if (start > first + 1) items.push('ellipsis-left');
     for (let i = start; i <= end; i++) items.push(i);
-    if (end < last - 1) items.push("ellipsis-right");
+    if (end < last - 1) items.push('ellipsis-right');
+
     if (last > first) items.push(last);
     return items;
   };
-  const pageItems = useMemo(() => getPageItems(totalPages, page, 1), [totalPages, page]);
 
+  const pageItems = React.useMemo(() => getPageItems(totalPages, page, 1), [totalPages, page]);
+
+  const handleSendReply = async (parentFb) => {
+    try {
+      const payload = {
+        userId,
+        movieId: movieId,
+        content: replyContent,
+        parentFeedbackId: parentFb.feedbackId,
+      };
+      await FeedbackService.submitFeedback(payload);
+      toast.success("Trả lời thành công!");
+      setReplyContent("");
+      setReplyTo(null);
+      await fetchFeedback();
+    } catch (err) {
+      console.error(err);
+      toast.error("Gửi trả lời thất bại");
+    }
+  };
+
+  // tạo feedback
   const handleFeedbackSubmit = async () => {
     if (!comment.trim()) {
       toast.error("Nội dung không được để trống");
       return;
     }
+
     if (!movieId) {
       toast.error("Không tìm thấy movieId");
       return;
     }
+
     if (!userId) {
       toast.error("Bạn cần đăng nhập để bình luận");
       return;
@@ -361,15 +396,54 @@ export default function WatchPage() {
 
     setSubmitting(true);
     try {
-      await FeedbackService.submitFeedback({ userId, movieId, content: comment });
+      const payload = {
+        userId,
+        movieId: movieId,
+        content: comment,
+        parentFeedbackId: replyTo ? replyTo.feedbackId : null
+      };
+      await FeedbackService.submitFeedback(payload);
       toast.success("Gửi bình luận thành công!");
       setComment("");
+      setReplyTo(null);
       await fetchFeedback();
     } catch (error) {
       console.error(error);
       toast.error("Gửi bình luận thất bại");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // like feedback
+  const handleLikeFeedback = async (feedbackId) => {
+    if (!userId) {
+      toast.error("Bạn cần đăng nhập để thực hiện thao tác này");
+      return;
+    }
+    try {
+      await FeedbackService.likeFeedback(feedbackId, userId);
+      // Cập nhật lại danh sách feedback
+      await fetchFeedback();
+    } catch (error) {
+      console.error("Lỗi khi thích phản hồi:", error);
+      toast.error("Thao tác thất bại");
+    }
+  };
+
+  // dislike feedback
+  const handleDislikeFeedback = async (feedbackId) => {
+    if (!userId) {
+      toast.error("Bạn cần đăng nhập để thực hiện thao tác này");
+      return;
+    }
+    try {
+      await FeedbackService.dislikeFeedback(feedbackId, userId);
+      // Cập nhật lại danh sách feedback
+      await fetchFeedback();
+    } catch (error) {
+      console.error("Lỗi khi không thích phản hồi:", error);
+      toast.error("Thao tác thất bại");
     }
   };
 
@@ -476,7 +550,7 @@ export default function WatchPage() {
       antiCapCleanupRef.current = null;
       try {
         p.dispose();
-      } catch {}
+      } catch { }
       playerRef.current = null;
     };
   }, [gate.status]); // Trigger khi gate status thay đổi
@@ -1074,31 +1148,21 @@ export default function WatchPage() {
 
             <div className="container mt-4 comments-top">
               {comments.map((fb) => (
-                <div key={fb.feedbackId ?? fb.id} className="list-group-item text-white mb-3 mt-4">
-                  <div className="d-flex align-items-start mb-2 glassmorphism border-0">
-                    <img
-                      src={fb.avatarUrl || default_avatar}
-                      alt={fb.userId}
-                      className="rounded-circle me-3 flex-shrink-0"
-                      width="42"
-                      height="42"
-                    />
-                    <div className="flex-grow-1 min-w-0">
-                      <div className="fw-bold text-truncate">
-                        {fb.userName || "Ẩn danh"}
-                        <small className="text-secondary ms-2">{dayjs(fb.createdAt).fromNow()}</small>
-                      </div>
-                      <p
-                        className="mb-0 text-break"
-                        style={{ whiteSpace: "normal", wordBreak: "break-word", overflowWrap: "anywhere" }}
-                      >
-                        {fb.content}
-                      </p>
-                    </div>
-                  </div>
-                  <hr />
-                </div>
+                console.log(fb),
+                <FeedbackItem
+                  key={fb.feedbackId}
+                  fb={fb}
+                  userId={userId}
+                  replyTo={replyTo}
+                  replyContent={replyContent}
+                  setReplyContent={setReplyContent}
+                  setReplyTo={setReplyTo}
+                  handleLikeFeedback={handleLikeFeedback}
+                  handleDislikeFeedback={handleDislikeFeedback}
+                  handleSendReply={handleSendReply}
+                />
               ))}
+
               {comments.length === 0 && (
                 <div className="text-secondary text-center py-3">Chưa có bình luận nào</div>
               )}
