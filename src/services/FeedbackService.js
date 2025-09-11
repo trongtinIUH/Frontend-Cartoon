@@ -22,6 +22,22 @@ const FeedbackService = {
         const response = await axiosInstance.post(API_BASE_URL, feedbackData);
         return response.data;
     },
+    // like feedback
+    likeFeedback: async (feedbackId, userId) => {
+        const response = await axiosInstance.post(
+            `${API_BASE_URL}/like/${feedbackId}?userId=${userId}`
+        );
+        return response.data;
+    },
+
+    // dislike feedback
+    dislikeFeedback: async (feedbackId, userId) => {
+        const response = await axiosInstance.post(
+            `${API_BASE_URL}/dislike/${feedbackId}?userId=${userId}`
+        );
+        return response.data;
+    }
+
 };
 
 export default FeedbackService;

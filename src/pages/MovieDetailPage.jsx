@@ -17,6 +17,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
 import WishlistService from "../services/WishlistService";
 import { createSecureWatchUrl } from "../utils/urlUtils";
+import { buildFeedbackTree, FeedbackItem } from "../components/FeedbackItem";
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
@@ -34,6 +35,8 @@ const MovieDetailPage = () => {
   const [ratings, setRatings] = useState([]); // danh sách rating của phim
   const [tab, setTab] = useState("episodes");
   const [comment, setComment] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
+  const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [comments, setComments] = useState([]);
   const [page, setPage] = useState(0);
@@ -221,7 +224,7 @@ const MovieDetailPage = () => {
     if (!id) return;
     try {
       const { items, totalPages: tp } = await FeedbackService.getListFeedbackByIdMovie(id, page, size);
-      setComments(items);
+      setComments(buildFeedbackTree(items));
       setTotalPages(tp || 1);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu phản hồi:", error);
@@ -266,6 +269,25 @@ const MovieDetailPage = () => {
 
   const pageItems = React.useMemo(() => getPageItems(totalPages, page, 1), [totalPages, page]);
 
+  const handleSendReply = async (parentFb) => {
+    try {
+      const payload = {
+        userId,
+        movieId: id,
+        content: replyContent,
+        parentFeedbackId: parentFb.feedbackId,
+      };
+      await FeedbackService.submitFeedback(payload);
+      toast.success("Trả lời thành công!");
+      setReplyContent("");
+      setReplyTo(null);
+      await fetchFeedback();
+    } catch (err) {
+      console.error(err);
+      toast.error("Gửi trả lời thất bại");
+    }
+  };
+
   // tạo feedback
   const handleFeedbackSubmit = async () => {
     if (!comment.trim()) {
@@ -283,24 +305,56 @@ const MovieDetailPage = () => {
       return;
     }
 
-    console.log("Submitting feedback:", { userId, movieId: id, content: comment });
-
     setSubmitting(true);
     try {
       const payload = {
         userId,
         movieId: id,
-        content: comment
+        content: comment,
+        parentFeedbackId: replyTo ? replyTo.feedbackId : null
       };
       await FeedbackService.submitFeedback(payload);
       toast.success("Gửi bình luận thành công!");
       setComment("");
+      setReplyTo(null);
       await fetchFeedback();
     } catch (error) {
       console.error(error);
       toast.error("Gửi bình luận thất bại");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // like feedback
+  const handleLikeFeedback = async (feedbackId) => {
+    if (!userId) {
+      toast.error("Bạn cần đăng nhập để thực hiện thao tác này");
+      return;
+    }
+    try {
+      await FeedbackService.likeFeedback(feedbackId, userId);
+      // Cập nhật lại danh sách feedback
+      await fetchFeedback();
+    } catch (error) {
+      console.error("Lỗi khi thích phản hồi:", error);
+      toast.error("Thao tác thất bại");
+    }
+  };
+
+  // dislike feedback
+  const handleDislikeFeedback = async (feedbackId) => {
+    if (!userId) {
+      toast.error("Bạn cần đăng nhập để thực hiện thao tác này");
+      return;
+    }
+    try {
+      await FeedbackService.dislikeFeedback(feedbackId, userId);
+      // Cập nhật lại danh sách feedback
+      await fetchFeedback();
+    } catch (error) {
+      console.error("Lỗi khi không thích phản hồi:", error);
+      toast.error("Thao tác thất bại");
     }
   };
 
@@ -767,36 +821,22 @@ const MovieDetailPage = () => {
                     </div>
                   </div>
                 </div>
-
                 {/* Danh sách bình luận */}
                 <div className="container mt-4 comments-top">
                   {comments.map((fb) => (
-                    <div key={fb.feedbackId ?? fb.id} className="list-group-item text-white mb-3 mt-4">
-                      <div className="d-flex align-items-start mb-2 glassmorphism border-0">
-                        <img
-                          src={fb.avatarUrl || default_avatar}
-                          alt={fb.userId}
-                          className="rounded-circle me-3 flex-shrink-0"
-                          width="42" height="42"
-                        />
-                        <div className="flex-grow-1 min-w-0" style={{ minWidth: 0 }}>
-                          <div className="fw-bold text-truncate">
-                            {fb.userName || "Ẩn danh"}
-                            <small className="text-secondary ms-2">{dayjs(fb.createdAt).fromNow()}</small>
-                          </div>
-                          <p className="mb-0 text-break" style={{ whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                            {fb.content}
-                          </p>
-                          {/* Action buttons */}
-                          <div className="align-items-center gap-3 mt-2 small">
-                           <i className="fa-regular fa-thumbs-up me-3" role="button" title="Thích"></i>
-                           <i className="fa-regular fa-thumbs-down me-3" role="button" title="Không thích"></i>
-                           <i className="fa-solid fa-reply" role="button" title="Trả lời"></i>
-                          </div>
-                        </div>
-                      </div>
-                      <hr />
-                    </div>
+                    console.log(fb),
+                    <FeedbackItem
+                      key={fb.feedbackId}
+                      fb={fb}
+                      userId={userId}
+                      replyTo={replyTo}
+                      replyContent={replyContent}
+                      setReplyContent={setReplyContent}
+                      setReplyTo={setReplyTo}
+                      handleLikeFeedback={handleLikeFeedback}
+                      handleDislikeFeedback={handleDislikeFeedback}
+                      handleSendReply={handleSendReply}
+                    />
                   ))}
                   {comments.length === 0 && (
                     <div className="text-secondary text-center py-3">Chưa có bình luận nào</div>
