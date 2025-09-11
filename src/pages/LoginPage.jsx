@@ -49,10 +49,24 @@ const LoginPage = () => {
             });
 
             if (response && response.idToken) {
-                const { idToken, userAttributes, my_user } = response;
+                // BE mới trả về: idToken, accessToken, refeshToken, expiresIn, userAttributes, my_user, username
+                const { 
+                    idToken, 
+                    accessToken, 
+                    refeshToken, 
+                    expiresIn, 
+                    userAttributes, 
+                    my_user, 
+                    username 
+                } = response;
+                
                 login({
-                    username: formattedPhone,
+                    username: username || formattedPhone, // Sử dụng username từ BE
                     idToken,
+                    accessToken,
+                    refeshToken, // Giữ tên như BE (có typo)
+                    refreshToken: refeshToken, // Thêm bản đúng để backward compatible
+                    expiresIn,
                     userAttributes,
                     my_user,
                     lastLoginTime: Date.now(),
