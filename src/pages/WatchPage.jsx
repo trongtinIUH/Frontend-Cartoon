@@ -82,6 +82,18 @@ export default function WatchPage() {
   // ✅ Gate kiểm tra quyền VIP
   const [gate, setGate] = useState({ checking: true, allowed: false, message: "" });
 
+  // ✅ Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []); // Empty dependency array means this runs once on mount
+
+  // ✅ Also scroll to top when episode changes or data loading completes
+  useEffect(() => {
+    if (currentEpisode?.episodeId && !dataLoading) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [currentEpisode?.episodeId, dataLoading]);
+
   // -------- computed
   const totalRatings = ratings.length;
   const avgRating = totalRatings

@@ -414,6 +414,32 @@ a.movie-suggestion-card { text-decoration: none; color: inherit; }
   color: #374151; 
 }
 
+.voucher-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.voucher-code {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.voucher-code:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(238, 90, 36, 0.3);
+}
+
+.voucher-code:active {
+  transform: translateY(0);
+}
+
 .promo-note { 
   margin-top: 6px; 
   font-size: 12px; 

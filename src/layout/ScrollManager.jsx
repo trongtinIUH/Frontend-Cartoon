@@ -11,9 +11,18 @@ export default function ScrollManager() {
     return () => { window.history.scrollRestoration = prev; };
   }, []);
 
-  // mỗi lần đổi route -> lên đầu trang
+  // mỗi lần đổi route -> lên đầu trang với delay để đảm bảo component đã render
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    // Sử dụng setTimeout để đảm bảo DOM đã được render hoàn toàn
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    };
+    
+    // Scroll ngay lập tức
+    scrollToTop();
+    
+    // Và cũng scroll sau khi render (backup)
+    setTimeout(scrollToTop, 100);
   }, [location.pathname, location.search]);
 
   return null;

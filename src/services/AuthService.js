@@ -1,16 +1,20 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8080/auth';
-const storageKey = 'auth_data';
+const storageKey = 'my_user';
 
 const AuthService = {
-    // Local storage helpers
+    // Local storage helpers - sử dụng my_user thay vì auth_data
   setAuth: (data) => localStorage.setItem(storageKey, JSON.stringify(data)),
   getAuth: () => {
     const raw = localStorage.getItem(storageKey);
     return raw ? JSON.parse(raw) : null;
   },
-  clearAuth: () => localStorage.removeItem(storageKey),
+  clearAuth: () => {
+    localStorage.removeItem(storageKey);
+    // Cleanup auth_data cũ nếu tồn tại
+    localStorage.removeItem('auth_data');
+  },
     post: async (url, data) => {
         try {
             const response = await axios.post(`${API_BASE_URL}${url}`, data);

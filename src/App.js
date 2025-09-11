@@ -19,6 +19,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DashboardPage from './pages/admin/DashboardPage';
 import MovieManagementPage from './pages/admin/MovieManagementPage';
+// Cleanup auth data cũ
+import './utils/authCleanup';
 import AuthorManagementPage from './pages/admin/AuthorManagementPage';
 import PaymentPage from './pages/PaymentPage';
 import PurchaseHistoryPage from './pages/PurchaseHistoryPage';

@@ -13,14 +13,7 @@ export const AuthProvider = ({ children }) => {
     // Kiểm tra auth state khi component mount
     useEffect(() => {
         const checkAuthState = () => {
-            // Ưu tiên check AuthService trước
-            const authData = AuthService.getAuth();
-            if (authData?.accessToken) {
-                setMyUser(authData);
-                return;
-            }
-
-            // Fallback: check localStorage cũ
+            // Chỉ sử dụng my_user
             const storedUser = localStorage.getItem('my_user');
             if (storedUser) {
                 try {
@@ -33,13 +26,18 @@ export const AuthProvider = ({ children }) => {
             } else {
                 setMyUser(null);
             }
+            
+            // Cleanup auth_data cũ nếu tồn tại
+            if (localStorage.getItem('auth_data')) {
+                localStorage.removeItem('auth_data');
+            }
         };
 
         checkAuthState();
 
         // Listen for storage changes (for multi-tab sync)
         const handleStorageChange = (event) => {
-            if (event.key === 'auth_data' || event.key === 'my_user') {
+            if (event.key === 'my_user') {
                 checkAuthState();
             }
         };
@@ -50,18 +48,18 @@ export const AuthProvider = ({ children }) => {
 
     // Hàm login để lưu thông tin vào context và localStorage
     const login = (userData, callback) => {
-        // Nếu userData có accessToken, lưu vào AuthService
-        if (userData.accessToken) {
-            AuthService.setAuth(userData);
-        }
-        
         setMyUser(userData);
         
-        // Backward compatibility: lưu vào localStorage cũ
-        localStorage.setItem('idToken', userData.idToken);
+        // Chỉ lưu vào my_user
         localStorage.setItem('my_user', JSON.stringify(userData));
+        localStorage.setItem('idToken', userData.idToken);
         localStorage.setItem('phoneNumber', userData.username || userData.my_user?.phoneNumber);
         localStorage.setItem('userAttributes', JSON.stringify(userData.userAttributes));
+
+        // Cleanup auth_data cũ nếu tồn tại
+        if (localStorage.getItem('auth_data')) {
+            localStorage.removeItem('auth_data');
+        }
 
         if (callback) {
             callback();
@@ -72,12 +70,10 @@ export const AuthProvider = ({ children }) => {
     const logout = (callback) => {
         setMyUser(null);
         
-        // Clear AuthService
-        AuthService.clearAuth();
-        
-        // Clear localStorage cũ
-        localStorage.removeItem('idToken');
+        // Clear tất cả auth data
         localStorage.removeItem('my_user');
+        localStorage.removeItem('auth_data'); // cleanup auth_data cũ
+        localStorage.removeItem('idToken');
         localStorage.removeItem('phoneNumber');
         localStorage.removeItem('userAttributes');
 
@@ -95,12 +91,7 @@ export const AuthProvider = ({ children }) => {
             
             const updatedUser = { ...prevUser, ...updatedUserData };
             
-            // Cập nhật AuthService nếu có accessToken
-            if (updatedUser.accessToken) {
-                AuthService.setAuth(updatedUser);
-            }
-            
-            // Backward compatibility
+            // Chỉ lưu vào my_user
             localStorage.setItem('my_user', JSON.stringify(updatedUser));
             
             return updatedUser;

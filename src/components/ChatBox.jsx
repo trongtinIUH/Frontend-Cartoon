@@ -44,9 +44,11 @@ const ChatBox = ({ currentMovieId }) => {
             showPromos: res.showPromos
           }]);
         } catch(e) {
+          console.error("❌ Welcome API failed:", e);
+          const errorMsg = e.message || "Không thể kết nối tới server chat";
           const welcomeText = MyUser 
-            ? `Chào ${MyUser?.my_user?.userName || MyUser?.username}! Hãy hỏi mình để được gợi ý phim nhé.`
-            : "Chào bạn! Hãy hỏi mình để được gợi ý phim nhé. (Giới hạn 3 câu hỏi cho khách)";
+            ? `Chào ${MyUser?.my_user?.userName || MyUser?.username}! ${errorMsg}`
+            : `Chào bạn! ${errorMsg} (Giới hạn 3 câu hỏi cho khách)`;
           setChatLog([{ role: "assistant", content: welcomeText }]);
         }
       })();
@@ -97,8 +99,13 @@ const ChatBox = ({ currentMovieId }) => {
         showPromos: !!res.showPromos
       };
       setChatLog((prev) => [...prev, aiMsg]);
-    } catch {
-      setChatLog((prev) => [...prev, { role: "assistant", content: "❌ Lỗi khi gọi AI!" }]);
+    } catch (error) {
+      console.error("❌ Chat error:", error);
+      const errorMsg = error.message || "Lỗi không xác định";
+      setChatLog((prev) => [...prev, { 
+        role: "assistant", 
+        content: `❌ ${errorMsg}` 
+      }]);
     } finally { setLoading(false); }
   };
 
@@ -209,12 +216,26 @@ const ChatBox = ({ currentMovieId }) => {
                 <div className="promo-grid">
                   {msg.promos.map((p, i) => (
                     <div key={p.promotionId + i} className="promo-card">
-                      <div className="promo-title">{p.title}</div>
+                      <div className="promo-title">{p.promotionName || p.title}</div>
                       <div className="promo-meta">
                         <div><b>Loại:</b> {p.type}</div>
-                        {p.voucherCode && <div><b>Voucher:</b> {p.voucherCode}</div>}
+                        {p.voucherCode && (
+                          <div className="voucher-code-row">
+                            <b>Mã:</b> 
+                            <span 
+                              className="voucher-code" 
+                              onClick={() => {
+                                navigator.clipboard.writeText(p.voucherCode);
+                                alert(`Đã sao chép mã: ${p.voucherCode}`);
+                              }}
+                              title="Click để copy mã"
+                            >
+                              {p.voucherCode}
+                            </span>
+                          </div>
+                        )}
                         {p.discountPercent != null && <div><b>Giảm:</b> {p.discountPercent}%</div>}
-                        {p.maxDiscountAmount != null && <div><b>Tối đa:</b> {p.maxDiscountAmount}</div>}
+                        {p.maxDiscountAmount != null && <div><b>Tối đa:</b> {p.maxDiscountAmount.toLocaleString()}đ</div>}
                         <div><b>HSD:</b> {p.endDate}</div>
                       </div>
                       {p.note && <div className="promo-note">{p.note}</div>}
