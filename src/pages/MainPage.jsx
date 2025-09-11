@@ -70,7 +70,25 @@ const MainPage = () => {
             const poster =
               movie.thumbnailUrl ||
               "https://placehold.co/400x600/0b1220/8aa0b6?text=No+Poster";
-            const isPremium = (movie.minVipLevel || "FREE") !== "FREE";
+            const minVipLevel = movie.minVipLevel || "FREE";
+            
+            // Xác định badge dựa trên gói VIP
+            const getBadgeInfo = (level) => {
+              switch(level) {
+                case "NO_ADS":
+                  return { text: "AD-FREE", class: "no-ads-badge" };
+                case "PREMIUM":
+                  return { text: "PREMIUM", class: "premium-badge" };
+                case "MEGA_PLUS":
+                  return { text: "MEGA+", class: "mega-plus-badge" };
+                case "COMBO_PREMIUM_MEGA_PLUS":
+                  return { text: "COMBO", class: "combo-badge" };
+                default:
+                  return null;
+              }
+            };
+            
+            const badgeInfo = getBadgeInfo(minVipLevel);
 
             return (
               <Link
@@ -90,7 +108,11 @@ const MainPage = () => {
                         "https://placehold.co/400x600/0b1220/8aa0b6?text=No+Poster";
                     }}
                   />
-                  {isPremium && <span className="vip-badge">P.ĐỀ</span>}
+                  {badgeInfo && (
+                    <span className={`vip-badge ${badgeInfo.class}`}>
+                      {badgeInfo.text}
+                    </span>
+                  )}
                 </div>
 
                 <div className="poster-meta">

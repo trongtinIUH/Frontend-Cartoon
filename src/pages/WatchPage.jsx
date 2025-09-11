@@ -78,6 +78,9 @@ export default function WatchPage() {
   const [dataLoading, setDataLoading] = useState(!episodeFromState || !movieFromState);
   const [suggestedMovies, setSuggestedMovies] = useState([]);
 
+  // ✅ Gate kiểm tra quyền VIP
+  const [gate, setGate] = useState({ checking: true, allowed: false, message: "" });
+
   // -------- computed
   const totalRatings = ratings.length;
   const avgRating = totalRatings
@@ -95,12 +98,63 @@ export default function WatchPage() {
     if (state?.seasons?.length) setSeasons(state.seasons);
   }, [state?.episode?.episodeId, state?.movie?.movieId]);
 
+  // ✅ Kiểm tra quyền VIP khi có currentMovie
+  useEffect(() => {
+    (async () => {
+      if (!currentMovie?.movieId) return;
+      
+      // ✅ Kiểm tra quyền với BE cho mọi phim
+      try {
+        const res = await MovieService.canWatch(currentMovie.movieId, userId);
+        console.log("VIP check result:", res); // Debug log
+        console.log("Current movie minVipLevel:", currentMovie.minVipLevel);
+        console.log("User ID:", userId);
+        
+        if (!res.allowed) {
+          console.log("❌ VIP check failed:", res.message);
+          setGate({ 
+            status: 'not_allowed', 
+            message: res.message || "Bạn chưa đủ quyền xem phim này." 
+          });
+        } else {
+          console.log("✅ VIP check passed");
+          // Double check: nếu phim cần VIP nhưng user chưa login
+          const required = currentMovie.minVipLevel || "FREE";
+          if (required !== "FREE" && !userId) {
+            console.log("❌ Client-side check failed: no user login for VIP content");
+            setGate({ 
+              status: 'not_allowed', 
+              message: `Phim này yêu cầu gói ${required}. Vui lòng đăng nhập và nâng cấp gói VIP để xem.` 
+            });
+          } else {
+            console.log("✅ All checks passed - allowing video");
+            setGate({ status: 'allowed', message: "" });
+          }
+        }
+      } catch (error) {
+        console.error("VIP check error:", error);
+        // Fallback: check client-side nếu BE lỗi
+        const required = currentMovie.minVipLevel || "FREE";
+        if (required !== "FREE" && !userId) {
+          setGate({ 
+            status: 'not_allowed', 
+            message: `Phim này yêu cầu gói ${required}. Vui lòng đăng nhập và nâng cấp gói VIP để xem.` 
+          });
+        } else {
+          setGate({ status: 'allowed', message: "" });
+        }
+      }
+    })();
+  }, [currentMovie?.movieId, userId]);
+
   // -------- fetch bằng URL khi không có state
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
       const targetMovieId = params.movieId || urlData?.movieId;
       const targetEpisodeId = params.episodeId || urlData?.episodeId;
+
+      console.log("Loading episode data:", { targetMovieId, targetEpisodeId });
 
       if (targetMovieId && targetEpisodeId) {
         setDataLoading(true);
@@ -111,6 +165,7 @@ export default function WatchPage() {
           ]);
           if (cancelled) return;
 
+          console.log("Loaded episode data:", { epData, mvData });
           setCurrentEpisode(epData);
           setCurrentMovie(mvData?.movie || mvData);
 
@@ -382,10 +437,14 @@ export default function WatchPage() {
     return () => window.removeEventListener("resize", measure);
   }, []);
 
-  // -------- Init Video.js đúng 1 lần
+  // -------- Init Video.js KHI video element đã render (gate allowed)
   useEffect(() => {
-    if (!videoRef.current || playerRef.current) return;
+    // Chỉ init khi gate allowed và video element tồn tại
+    if (gate.status !== 'allowed' || !videoRef.current || playerRef.current) return;
 
+    console.log("Initializing video player...");
+    console.log("Video element exists:", !!videoRef.current);
+    
     const p = videojs(videoRef.current, {
       controls: true,
       autoplay: true,
@@ -397,11 +456,20 @@ export default function WatchPage() {
 
     p.hlsQualitySelector?.({ displayCurrentQuality: true });
 
+    // Event listeners for debugging
+    p.on('loadstart', () => console.log('Video: loadstart'));
+    p.on('loadeddata', () => console.log('Video: loadeddata'));
+    p.on('canplay', () => console.log('Video: canplay'));
+    p.on('play', () => console.log('Video: play'));
+    p.on('error', (e) => console.error('Video error:', e));
+
     // anti-capture
     antiCapCleanupRef.current?.();
     antiCapCleanupRef.current = initAntiCapture(p);
 
     playerRef.current = p;
+    
+    console.log("Video player initialized successfully:", p);
 
     return () => {
       antiCapCleanupRef.current?.();
@@ -411,19 +479,61 @@ export default function WatchPage() {
       } catch {}
       playerRef.current = null;
     };
-  }, []);
+  }, [gate.status]); // Trigger khi gate status thay đổi
 
-  // -------- Mỗi khi đổi tập: chỉ đổi source
+  // -------- Mỗi khi đổi tập: chỉ đổi source (chỉ khi gate allowed)
   useEffect(() => {
+    // Chỉ setup video khi gate đã cho phép
+    if (gate.status !== 'allowed') {
+      console.log("Waiting for gate check before video setup...");
+      return;
+    }
+
     const url = (currentEpisode || episodeFromState)?.videoUrl;
     const p = playerRef.current;
-    if (!p || !url) return;
+    
+    console.log("🎬 Video setup check:", {
+      gateStatus: gate.status,
+      currentEpisode,
+      episodeFromState,
+      url,
+      playerExists: !!p
+    });
+    
+    if (!url) {
+      console.error("❌ No video URL found!");
+      console.log("Episode data:", { currentEpisode, episodeFromState });
+      return;
+    }
+    
+    if (!p) {
+      console.error("❌ Video player not initialized!");
+      return;
+    }
 
+    console.log("🚀 Setting video source:", url);
+    
+    // Test URL trước khi set
+    fetch(url, { method: 'HEAD' })
+      .then(response => {
+        console.log("🔗 Video URL status:", response.status, response.statusText);
+        if (!response.ok) {
+          console.error("❌ Video URL not accessible:", response.status);
+        }
+      })
+      .catch(err => console.error("❌ Video URL fetch failed:", err));
+    
     p.pause();
     p.src({ src: url, type: "application/x-mpegURL" });
-    // p.load(); // mở nếu BE hay trả 204 khi đổi nhanh
-    p.play().catch(() => {});
-  }, [currentEpisode?.episodeId, episodeFromState?.episodeId]);
+    p.load(); // Force load the new source
+    
+    // Thử play sau khi load
+    setTimeout(() => {
+      p.play().catch((error) => {
+        console.error("❌ Video play failed:", error);
+      });
+    }, 500);
+  }, [currentEpisode?.episodeId, episodeFromState?.episodeId, gate.status]); // Thêm gate.status dependency
 
   // -------- Lắng nghe ended tách riêng, luôn thấy nextEp mới nhất
   useEffect(() => {
@@ -620,8 +730,96 @@ export default function WatchPage() {
         </h1>
       </div>
 
-      {/* PLAYER */}
-      <section className="player-wrap">
+      {/* VIP Gate Check */}
+      {gate.status === 'checking' && (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '400px',
+          flexDirection: 'column',
+          gap: '10px'
+        }}>
+          <div>Đang kiểm tra quyền truy cập...</div>
+          <div>⏳</div>
+        </div>
+      )}
+
+      {gate.status === 'not_allowed' && (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '400px',
+          flexDirection: 'column',
+          gap: '20px',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          border: '1px solid #ddd',
+          borderRadius: '12px',
+          margin: '20px',
+          padding: '40px',
+          color: 'white',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '48px' }}>�</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>
+            Nội dung VIP Premium
+          </div>
+          <div style={{ fontSize: '16px', lineHeight: '1.6', maxWidth: '500px' }}>
+            {gate.message}
+          </div>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
+            <button 
+              onClick={() => navigate('/buy-package')}
+              style={{
+                background: 'linear-gradient(45deg, #ff6b6b, #ee5a24)',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
+                transition: 'transform 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+            >
+              🚀 Nâng cấp VIP ngay
+            </button>
+            {!userId && (
+              <button 
+                onClick={() => navigate('/login')}
+                style={{
+                  background: 'transparent',
+                  color: 'white',
+                  border: '2px solid white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.background = 'white';
+                  e.target.style.color = '#667eea';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.color = 'white';
+                }}
+              >
+                🔑 Đăng nhập
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* PLAYER - only show when allowed */}
+      {gate.status === 'allowed' && (
+        <section className="player-wrap">
         <div
           ref={frameRef}
           className={`player-frame`}
@@ -719,6 +917,7 @@ export default function WatchPage() {
           )}
         </div>
       </section>
+      )}
 
       {/* MAIN CONTENT */}
       <div className="watch-grid">

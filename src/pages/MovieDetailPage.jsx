@@ -155,49 +155,69 @@ useEffect(() => {
 
 
 
+  // ✅ Helper kiểm tra quyền VIP trước khi xem
+  const checkAndGoWatch = async (ep) => {
+    if (!movie) return;
+
+    // Trailer thì cho xem luôn
+    if (movie.status === "UPCOMING") {
+      if (movie.trailerUrl) {
+        document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        toast.error("Phim sắp chiếu chưa có trailer.");
+      }
+      return;
+    }
+
+    // Phim FREE thì ai cũng được xem
+    const required = movie.minVipLevel || "FREE";
+    
+    // ✅ Kiểm tra quyền với BE
+    try {
+      const res = await MovieService.canWatch(movie.movieId, userId);
+      console.log("VIP check result:", res); // Debug log
+      if (!res.allowed) {
+        if (res.status === 404) {
+          toast.error("Phim không tồn tại hoặc đã bị gỡ.");
+        } else {
+          toast.info(res.message || "Bạn chưa đủ quyền xem phim này.");
+        }
+        return;
+      }
+    } catch (error) {
+      console.error("VIP check error:", error);
+      toast.error("Có lỗi khi kiểm tra quyền xem. Vui lòng thử lại.");
+      return;
+    }
+
+    // ✅ được phép: điều hướng như cũ
+    const secureUrl = createSecureWatchUrl(movie, ep);
+    navigate(secureUrl, { state: { episode: ep, movie, authors, episodes, seasons } });
+  };
+
 // Thay đổi navigate trong MovieDetailPage
 const handleWatch = (episode) => {
   console.log("handleWatch called with:", { movie, episode });
-  const secureUrl = createSecureWatchUrl(movie, episode);
-  console.log("Generated URL:", secureUrl);
-  navigate(secureUrl, { 
-    state: { episode, movie, authors, episodes, seasons } 
-  });
+  checkAndGoWatch(episode);
 };
 
 
   const handleWatchFirst = () => {
-  if (!movie) return;
-
-  // Nếu là phim sắp chiếu, chỉ hiển thị trailer
-  if (movie.status === "UPCOMING") {
-    if (!movie.trailerUrl) {
-      toast.error("Phim sắp chiếu chưa có trailer.");
+    if (!movie) return;
+    
+    if (!episodes?.length) {
+      if (movie.trailerUrl) {
+        toast.info("Chưa có tập phim, xem trailer bên dưới nhé.");
+        document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        toast.warn("Chưa có tập nào.");
+      }
       return;
     }
-    // Scroll đến trailer section
-    document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" });
-    return;
-  }
-
-  // Với phim đã ra mắt, vẫn có thể xem trailer nếu có
-  if (!episodes || episodes.length === 0) {
-    if (movie.trailerUrl) {
-      toast.info("Chưa có tập phim, bạn có thể xem trailer bên dưới.");
-      document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
-    toast.warn("Chưa có tập nào trong season này.");
-    return;
-  }
-  
-  console.log("handleWatchFirst called with:", { movie, firstEpisode: episodes[0] });
-  const secureUrl = createSecureWatchUrl(movie, episodes[0]);
-  console.log("Generated URL for first episode:", secureUrl);
-  navigate(secureUrl, { 
-    state: { episode: episodes[0], movie, seasons, episodes } 
-  });
-};
+    
+    // ✅ Sử dụng checkAndGoWatch thay vì navigate trực tiếp
+    checkAndGoWatch(episodes[0]);
+  };
 
 
   const handleClickTopMovie = async (mid) => {

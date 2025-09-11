@@ -236,7 +236,46 @@ const MovieService = {
         return res.data;
         },
 
-
+          // ✅ BE trả 200 nếu được, 403/404 nếu không.
+        canWatch: async (movieId, userId) => {
+            try {
+            console.log("Making VIP check with:", { movieId, userId }); // Debug log
+            
+            // Headers: chỉ gửi userId nếu có (FREE movies không cần)
+            const headers = {};
+            if (userId) {
+                headers.userId = userId;
+            }
+            
+            const res = await axiosInstance.get(`${API_BASE_URL}/${movieId}/watch`, { headers });
+            console.log("VIP check success:", res.data); // Debug log
+            
+            return { 
+                allowed: res.data.allowed || true, 
+                data: res.data 
+            };
+            } catch (err) {
+            console.log("VIP check error:", err.response); // Debug log
+            const status = err?.response?.status;
+            
+            // BE trả JSON error: { message: "...", status: 403, ... }
+            let message = "Không được phép xem.";
+            if (err?.response?.data) {
+                const errorData = err.response.data;
+                if (typeof errorData === 'object' && errorData.message) {
+                    message = errorData.message;
+                } else if (typeof errorData === 'string') {
+                    message = errorData;
+                }
+            }
+            
+            return { 
+                allowed: false, 
+                status, 
+                message 
+            };
+            }
+        },
 }
 
 export default MovieService;
