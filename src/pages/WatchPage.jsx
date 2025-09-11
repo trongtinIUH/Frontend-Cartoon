@@ -257,7 +257,8 @@ export default function WatchPage() {
           setSelectedSeason(first);
           if (first?.seasonId) {
             const eps = await EpisodeService.getEpisodesBySeasonId(first.seasonId);
-            setEpsOfSeason(Array.isArray(eps) ? eps : []);
+            const episodeArray = Array.isArray(eps) ? eps : [];
+            setEpsOfSeason(episodeArray);
           } else {
             setEpsOfSeason([]);
           }
@@ -459,12 +460,14 @@ export default function WatchPage() {
     }
   };
 
-  // -------- nextEp
+  // -------- nextEp với preloading
   const nextEp = useMemo(() => {
     const cur = currentEpisode || episodeFromState;
     if (!cur || !epsOfSeason?.length) return null;
     const idx = epsOfSeason.findIndex((e) => e.episodeId === cur.episodeId);
-    return idx >= 0 && idx + 1 < epsOfSeason.length ? epsOfSeason[idx + 1] : null;
+    const next = idx >= 0 && idx + 1 < epsOfSeason.length ? epsOfSeason[idx + 1] : null;
+    
+    return next;
   }, [currentEpisode, episodeFromState, epsOfSeason]);
 
   // -------- prevEp
@@ -479,6 +482,9 @@ export default function WatchPage() {
   const playerRef = useRef(null);
   const videoRef = useRef(null);
   const antiCapCleanupRef = useRef(null);
+  
+  // CloudFront optimized URL state
+  const [optimizedUrl, setOptimizedUrl] = useState(null);
 
   const frameRef = useRef(null);
   const [playerH, setPlayerH] = useState(0);
@@ -575,18 +581,18 @@ export default function WatchPage() {
       return;
     }
 
-    const url = (currentEpisode || episodeFromState)?.videoUrl;
+    const originalUrl = (currentEpisode || episodeFromState)?.videoUrl;
     const p = playerRef.current;
     
     console.log("🎬 Video setup check:", {
       gateStatus: gate.status,
       currentEpisode,
       episodeFromState,
-      url,
+      originalUrl,
       playerExists: !!p
     });
     
-    if (!url) {
+    if (!originalUrl) {
       console.error("❌ No video URL found!");
       console.log("Episode data:", { currentEpisode, episodeFromState });
       return;
@@ -597,10 +603,13 @@ export default function WatchPage() {
       return;
     }
 
-    console.log("🚀 Setting video source:", url);
+    // Use video URL directly 
+    setOptimizedUrl(originalUrl); // Update state
+    
+    console.log("🚀 Setting video source:", originalUrl);
     
     // Test URL trước khi set
-    fetch(url, { method: 'HEAD' })
+    fetch(originalUrl, { method: 'HEAD' })
       .then(response => {
         console.log("🔗 Video URL status:", response.status, response.statusText);
         if (!response.ok) {
@@ -610,7 +619,7 @@ export default function WatchPage() {
       .catch(err => console.error("❌ Video URL fetch failed:", err));
     
     p.pause();
-    p.src({ src: url, type: "application/x-mpegURL" });
+    p.src({ src: originalUrl, type: "application/x-mpegURL" });
     p.load(); // Force load the new source
     
     // Thử play sau khi load
