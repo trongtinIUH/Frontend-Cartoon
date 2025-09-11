@@ -361,12 +361,39 @@
 .form-control{
   background: rgba(255,255,255,.08) !important;
   border:1px solid rgba(255,255,255,.14) !important;
-  color:#eef3ff !important; height:44px; border-radius:12px !important;
+  color:#ffffff !important; 
+  height:44px; 
+  border-radius:12px !important;
+  font-weight: 500 !important;
 }
-.form-control::placeholder{ color:#cfd7ea !important; opacity:.85; }
+.form-control::placeholder{ 
+  color:#cfd7ea !important; 
+  opacity:.85; 
+}
 .form-control:focus{
   box-shadow:0 0 0 3px rgba(43,192,228,.25) !important;
   border-color:#6bd6ff !important;
+  color:#ffffff !important;
+}
+
+/* Đảm bảo input text luôn màu trắng */
+input.form-control {
+  color: #ffffff !important;
+}
+input.form-control:focus {
+  color: #ffffff !important;
+}
+
+/* Specific cho login page */
+.login-content input[type="text"],
+.login-content input[type="password"] {
+  color: #ffffff !important;
+  background: rgba(255,255,255,.08) !important;
+}
+
+.login-content input[type="text"]:focus,
+.login-content input[type="password"]:focus {
+  color: #ffffff !important;
 }
 
 /* Subtitle fade-in nhẹ */
@@ -377,4 +404,19 @@
 @media (max-width:576px){
   .auth-card{ border-radius:18px !important; }
   .auth-heading{ font-size:30px; }
+}
+
+/* Force white text for all login inputs - highest priority */
+.login-content .form-control,
+.login-content input,
+.auth-card input {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.login-content .form-control:focus,
+.login-content input:focus,
+.auth-card input:focus {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
