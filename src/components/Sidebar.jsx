@@ -112,12 +112,12 @@ const Sidebar = () => {
 
       <li className="nav-item">
         <NavLink
-          to="/admin-episode"
+          to="/admin-author"
           className={({ isActive }) =>
             `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
           }
         >
-          <i className="fas fa-th me-2" /> <span>Quản lý tập phim</span>
+          <i className="fas fa-user-tie me-2" /> <span>Quản lý tác giả/diễn viên</span>
         </NavLink>
       </li>
 

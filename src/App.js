@@ -19,6 +19,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DashboardPage from './pages/admin/DashboardPage';
 import MovieManagementPage from './pages/admin/MovieManagementPage';
+import AuthorManagementPage from './pages/admin/AuthorManagementPage';
 import PaymentPage from './pages/PaymentPage';
 import PurchaseHistoryPage from './pages/PurchaseHistoryPage';
 import BrowseMoviesPage from "./pages/BrowseMoviesPage";
@@ -70,6 +71,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/manage-movie" element={<ManageMoviePage />} />
                     <Route path="/tim-kiem/:title" element={<SearchResultPage />} />
                     <Route path="/danh-muc/:kind/:value" element={<BrowseMoviesPage />} />
+                    <Route path="/browse/:kind/:value" element={<BrowseMoviesPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
                     <Route path="/favorites" element={<FavoritesPage />} />
@@ -87,6 +89,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/admin-dashboard" element={<DashboardPage />} />
                     <Route path="/admin-movie" element={<MovieManagementPage />} />
                     <Route path="/admin-promotion" element={<PromotionManagementPage />} />
+                    <Route path="/admin-author" element={<AuthorManagementPage />} />
                   </Route>
                 </Routes>
 

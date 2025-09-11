@@ -8,20 +8,44 @@ import "swiper/css/navigation";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/CountryMoviesSection.css";
 
-const CountryMoviesSection = ({ title, country, link, gradient }) => {
+const CountryMoviesSection = ({ title, country, countries, link, gradient }) => {
   const [movies, setMovies] = useState([]);
 
   useEffect(() => {
-    MovieService.getMoviesByCountry(country)
-      .then((res) => {
-        if (Array.isArray(res)) {
-          setMovies(res);
-        } else {
-          setMovies([]);
+    const fetchMovies = async () => {
+      try {
+        let allMovies = [];
+        
+        // Nếu có countries array, lấy phim từ nhiều quốc gia
+        if (countries && Array.isArray(countries)) {
+          const promises = countries.map(countryName => 
+            MovieService.getMoviesByCountry(countryName)
+          );
+          const results = await Promise.all(promises);
+          
+          // Gộp tất cả kết quả lại
+          allMovies = results.flat().filter(movie => movie);
+          
+          // Loại bỏ trùng lặp dựa trên movieId
+          const uniqueMovies = allMovies.filter((movie, index, self) => 
+            index === self.findIndex(m => m.movieId === movie.movieId)
+          );
+          
+          setMovies(uniqueMovies);
+        } 
+        // Nếu chỉ có 1 country, sử dụng logic cũ
+        else if (country) {
+          const res = await MovieService.getMoviesByCountry(country);
+          setMovies(Array.isArray(res) ? res : []);
         }
-      })
-      .catch(() => setMovies([]));
-  }, [country]);
+      } catch (error) {
+        console.error("Error fetching movies:", error);
+        setMovies([]);
+      }
+    };
+
+    fetchMovies();
+  }, [country, countries]);
 
   return (
     <div className="country-movies-section mb-4">
@@ -59,8 +83,8 @@ const CountryMoviesSection = ({ title, country, link, gradient }) => {
               1200: { slidesPerView: 6 }
             }}
             navigation={{
-              nextEl: `.swiper-button-next-${country}`,
-              prevEl: `.swiper-button-prev-${country}`,
+              nextEl: `.swiper-button-next-${title.replace(/\s+/g, '-')}`,
+              prevEl: `.swiper-button-prev-${title.replace(/\s+/g, '-')}`,
             }}
             className="movies-swiper"
           >
@@ -111,10 +135,10 @@ const CountryMoviesSection = ({ title, country, link, gradient }) => {
           </Swiper>
 
           {/* Custom Navigation Buttons */}
-          <div className={`swiper-button-prev-${country} swiper-button-prev-custom`}>
+          <div className={`swiper-button-prev-${title.replace(/\s+/g, '-')} swiper-button-prev-custom`}>
             <i className="fas fa-chevron-left"></i>
           </div>
-          <div className={`swiper-button-next-${country} swiper-button-next-custom`}>
+          <div className={`swiper-button-next-${title.replace(/\s+/g, '-')} swiper-button-next-custom`}>
             <i className="fas fa-chevron-right"></i>
           </div>
         </div>

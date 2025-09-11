@@ -2,7 +2,9 @@
     background: #0F2027;  /* fallback for old browsers */
     background: -webkit-linear-gradient(to right, #2C5364, #203A43, #0F2027);  /* Chrome 10-25, Safari 5.1-6 */
     background: linear-gradient(to right, #2C5364, #203A43, #0F2027); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-  
+    display: flex;        /* Đảm bảo sử dụng flexbox */
+    align-items: center;  /* Căn giữa theo chiều dọc */
+    padding: 15px 0;      /* Thêm padding đồng đều */
 }
 .country-movies-section {
   padding: 0 20px;
@@ -11,9 +13,11 @@
 
 /* Header bên trái */
 .country-header-left {
-  min-width: 200px;
-  max-width: 250px;
+  width: 220px;         /* Cố định chiều rộng để đồng đều */
+  min-width: 220px;     /* Đảm bảo không thu hẹp */
+  max-width: 220px;     /* Đảm bảo không mở rộng */
   text-align: left;
+  flex-shrink: 0;       /* Không cho phép thu nhỏ */
 }
 
 .country-title { 
@@ -58,7 +62,7 @@
   width: 100%;       /* Responsive width */
   background: #283048;  /* fallback for old browsers */
 background: -webkit-linear-gradient(to right, #859398, #283048);  /* Chrome 10-25, Safari 5.1-6 */
-background: linear-gradient(to right, #859398, #283048); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+background: linear-gradient(to right, #505c61, #283048); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 
 }
 
@@ -176,6 +180,7 @@ background: linear-gradient(to right, #859398, #283048); /* W3C, IE 10+/ Edge, F
   line-height: 1.2;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -186,6 +191,7 @@ background: linear-gradient(to right, #859398, #283048); /* W3C, IE 10+/ Edge, F
   margin-bottom: 0;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -241,6 +247,7 @@ background: linear-gradient(to right, #859398, #283048); /* W3C, IE 10+/ Edge, F
   }
   
   .country-header-left {
+    width: auto;         /* Trở về auto trên mobile */
     min-width: unset;
     max-width: unset;
     margin-bottom: 15px;

@@ -14,7 +14,7 @@ import "videojs-contrib-quality-levels";
 import "videojs-hls-quality-selector";
 
 import { Funnel } from "lucide-react";
-import { faHeart, faPlus, faFlag, faShareNodes, faCirclePlay } from "@fortawesome/free-solid-svg-icons";
+import { faHeart, faPlus, faFlag, faShareNodes, faCirclePlay, faEye } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import "../css/WatchPage.css";
@@ -31,6 +31,9 @@ import "dayjs/locale/vi";
 import { buildFeedbackTree, FeedbackItem } from "../components/FeedbackItem";
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
+
+
+
 
 export default function WatchPage() {
   const { state } = useLocation();
@@ -74,6 +77,7 @@ export default function WatchPage() {
   const [currentEpisode, setCurrentEpisode] = useState(episodeFromState);
   const [currentMovie, setCurrentMovie] = useState(movieFromState);
   const [dataLoading, setDataLoading] = useState(!episodeFromState || !movieFromState);
+  const [suggestedMovies, setSuggestedMovies] = useState([]);
 
   // -------- computed
   const totalRatings = ratings.length;
@@ -147,6 +151,20 @@ export default function WatchPage() {
       } catch { }
     })();
   }, [movieId, authors?.length]);
+
+  // -------- tải phim đề xuất (dùng BE)
+  useEffect(() => {
+    (async () => {
+      if (!movieId) return;
+      try {
+        const recs = await MovieService.getRecommendations(movieId, 6);
+        setSuggestedMovies(Array.isArray(recs) ? recs : []);
+      } catch (err) {
+        console.error("Error fetching recommendations:", err);
+        setSuggestedMovies([]);
+      }
+    })();
+  }, [movieId]);
 
   // -------- tải ratings
   useEffect(() => {
@@ -222,6 +240,8 @@ export default function WatchPage() {
       toast.error("Thao tác thất bại");
     }
   };
+
+
 
   // -------- Bình luận
   const [comment, setComment] = useState("");
@@ -380,6 +400,14 @@ export default function WatchPage() {
     return idx >= 0 && idx + 1 < epsOfSeason.length ? epsOfSeason[idx + 1] : null;
   }, [currentEpisode, episodeFromState, epsOfSeason]);
 
+  // -------- prevEp
+  const prevEp = useMemo(() => {
+    const cur = currentEpisode || episodeFromState;
+    if (!cur || !epsOfSeason?.length) return null;
+    const idx = epsOfSeason.findIndex(e => e.episodeId === cur.episodeId);
+    return idx > 0 ? epsOfSeason[idx - 1] : null;
+  }, [currentEpisode, episodeFromState, epsOfSeason]);
+
   // -------- Player refs & UI states
   const playerRef = useRef(null);
   const videoRef = useRef(null);
@@ -387,6 +415,28 @@ export default function WatchPage() {
 
   const frameRef = useRef(null);
   const [playerH, setPlayerH] = useState(0);
+
+  // refs cho nút trên control bar
+  const prevBtnRef = useRef(null);
+  const nextBtnRef = useRef(null);
+
+  // giữ “bản mới nhất” của prev/next để callback trong Video.js luôn đúng
+  const prevEpRef = useRef(null);
+  const nextEpRef = useRef(null);
+  useEffect(() => { prevEpRef.current = prevEp; nextEpRef.current = nextEp; }, [prevEp, nextEp]);
+
+  const endedHandlerRef = useRef(null);
+
+  const goToEp = (ep) => {
+    if (!ep) return;
+    const cm = currentMovie || movieFromState;
+    const url = createWatchUrl(cm, ep);
+    navigate(url, { state: { episode: ep, movie: cm, episodes: epsOfSeason, authors, seasons } });
+  };
+
+  const goPrev = () => goToEp(prevEpRef.current);
+  const goNext = () => goToEp(nextEpRef.current);
+
 
   const [isTheater, setIsTheater] = useState(false);
   const [autoNext, setAutoNext] = useState(true);
@@ -416,6 +466,7 @@ export default function WatchPage() {
       preload: "auto",
       fluid: true,
       responsive: true,
+      html5: { vhs: { overrideNative: false } },
     });
 
     p.hlsQualitySelector?.({ displayCurrentQuality: true });
@@ -453,7 +504,12 @@ export default function WatchPage() {
     const p = playerRef.current;
     if (!p) return;
 
-    const onEnded = () => {
+    // gỡ handler cũ (nếu có) trước khi gắn handler mới
+    if (endedHandlerRef.current) {
+      p.off('ended', endedHandlerRef.current);
+    }
+
+    const handler = () => {
       if (autoNext && nextEp) {
         const cm = currentMovie || movieFromState;
         const url = createWatchUrl(cm, nextEp);
@@ -463,10 +519,61 @@ export default function WatchPage() {
       }
     };
 
-    p.off("ended", onEnded);
-    p.on("ended", onEnded);
-    return () => p.off("ended", onEnded);
+    endedHandlerRef.current = handler;
+    p.on('ended', handler);
+
+    return () => {
+      if (endedHandlerRef.current) {
+        p.off('ended', endedHandlerRef.current);
+      }
+    };
   }, [autoNext, nextEp?.episodeId, epsOfSeason, seasons, authors, currentMovie?.movieId, movieFromState?.movieId, navigate]);
+
+  //chế độ rạp phim
+  useEffect(() => {
+  document.body.classList.toggle('theater-mode', isTheater);
+  return () => document.body.classList.remove('theater-mode');
+}, [isTheater]);
+
+  // ESC để thoát theater mode
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isTheater) {
+        setIsTheater(false);
+      }
+    };
+
+    if (isTheater) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Ẩn cursor sau 3s khi không di chuyển trong theater mode
+      let cursorTimer;
+      const hideCursor = () => {
+        document.body.style.cursor = 'none';
+      };
+      const showCursor = () => {
+        document.body.style.cursor = 'default';
+        clearTimeout(cursorTimer);
+        cursorTimer = setTimeout(hideCursor, 3000);
+      };
+      
+      document.addEventListener('mousemove', showCursor);
+      cursorTimer = setTimeout(hideCursor, 3000);
+      
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('mousemove', showCursor);
+        clearTimeout(cursorTimer);
+        document.body.style.cursor = 'default';
+      };
+    }
+  }, [isTheater]);
+  // Cập nhật fluid khi isTheater thay đổi
+  useEffect(() => {
+  const p = playerRef.current;
+  if (!p) return;
+  p.fluid(!isTheater);   // Theater: false, Normal: true
+}, [isTheater]);
+
 
   // -------- Debug
   useEffect(() => {
@@ -517,6 +624,61 @@ export default function WatchPage() {
   const currentEp = currentEpisode || episodeFromState;
   const currentMov = currentMovie || movieFromState;
 
+  useEffect(() => {
+  const p = playerRef.current;
+  if (!p) return;
+
+  const Button = videojs.getComponent('Button');
+
+  class PrevEpButton extends Button {
+    constructor(player, options) {
+      super(player, options);
+      this.addClass('vjs-prev-ep');
+      this.controlText('Tập trước');
+    }
+    handleClick() { goPrev(); }
+  }
+
+  class NextEpButton extends Button {
+    constructor(player, options) {
+      super(player, options);
+      this.addClass('vjs-next-ep');
+      this.controlText('Tập sau');
+    }
+    handleClick() { goNext(); }
+  }
+
+  // đăng ký component 1 lần
+  if (!videojs.getComponent('PrevEpButton')) videojs.registerComponent('PrevEpButton', PrevEpButton);
+  if (!videojs.getComponent('NextEpButton')) videojs.registerComponent('NextEpButton', NextEpButton);
+
+  const cb = p.getChild('controlBar');
+
+  // chèn ngay trước nút Fullscreen (nếu không tìm thấy thì chèn cuối)
+  const fsIndex = cb.children().findIndex(c => c?.name?.() === 'FullscreenToggle');
+  const insertIndex = fsIndex >= 0 ? fsIndex : cb.children().length;
+
+  prevBtnRef.current = cb.addChild('PrevEpButton', {}, insertIndex);
+  nextBtnRef.current = cb.addChild('NextEpButton', {}, insertIndex + 1);
+
+  return () => {
+    // gỡ khi unmount
+    prevBtnRef.current?.dispose?.(); prevBtnRef.current = null;
+    nextBtnRef.current?.dispose?.(); nextBtnRef.current = null;
+  };
+}, [playerRef.current]); // chạy sau khi player đã được tạo
+
+  useEffect(() => {
+    if (prevBtnRef.current) {
+      prevBtnRef.current.toggleClass('vjs-hidden', !prevEp);
+    }
+    if (nextBtnRef.current) {
+      nextBtnRef.current.toggleClass('vjs-hidden', !nextEp);
+    }
+  }, [prevEp, nextEp]);
+  
+
+
   if (dataLoading) return <div className="watch-loading">Đang tải...</div>;
   if (!currentEp) return <div className="watch-empty">Không tìm thấy tập phim.</div>;
 
@@ -536,15 +698,7 @@ export default function WatchPage() {
       <section className="player-wrap">
         <div
           ref={frameRef}
-          className={`player-frame ${sticky ? "is-sticky" : ""} ${dragging ? "dragging" : ""}`}
-          style={{
-            position: sticky ? "fixed" : "static",
-            left: sticky ? pos.x : undefined,
-            top: sticky ? pos.y : undefined,
-            transform: sticky && !dragging ? "scale(0.35) translate(-100%, -100%)" : "none",
-            cursor: sticky ? "move" : "default",
-          }}
-          onMouseDown={sticky ? onMouseDown : undefined}
+          className={`player-frame`}
         >
           <div data-vjs-player>
             <video
@@ -555,6 +709,7 @@ export default function WatchPage() {
               controls
             />
           </div>
+          
         </div>
 
         {/* Khi sticky bật, hiển thị thông tin phim phía trên */}
@@ -577,38 +732,53 @@ export default function WatchPage() {
         {sticky && <div className="player-placeholder" style={{ height: playerH }} aria-hidden />}
 
         {/* CONTROL BAR */}
-        <div className="player-controls">
-          <button className={`pc-item ${isInWishlist ? "active" : ""}`} onClick={handleToggleWishlist}>
-            <FontAwesomeIcon icon={faHeart} /> <span>Yêu thích</span>
-          </button>
-          <button className={`pc-item ${inList ? "active" : ""}`} onClick={() => setInList((v) => !v)}>
-            <FontAwesomeIcon icon={faPlus} /> <span>Thêm vào</span>
-          </button>
-
-          <div className="pc-toggle">
-            <span>Tự chuyển</span>
-            <label className="switch">
-              <input type="checkbox" checked={autoNext} onChange={(e) => setAutoNext(e.target.checked)} />
-              <span className="slider" />
-            </label>
+        <div className="action-toolbar">
+          {/* nhóm 1: các hành động nhanh */}
+          <div className="at-group">
+            <button className={`at-item ${isInWishlist ? "active" : ""}`} onClick={handleToggleWishlist}>
+              <FontAwesomeIcon icon={faHeart} /> <span>Yêu thích</span>
+            </button>
+            <button className={`at-item ${inList ? "active" : ""}`} onClick={() => setInList(v => !v)}>
+              <FontAwesomeIcon icon={faPlus} /> <span>Thêm vào</span>
+            </button>
+            <button className="at-item">
+              <FontAwesomeIcon icon={faShareNodes} /> <span>Chia sẻ</span>
+            </button>
+            <button className="at-item danger">
+              <FontAwesomeIcon icon={faFlag} /> <span>Báo lỗi</span>
+            </button>
           </div>
 
-          <div className="pc-toggle">
-            <span>Rạp phim</span>
-            <label className="switch">
-              <input type="checkbox" checked={isTheater} onChange={(e) => setIsTheater(e.target.checked)} />
-              <span className="slider" />
-            </label>
+          {/* nhóm 2: các toggle */}
+          <div className="at-group">
+            <div className="at-toggle">
+              <span>Tự chuyển</span>
+              <label className="switch">
+                <input type="checkbox" checked={autoNext} onChange={e => setAutoNext(e.target.checked)} />
+                <span className="slider" />
+              </label>
+            </div>
+            <div className="at-toggle">
+              <span>Rạp phim</span>
+              <label className="switch">
+                <input type="checkbox" checked={isTheater} onChange={e => setIsTheater(e.target.checked)} />
+                <span className="slider" />
+              </label>
+            </div>
           </div>
 
-          <button className="pc-item">
-            <FontAwesomeIcon icon={faShareNodes} /> <span>Chia sẻ</span>
+          {/* Rating – là nơi DUY NHẤT hiển thị điểm */}
+          <button className="at-rate" onClick={() => setShowRatingModal(true)} title="Đánh giá bộ phim">
+            <span className="star">★</span>
+            <span className="score">{avgRating.toFixed(1)}</span>
+            <span className="count">({totalRatings})</span>
+            <span className="label">Đánh giá</span>
           </button>
 
-          <div className="pc-spacer" />
+          {/* Next ep (nếu có) */}
           {nextEp && (
             <button
-              className="pc-next"
+              className="at-next"
               onClick={() => {
                 const cm = currentMov;
                 const watchUrl = createWatchUrl(cm, nextEp);
@@ -621,10 +791,6 @@ export default function WatchPage() {
               <FontAwesomeIcon icon={faCirclePlay} /> Tập {nextEp.episodeNumber}
             </button>
           )}
-
-          <button className="pc-item danger">
-            <FontAwesomeIcon icon={faFlag} /> <span>Báo lỗi</span>
-          </button>
         </div>
       </section>
 
@@ -672,12 +838,7 @@ export default function WatchPage() {
 
               <div className="movie-stats">
                 <div className="stat-item">
-                  <span className="stat-icon">⭐</span>
-                  <span className="stat-value">{avgRating.toFixed(1)}</span>
-                  <span className="stat-label">({totalRatings} đánh giá)</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-icon">👁</span>
+                  <FontAwesomeIcon icon={faEye} className="stat-icon" />
                   <span className="stat-value">{currentMov?.viewCount || 0}</span>
                   <span className="stat-label">lượt xem</span>
                 </div>
@@ -840,75 +1001,85 @@ export default function WatchPage() {
 
         {/* RIGHT */}
         <aside className="wg-side">
-          <div className="rate-box">
-            <div className="score">{avgRating.toFixed(1)}</div>
-            <div className="act">
-              <button onClick={() => setShowRatingModal(true)}>Đánh giá</button>
-              <button onClick={() => document.querySelector(".comments-top")?.scrollIntoView({ behavior: "smooth" })}>
-                Bình luận
-              </button>
-            </div>
-          </div>
-
-          <div className="actors-box">
-            <div className="box-head">Đạo diễn</div>
-            <div className="actors">
-              {authors
-                .filter((a) => a.authorRole === "DIRECTOR")
-                .map((a) => (
-                  <Link key={a.authorId} className="actor" to={`/author/${a.authorId}`}>
-                    <img
-                      src={a.avatarUrl || a.photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                      alt={a.name}
-                    />
-                    <span>{a.name}</span>
-                  </Link>
-                ))}
-              {authors.filter((a) => a.authorRole === "DIRECTOR").length === 0 && (
-                <div className="text-muted" style={{ padding: "0 12px 10px" }}>
-                  Chưa có dữ liệu
+          <div className="cast-crew-box">
+            <div className="box-head">Thông tin tham gia</div>
+            
+            {/* Đạo diễn */}
+            {authors.filter((a) => a.authorRole === "DIRECTOR").length > 0 && (
+              <div className="crew-section">
+                <h6 className="crew-title">Đạo diễn:</h6>
+                <div className="crew-list">
+                  {authors
+                    .filter((a) => a.authorRole === "DIRECTOR")
+                    .map((a, index, arr) => (
+                      <span key={a.authorId}>
+                        <Link 
+                          className="crew-name" 
+                          to={`/browse/author-id/${encodeURIComponent(a.authorId)}`}
+                        >
+                          {a.name}
+                        </Link>
+                        {index < arr.length - 1 && ", "}
+                      </span>
+                    ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            <div className="box-head">Diễn viên</div>
-            <div className="actors">
-              {authors
-                .filter((a) => a.authorRole === "PERFORMER")
-                .map((a) => (
-                  <Link key={a.authorId} className="actor" to={`/author/${a.authorId}`}>
-                    <img
-                      src={a.avatarUrl || a.photo || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                      alt={a.name}
-                    />
-                    <span>{a.name}</span>
-                  </Link>
-                ))}
-              {authors.filter((a) => a.authorRole === "PERFORMER").length === 0 && (
-                <div className="text-muted" style={{ padding: "0 12px 10px" }}>
-                  Chưa có dữ liệu
+            {/* Diễn viên */}
+            {authors.filter((a) => a.authorRole === "PERFORMER").length > 0 && (
+              <div className="crew-section">
+                <h6 className="crew-title">Diễn viên:</h6>
+                <div className="crew-list">
+                  {authors
+                    .filter((a) => a.authorRole === "PERFORMER")
+                    .map((a, index, arr) => (
+                      <span key={a.authorId}>
+                        <Link 
+                          className="crew-name" 
+                          to={`/browse/author-id/${encodeURIComponent(a.authorId)}`}
+                        >
+                          {a.name}
+                        </Link>
+                        {index < arr.length - 1 && ", "}
+                      </span>
+                    ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Trường hợp không có dữ liệu */}
+            {authors.length === 0 && (
+              <div className="text-muted" style={{ padding: "12px" }}>
+                Chưa có thông tin về đạo diễn và diễn viên
+              </div>
+            )}
           </div>
 
           <div className="suggest-box">
             <div className="box-head">Đề xuất cho bạn</div>
             <div className="suggest">
-              {(currentMov?.suggest || []).slice(0, 6).map((s) => (
-                <Link key={s.id} className="s-item" to={`/movie/${s.id}`}>
-                  <img src={s.poster} alt={s.title} />
-                  <div className="s-meta">
-                    <div className="t">{s.title}</div>
-                    <div className="a">{s.alias}</div>
-                    <div className="line">
-                      {s.age && <span className="chip">{s.age}</span>}
-                      {s.season && <span className="chip ghost">Phần {s.season}</span>}
-                      {s.episode && <span className="chip ghost">Tập {s.episode}</span>}
+              {suggestedMovies.length > 0 ? (
+                suggestedMovies.map((movie) => (
+                  <Link key={movie.movieId || movie.id} className="s-item" to={`/movie/${movie.movieId || movie.id}`}>
+                    <img src={movie.poster || movie.thumbnailUrl} alt={movie.title} />
+                    <div className="s-meta">
+                      <div className="t">{movie.title}</div>
+                      <div className="a">{movie.alias || movie.originalTitle || ""}</div>
+                      <div className="line">
+                        {movie.releaseYear && <span className="chip">{movie.releaseYear}</span>}
+                        {movie.genres?.slice(0, 2).map(genre => (
+                          <span key={genre} className="chip ghost">{genre}</span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))
+              ) : (
+                <div className="text-muted" style={{ padding: "12px" }}>
+                  Đang tải phim đề xuất...
+                </div>
+              )}
             </div>
           </div>
         </aside>

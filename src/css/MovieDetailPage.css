@@ -145,20 +145,49 @@
 }
 
 .btn-xem-ngay {
-  background: linear-gradient(90deg, #ffecb4, #ffcc70 70%);
-  color: #3c2c08;
-  font-size: 1.1rem;
+  background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 50%, #0288d1 100%);
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 600;
   border: none;
-  border-radius: 2rem;
-  transition: background 0.3s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px #ffcc7042;
+  border-radius: 12px;
+  padding: 12px 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(41, 182, 246, 0.25);
   outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
 }
+
+.btn-xem-ngay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.6s ease;
+}
+
 .btn-xem-ngay:hover {
-  background: linear-gradient(90deg, #ffe082 10%, #ffc107 100%);
-  color: #262628;
-  box-shadow: 0 2px 18px #ffcc7066;
+  background: linear-gradient(135deg, #29b6f6 0%, #0288d1 50%, #0277bd 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 24px rgba(41, 182, 246, 0.4);
+  transform: translateY(-2px);
 }
+
+.btn-xem-ngay:hover::before {
+  left: 100%;
+}
+
+.btn-xem-ngay:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(41, 182, 246, 0.3);
+}
+
 .play-icon {
   display: flex;
   align-items: center;
@@ -564,3 +593,408 @@
 @media (max-width: 575px) {
   .person-name { font-size: .9rem; }
 }
+
+.detail-hero{
+  position: relative;
+  height: clamp(300px, 40vw, 460px);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Hero banner rõ nét như RoPhim */
+.hero-bg{
+  position: absolute; 
+  inset: -32px;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  filter: blur(1px) brightness(.92) saturate(1.2) contrast(1.05);
+  transform: scale(1.04);
+  animation: hero-kenburns 35s ease-in-out infinite alternate;
+  transition: filter 0.3s ease;
+}
+
+/* Hiệu ứng hover để làm rõ hoàn toàn */
+.detail-hero:hover .hero-bg {
+  filter: blur(1px) brightness(.95) saturate(1.25) contrast(1.1);
+}
+
+/* Banner rõ nét ở giữa khi không có landscape */
+.hero-center{ 
+  position: absolute; 
+  inset: 0; 
+  z-index: 2; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  pointer-events: none; 
+}
+.hero-center img{ 
+  max-height: 100%; 
+  max-width: 92%; 
+  width: auto; 
+  height: auto; 
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
+  border-radius: 12px;
+}
+
+.mode-landscape .hero-center{ display: none; }
+
+/* Vignette nhẹ nhàng như RoPhim */
+.hero-vignette{ 
+  position: absolute; 
+  inset: 0; 
+  z-index: 3;
+  background:
+    radial-gradient(100% 70% at 50% 20%, rgba(0,0,0,0) 0%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.6) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,.15) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,.45) 85%, #0a0c12 100%);
+}
+
+/* Texture grain nhẹ nhàng */
+.hero-grain{ 
+  position: absolute; 
+  inset: 0; 
+  z-index: 4; 
+  pointer-events: none; 
+  opacity: .12; 
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1.5px);
+  background-size: 4px 4px;
+}
+
+/* Content overlay với gradient đẹp */
+.content-over-hero{ 
+  position: relative; 
+  z-index: 5; 
+  margin-top: clamp(-120px, -12vw, -160px); 
+  padding-bottom: 80px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(11,13,19,.3) 60%, rgba(11,13,19,.8) 100%);
+}
+
+/* Animation mượt mà hơn */
+@keyframes hero-kenburns{ 
+  0% { transform: scale(1.03) rotate(0deg); }
+  50% { transform: scale(1.08) rotate(0.2deg); }
+  100% { transform: scale(1.05) rotate(-0.1deg); }
+}
+
+/* ===== MOBILE RESPONSIVE IMPROVEMENTS ===== */
+
+/* Trailer responsive */
+#trailer-section {
+  margin-bottom: 2rem;
+}
+
+/* ===== FORCE HORIZONTAL ACTION ICONS ON MOBILE ===== */
+@media (max-width: 768px) {
+  /* OVERRIDE ALL: Force horizontal layout for action icons */
+  .d-flex.align-items-center.action-icons,
+  .action-icons.d-flex.align-items-center,
+  div.action-icons {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    display: flex !important;
+  }
+  
+  /* Force action items to be inline */
+  .action-icons > .action-item,
+  .action-icons .action-item.text-center {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    max-width: 33.33% !important;
+    margin: 0 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Trailer section */
+  #trailer-section {
+    margin-bottom: 1.5rem;
+    padding: 0 10px;
+  }
+  
+  #trailer-section h5 {
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  /* Trailer player container */
+  #trailer-section .video-container,
+  #trailer-section video {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  /* Main action container - gộp tất cả buttons và actions thành layout compact */
+  .d-flex.align-items-center.gap-4 {
+    flex-direction: column !important;
+    gap: 0 !important;
+    width: 100%;
+    padding: 1rem;
+    border-radius: 16px;
+    background: rgba(38, 38, 48, 0.95) !important;
+  }
+  
+  /* Buttons row - horizontal layout cho 2 buttons chính */
+  .main-buttons-row {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+    background: transparent !important;
+  }
+  
+  /* Override Bootstrap classes causing white background */
+  .main-buttons-row.d-flex,
+  .main-buttons-row.d-md-contents {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+  
+  .main-buttons-row .btn-watch,
+  .main-buttons-row .btn {
+    flex: 1 !important;
+    min-height: 48px !important;
+    font-size: 1rem !important;
+    padding: 12px 16px !important;
+    border-radius: 12px !important;
+  }
+  
+  /* Action icons row - FORCE horizontal layout */
+  .action-icons.d-flex {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 12px 0 0 0 !important;
+    background: transparent !important;
+    border-top: 1px solid rgba(255,255,255,0.15) !important;
+    gap: 8px !important;
+  }
+  
+  .action-icons .action-item {
+    flex: 1 !important;
+    text-align: center !important;
+    padding: 10px 4px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    min-height: 50px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  
+  .action-icons .action-item:hover {
+    background: rgba(255,255,255,0.1) !important;
+  }
+  
+  .action-icons .action-item .action-label {
+    font-size: 0.75rem !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+  }
+  
+  /* Icon sizing for mobile */
+  .action-icons .action-item .fa, 
+  .action-icons .action-item svg {
+    font-size: 1.2rem !important;
+    margin-bottom: 2px !important;
+  }
+  
+  /* Movie info layout */
+  .movie-info-card {
+    margin: 0 !important;
+    padding: 1rem !important;
+  }
+  
+  /* Poster responsive */
+  .movie-poster {
+    max-width: 160px !important;
+    height: auto;
+    margin: 0 auto 1rem;
+  }
+  
+  /* Title responsive */
+  .movie-title {
+    font-size: 1.5rem !important;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  /* Movie meta info */
+  .movie-meta {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  /* Genre tags */
+  .genre-tags {
+    justify-content: center !important;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  /* Description */
+  .movie-description {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    text-align: justify;
+  }
+  
+  /* Movie info layout */
+  .movie-info-card {
+    margin: 0 !important;
+    padding: 1rem !important;
+  }
+  
+  /* Poster responsive */
+  .movie-poster {
+    max-width: 160px !important;
+    height: auto;
+    margin: 0 auto 1rem;
+  }
+  
+  /* Title responsive */
+  .movie-title {
+    font-size: 1.5rem !important;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  /* Movie meta info */
+  .movie-meta {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  /* Genre tags */
+  .genre-tags {
+    justify-content: center !important;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  /* Container padding */
+  .container {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  
+  /* Hero section responsive */
+  .content-over-hero {
+    margin-top: -80px !important;
+    padding-bottom: 40px;
+  }
+  
+  /* Trailer section smaller */
+  #trailer-section {
+    padding: 0 5px;
+    margin-bottom: 1rem;
+  }
+  
+  #trailer-section h5 {
+    font-size: 1.1rem;
+  }
+  
+  /* Action icons on small screens - tighter layout */
+  .action-icons.d-flex {
+    padding: 8px 0 0 0 !important;
+    gap: 4px !important;
+  }
+  
+  .action-icons .action-item {
+    padding: 8px 2px !important;
+    min-height: 45px !important;
+  }
+  
+  .action-icons .action-item .action-label {
+    font-size: 0.7rem !important;
+  }
+  
+  .action-icons .action-item .fa, 
+  .action-icons .action-item svg {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Movie poster even smaller */
+  .movie-poster {
+    max-width: 140px !important;
+  }
+  
+  /* Title smaller */
+  .movie-title {
+    font-size: 1.3rem !important;
+  }
+  
+  /* Buttons smaller padding */
+  .main-buttons-row .btn-watch,
+  .main-buttons-row .btn {
+    padding: 10px 14px !important;
+    font-size: 0.9rem !important;
+    min-height: 44px !important;
+    
+  }
+  
+  /* Top movies section */
+  .top-movies-week {
+    margin-top: 1rem !important;
+    padding: 1rem !important;
+  }
+  
+  /* Top movie items */
+  .top-movie-thumb {
+    width: 30px !important;
+    height: 42px !important;
+  }
+  
+  .top-rank {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  /* Rating and views smaller */
+  .movie-rating,
+  .movie-views {
+    font-size: 0.8rem;
+  }
+  
+  /* Prevent horizontal scroll */
+  .row {
+    margin: 0 !important;
+  }
+  
+  .col-lg-4,
+  .col-lg-8 {
+    padding: 0 5px !important;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .d-flex.align-items-center.gap-4 {
+    flex-direction: row !important;
+  }
+  
+  .btn-watch,
+  .btn[style*="linear-gradient"] {
+    width: auto !important;
+    flex: 1 !important;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .hero-bg{ animation: none; transform: none; }
+}
+

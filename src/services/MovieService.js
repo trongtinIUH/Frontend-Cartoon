@@ -229,6 +229,14 @@ const MovieService = {
         },
 
 
+    getRecommendations: async (movieId, limit = 6) => {
+        const res = await axios.get(`${API_BASE_URL}/${movieId}/recommendations`, {
+            params: { limit }
+        });
+        return res.data;
+        },
+
+
 }
 
 export default MovieService;
