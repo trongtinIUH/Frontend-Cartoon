@@ -11,7 +11,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart, faPlus, faShare, faCommentDots, faPlay } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import FeedbackService from "../services/FeedbackService";
-import default_avatar from "../image/default_avatar.jpg"
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
@@ -919,7 +918,6 @@ const MovieDetailPage = () => {
                   {/* Danh sách bình luận */}
                   <div className="container mt-4 comments-top">
                     {comments.map((fb) => (
-                      console.log(fb),
                       <FeedbackItem
                         key={fb.feedbackId}
                         fb={fb}

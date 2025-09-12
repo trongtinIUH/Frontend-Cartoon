@@ -949,7 +949,6 @@ export default function WatchPage() {
 
             <div className="container mt-4 comments-top">
               {comments.map((fb) => (
-                console.log(fb),
                 <FeedbackItem
                   key={fb.feedbackId}
                   fb={fb}

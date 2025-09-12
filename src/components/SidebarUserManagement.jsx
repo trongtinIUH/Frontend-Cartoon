@@ -66,7 +66,7 @@ const SidebarUserManagement = () => {
               alt="Avatar"
               className="rounded-circle mb-2 avatar"
             />
-            <p className="m-0 mt-2">{MyUser?.my_user?.userName}</p>
+            <p className="m-0">{MyUser?.my_user?.userName}</p>
             <p className="m-0">{MyUser?.my_user?.email}</p>
             {/* <li className="nav-item mt-4">
               <Link
