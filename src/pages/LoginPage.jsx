@@ -8,8 +8,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay } from '@fortawesome/free-solid-svg-icons';
 import Logo from '../components/Logo';
 
-
-
 const LoginPage = () => {
     const navigate = useNavigate();
     const { login } = useAuth();

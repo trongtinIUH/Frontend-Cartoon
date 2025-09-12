@@ -1,13 +1,12 @@
 /* Desktop: cách header ra */
 @media (min-width: 992px) {
   .profile-page {
-    margin-top: 100px;
+    margin-top: 50px;
   }
 }
 
 body {
   background-color: #212529;
-  /* hoặc #000 nếu bạn muốn */
 }
 
 /* Tablet & Mobile: Sidebar lên trên, content xuống dưới */

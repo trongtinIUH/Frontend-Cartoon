@@ -58,7 +58,7 @@ const FavoritesPage = () => {
           <h5 className="mb-4 fw-bold">Yêu thích</h5>
           <p className="mb-4">Danh sách phim yêu thích của bạn</p>
 
-           <div className="wishlist-grid">
+          <div className="wishlist-grid">
             {wishlist?.length > 0 ? (
               wishlist.map((movie) => (
                 <div key={movie.movieId} className="wishlist-card">
@@ -91,7 +91,7 @@ const FavoritesPage = () => {
 
                     {/* Titles */}
                     <div className="mt-2 text-center">
-                      <div className="text-white fw-semibold text-truncate">
+                      <div className="text-white fw-semibold title">
                         {movie.movieTitle}
                       </div>
                       <div className="text-secondary small text-truncate">
