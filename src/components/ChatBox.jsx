@@ -1,5 +1,5 @@
 // ChatBox.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { sendMessageToServer, fetchWelcome } from "../services/ChatService";
 import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -18,6 +18,10 @@ const ChatBox = ({ currentMovieId }) => {
   const [questionCount, setQuestionCount] = useState(0);
   const MAX_QUESTIONS_GUEST = 3; // Giới hạn 3 câu hỏi cho khách
   
+  // Ref để scroll xuống tin nhắn cuối cùng
+  const chatContentRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  
   const [quick, setQuick] = useState([
     "Có khuyến mãi hay voucher nào không?",
     "Mã giảm giá cho gói VIP rẻ nhất",
@@ -25,6 +29,21 @@ const ChatBox = ({ currentMovieId }) => {
     "Gợi ý phim gia đình",
     "Top phim chiếu rạp mới"
   ]);
+
+  // Hàm scroll xuống cuối
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: "smooth", 
+        block: "end" 
+      });
+    }
+  };
+
+  // Auto scroll khi có tin nhắn mới hoặc loading thay đổi
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatLog, loading]);
 
   // Khi mở chat lần đầu -> gọi welcome
   useEffect(() => {
@@ -183,7 +202,7 @@ const ChatBox = ({ currentMovieId }) => {
           </div>
         </div>
 
-        <div className="chatbox-content">
+        <div className="chatbox-content" ref={chatContentRef}>
           {chatLog.map((msg, i) => (
             <div className={`chatbox-message ${msg.role}`} key={i}>
               <strong>{msg.role === "user" ? `${msg.username}: ` : "AI: "}</strong>
@@ -264,6 +283,9 @@ const ChatBox = ({ currentMovieId }) => {
               </div>
             </div>
           )}
+          
+          {/* Invisible element để scroll xuống */}
+          <div ref={messagesEndRef} />
         </div>
 
         <div className="chatbox-input-area">

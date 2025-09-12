@@ -96,7 +96,7 @@ export default function WatchPage() {
       'NO_ADS': 'NO ADS',
       'PREMIUM': 'PREMIUM', 
       'MEGA_PLUS': 'MEGA+',
-      'COMBO_PREMIUM': 'COMBO PREMIUM'
+      'COMBO_PREMIUM_MEGA_PLUS': 'COMBO PREMIUM'
     };
     return packageMap[minVipLevel] || minVipLevel;
   };

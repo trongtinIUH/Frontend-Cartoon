@@ -137,16 +137,16 @@ export default function AuthorManagementPage() {
   }, [hasMore, loadingMore, loadMore]);
 
   return (
-    <div className="d-flex">
+    <div className="d-flex bg-light min-vh-100">
       <Sidebar />
-      <div className="flex-grow-1 p-4" style={{ marginLeft: 250 }}>
-        <div className="d-flex flex-wrap justify-content-between align-items-center mb-3">
+      <div className="flex-grow-1 p-4" style={{ marginLeft: 250, backgroundColor: '#f8f9fa' }}>
+        <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
           <div>
-            <h2 className="fw-bold mb-1">QUẢN LÝ TÁC GIẢ / DIỄN VIÊN</h2>
+            <h2 className="fw-bold mb-2 text-dark">QUẢN LÝ TÁC GIẢ / DIỄN VIÊN</h2>
             <p className="text-muted mb-0">
-              Tổng cộng: <strong>{totalCount}</strong> tác giả/diễn viên
+              Tổng cộng: <strong className="text-primary">{totalCount}</strong> tác giả/diễn viên
               {authors.length !== totalCount && (
-                <span> • Đã tải: <strong>{authors.length}</strong></span>
+                <span> • Đã tải: <strong className="text-success">{authors.length}</strong></span>
               )}
             </p>
           </div>
@@ -154,28 +154,36 @@ export default function AuthorManagementPage() {
             <button className="btn btn-outline-secondary" onClick={()=>reset(true)}>
               <FaSync className="me-1" /> Làm mới
             </button>
-            <button className="btn btn-primary" onClick={()=>setOpenAdd(true)}>
+            <button className="btn btn-primary shadow-sm" onClick={()=>setOpenAdd(true)}>
               <FaPlus className="me-2"/> Thêm mới
             </button>
           </div>
         </div>
 
         {/* Toolbar */}
-        <div className="card border-0 shadow-sm mb-3">
+        <div className="card border-0 shadow-sm mb-4 bg-white">
           <div className="card-body">
             <div className="row g-3 align-items-end">
               <div className="col-12 col-lg-6">
-                <label className="form-label">Tìm theo tên</label>
+                <label className="form-label fw-semibold">Tìm theo tên</label>
                 <div className="input-group">
-                  <input value={keyword} onChange={e=>setKeyword(e.target.value)} type="search" className="form-control" placeholder="Nhập tên…" />
-                  <span className="input-group-text"><FaSearch/></span>
+                  <input 
+                    value={keyword} 
+                    onChange={e=>setKeyword(e.target.value)} 
+                    type="search" 
+                    className="form-control" 
+                    placeholder="Nhập tên tác giả/diễn viên…" 
+                  />
+                  <span className="input-group-text bg-primary text-white">
+                    <FaSearch/>
+                  </span>
                 </div>
               </div>
               <div className="col-6 col-lg-3">
-                <label className="form-label">Vai trò</label>
+                <label className="form-label fw-semibold">Vai trò</label>
                 <select className="form-select" value={role} onChange={e=>setRole(e.target.value)}>
                   <option value="">Tất cả</option>
-                  {ROLES.map(r=> <option key={r} value={r}>{r}</option>)}
+                  {ROLES.map(r=> <option key={r} value={r}>{r === 'DIRECTOR' ? 'Đạo diễn' : 'Diễn viên'}</option>)}
                 </select>
               </div>
             </div>
@@ -183,32 +191,34 @@ export default function AuthorManagementPage() {
         </div>
 
         {/* Bulk bar */}
-        <div className="card border-0 shadow-sm mb-3">
-          <div className="card-body py-2 d-flex justify-content-between align-items-center">
+        <div className="card border-0 shadow-sm mb-4 bg-white">
+          <div className="card-body py-3 d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center gap-3">
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" id="a-sel-all" checked={allChecked} onChange={toggleAll}/>
                 <label className="form-check-label fw-semibold" htmlFor="a-sel-all">Chọn tất cả</label>
               </div>
-              {selected.size>0 && <span className="text-muted small">Đã chọn {selected.size}</span>}
+              {selected.size>0 && <span className="badge bg-info text-dark">Đã chọn {selected.size}</span>}
             </div>
             <div>
               {selected.size>0
-                ? <button className="btn btn-sm btn-danger" onClick={()=>handleDelete()}> <FaTrash className="me-1"/> Xoá</button>
+                ? <button className="btn btn-sm btn-danger shadow-sm" onClick={()=>handleDelete()}> 
+                    <FaTrash className="me-1"/> Xoá đã chọn
+                  </button>
                 : <span className="text-muted small">Chọn tác giả để thao tác</span>}
             </div>
           </div>
         </div>
 
         {/* Table with infinite scroll */}
-        <div className="card border-0 shadow-sm">
+        <div className="card border-0 shadow-sm bg-white">
           <div 
             className="table-responsive" 
             style={{ maxHeight: '600px', overflowY: 'auto' }}
             onScroll={handleScroll}
           >
             <table className="table table-hover align-middle mb-0">
-              <thead className="table-light sticky-top">
+              <thead className="table-dark sticky-top">
                 <tr>
                   <th style={{width:42}}></th>
                   <th>#</th>
@@ -220,16 +230,20 @@ export default function AuthorManagementPage() {
               </thead>
               <tbody>
                 {filtered.map((a, idx)=>(
-                  <tr key={a.authorId}>
+                  <tr key={a.authorId} className="border-bottom">
                     <td><input type="checkbox" className="form-check-input" checked={selected.has(a.authorId)} onChange={()=>toggleOne(a.authorId)}/></td>
                     <td>{idx+1}</td>
-                    <td className="fw-semibold">{a.name}</td>
-                    <td><span className={`badge ${a.authorRole==="DIRECTOR"?"bg-info":"bg-secondary"}`}>{a.authorRole}</span></td>
+                    <td className="fw-semibold text-dark">{a.name}</td>
+                    <td>
+                      <span className={`badge ${a.authorRole==="DIRECTOR"?"bg-info text-dark":"bg-secondary"}`}>
+                        {a.authorRole === 'DIRECTOR' ? 'ĐẠO DIỄN' : 'DIỄN VIÊN'}
+                      </span>
+                    </td>
                     <td className="text-center">
                       {getMovieCount(a) > 0 ? (
                         <Link 
                           to={`/browse/author-id/${encodeURIComponent(a.authorId)}`}
-                          className="badge bg-primary text-decoration-none"
+                          className="badge bg-primary text-decoration-none shadow-sm"
                           title={`Xem ${getMovieCount(a)} phim của ${a.name}`}
                         >
                           {getMovieCount(a)}
@@ -239,9 +253,13 @@ export default function AuthorManagementPage() {
                       )}
                     </td>
                     <td>
-                      <div className="btn-group">
-                        <button className="btn btn-sm btn-outline-primary" onClick={()=>setEditTarget(a)}><FaEdit className="me-1"/> Sửa</button>
-                        <button className="btn btn-sm btn-outline-danger" onClick={()=>handleDelete(new Set([a.authorId]))}><FaTrash/></button>
+                      <div className="btn-group shadow-sm">
+                        <button className="btn btn-sm btn-outline-primary" onClick={()=>setEditTarget(a)}>
+                          <FaEdit className="me-1"/> Sửa
+                        </button>
+                        <button className="btn btn-sm btn-outline-danger" onClick={()=>handleDelete(new Set([a.authorId]))}>
+                          <FaTrash/>
+                        </button>
                       </div>
                     </td>
                   </tr>

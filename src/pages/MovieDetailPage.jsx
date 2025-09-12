@@ -585,7 +585,12 @@ const handleWatch = (episode) => {
                   </div>
 
                   <div className="movie-description mb-3">
-                    <div className="d-flex align-items-center mb-2">
+                    <div className="d-flex align-items-center mb-2 p-2 rounded-3" 
+                         style={{ 
+                           background: 'linear-gradient(135deg, rgba(75, 193, 250, 0.15) 0%, rgba(102, 126, 234, 0.15) 100%)',
+                           border: '1px solid rgba(75, 193, 250, 0.2)',
+                           backdropFilter: 'blur(5px)'
+                         }}>
                       <i className="fas fa-align-left me-2" style={{ color: "#4bc1fa", fontSize: "14px" }}></i>
                       <strong style={{ color: "#fff", fontSize: "15px" }}>Nội dung phim</strong>
                     </div>
@@ -594,7 +599,8 @@ const handleWatch = (episode) => {
                       className={`description-content p-3 rounded-3 ${descExpanded ? "is-expanded" : "is-clamped"}`}
                       style={{
                         backgroundColor: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.1)"
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        backdropFilter: "blur(8px)"
                       }}
                     >
                       <p className="desc-text mb-0">
@@ -711,9 +717,19 @@ const handleWatch = (episode) => {
             <div className="col-lg-8">
               {/* Trailer - hiển thị cho tất cả phim có trailer */}
               {movie.trailerUrl && (
-                <div id="trailer-section" className="mb-4">
-                  <h5 className="mb-3">Trailer</h5>
-                  <TrailerPlayer src={movie.trailerUrl} poster={movie.bannerUrl || movie.thumbnailUrl} />
+                <div id="trailer-section" className="trailer-container glassmorphism p-4 rounded-4 shadow mb-4">
+                  <div className="d-flex align-items-center gap-2 mb-3 p-3 rounded-3" 
+                       style={{ 
+                         background: 'linear-gradient(135deg, rgba(75, 193, 250, 0.2) 0%, rgba(102, 126, 234, 0.2) 100%)',
+                         border: '1px solid rgba(75, 193, 250, 0.3)',
+                         backdropFilter: 'blur(10px)'
+                       }}>
+                    <FontAwesomeIcon icon={faPlay} className="text-primary" style={{ fontSize: '18px' }} />
+                    <h5 className="mb-0 text-white fw-bold">Trailer Chính Thức</h5>
+                  </div>
+                  <div className="trailer-wrapper rounded-3 overflow-hidden shadow-lg">
+                    <TrailerPlayer src={movie.trailerUrl} poster={movie.bannerUrl || movie.thumbnailUrl} />
+                  </div>
                 </div>
               )}
 
