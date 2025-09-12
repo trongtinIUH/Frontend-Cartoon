@@ -17,9 +17,33 @@
 
 
 /* CHỈ ÁP DỤNG TRONG NEWLIST */
-.newlist .movie-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; justify-items:center; }
-.newlist .poster-card { display:flex; flex-direction:column; gap:8px; text-decoration:none; width:100%; max-width:190px; }
-.newlist .poster-wrap { position:relative; border-radius:10px; overflow:hidden; aspect-ratio:2/3; background:#0b1220; box-shadow:0 4px 12px rgba(0,0,0,.25); transition:transform .25s ease, box-shadow .25s ease, filter .25s ease; }
+.newlist .movie-grid { 
+  display: grid; 
+  gap: 14px; 
+  justify-items: center; 
+  /* Mobile-first: 2 cột */
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.newlist .poster-card { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+  text-decoration: none; 
+  width: 100%; 
+  /* Mobile: tối đa 160px */
+  max-width: 160px; 
+}
+
+.newlist .poster-wrap { 
+  position: relative; 
+  border-radius: 10px; 
+  overflow: hidden; 
+  aspect-ratio: 2/3; 
+  background: #0b1220; 
+  box-shadow: 0 4px 12px rgba(0,0,0,.25); 
+  transition: transform .25s ease, box-shadow .25s ease, filter .25s ease; 
+}
 .newlist .poster-img { width:100%; height:100%; object-fit:cover; transition:transform .35s ease; }
 .newlist .poster-wrap::after { content:""; position:absolute; inset:auto 0 0 0; height:38%; background:linear-gradient(to top, rgba(0,0,0,.65), rgba(0,0,0,0)); pointer-events:none; }
 
@@ -114,7 +138,53 @@
 .newlist .title-en { color:#9fb3c8; font-size:.78rem; margin:2px 0 0; line-height:1.2; display:-webkit-box; -webkit-line-clamp:1; line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
 
 
-/* BREAKPOINTS: tăng nhẹ max-width card theo màn hình */
-@media (min-width: 576px) { .poster-card { max-width: 180px; } }
-@media (min-width: 768px) { .poster-card { max-width: 190px; } }
-@media (min-width: 1200px){ .poster-card { max-width: 200px; } }
+/* BREAKPOINTS: responsive cho các kích thước màn hình */
+/* Mobile nhỏ (320px+): 2 cột, card nhỏ hơn */
+@media (max-width: 480px) { 
+  .newlist .poster-card { 
+    max-width: 140px; 
+  }
+  .newlist .movie-grid {
+    gap: 10px;
+  }
+}
+
+/* Tablet nhỏ (481px+): 3 cột */
+@media (min-width: 481px) { 
+  .newlist .movie-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .newlist .poster-card { 
+    max-width: 170px; 
+  } 
+}
+
+/* Tablet lớn (768px+): 4 cột */
+@media (min-width: 768px) { 
+  .newlist .movie-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .newlist .poster-card { 
+    max-width: 180px; 
+  } 
+}
+
+/* Desktop (992px+): 5 cột */
+@media (min-width: 992px) { 
+  .newlist .movie-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .newlist .poster-card { 
+    max-width: 190px; 
+  } 
+}
+
+/* Desktop lớn (1200px+): 6 cột, auto-fill */
+@media (min-width: 1200px) { 
+  .newlist .movie-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+  .newlist .poster-card { 
+    max-width: 200px; 
+  } 
+}

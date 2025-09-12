@@ -7,17 +7,58 @@ const AuthContext = createContext();
 // Cung cấp các thông tin và hàm cần thiết qua context
 export const useAuth = () => useContext(AuthContext);
 
+// ✅ Utility function để check token expiration
+const isTokenExpired = (token) => {
+    if (!token) return true;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        return payload.exp < currentTime;
+    } catch (error) {
+        console.error('Error parsing token:', error);
+        return true;
+    }
+};
+
 export const AuthProvider = ({ children }) => {
     const [MyUser, setMyUser] = useState(null);
 
     // Kiểm tra auth state khi component mount
     useEffect(() => {
-        const checkAuthState = () => {
+        const checkAuthState = async () => {
             // Chỉ sử dụng my_user
             const storedUser = localStorage.getItem('my_user');
-            if (storedUser) {
+            const idToken = localStorage.getItem('idToken');
+            
+            if (storedUser && idToken) {
                 try {
                     const userData = JSON.parse(storedUser);
+                    
+                    // ✅ Kiểm tra token expiration
+                    if (isTokenExpired(idToken)) {
+                        console.log("🔄 Token expired, attempting refresh...");
+                        
+                        try {
+                            const newAuth = await AuthService.refresh();
+                            if (newAuth?.idToken) {
+                                localStorage.setItem('idToken', newAuth.idToken);
+                                localStorage.setItem('my_user', JSON.stringify(newAuth));
+                                setMyUser(newAuth);
+                                return;
+                            }
+                        } catch (refreshError) {
+                            console.warn("🔒 Token refresh failed");
+                            // Clear expired data
+                            localStorage.removeItem('my_user');
+                            localStorage.removeItem('idToken');
+                            localStorage.removeItem('phoneNumber');
+                            localStorage.removeItem('userAttributes');
+                            setMyUser(null);
+                            return;
+                        }
+                    }
+                    
                     setMyUser(userData);
                 } catch (error) {
                     console.error('Error parsing stored user:', error);

@@ -573,9 +573,14 @@ const handleWatch = (episode) => {
 
                   <div className="movie-badges mb-2">
                     {(movie.genres || []).map((g) => (
-                      <span className="badge genre-badge me-2 mb-1" key={g}>
+                      <Link 
+                        to={`/browse/the-loai/${encodeURIComponent(g)}`} 
+                        className="badge genre-badge me-2 mb-1" 
+                        key={g}
+                        style={{ textDecoration: 'none', cursor: 'pointer' }}
+                      >
                         {g}
-                      </span>
+                      </Link>
                     ))}
                   </div>
 
@@ -629,7 +634,17 @@ const handleWatch = (episode) => {
 
                       <div className="detail-item mb-2">
                         <span className="detail-label fw-bold">Quốc gia:</span>{" "}
-                        <span className="detail-value">{movie.country || "-"}</span>
+                        {movie.country ? (
+                          <Link 
+                            to={`/browse/quoc-gia/${encodeURIComponent(movie.country)}`}
+                            className="detail-value"
+                            style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+                          >
+                            {movie.country}
+                          </Link>
+                        ) : (
+                          <span className="detail-value">-</span>
+                        )}
                       </div>
 
                     </div>

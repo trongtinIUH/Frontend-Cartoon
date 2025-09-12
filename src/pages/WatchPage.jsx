@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from "reac
 import { useAuth } from "../context/AuthContext";
 
 import RatingModal from "../components/RatingModal";
+import UpgradeModal from "../components/UpgradeModal";
 import AuthorService from "../services/AuthorService";
 import EpisodeService from "../services/EpisodeService";
 import MovieService from "../services/MovieService";
@@ -79,15 +80,33 @@ export default function WatchPage() {
   const [dataLoading, setDataLoading] = useState(!episodeFromState || !movieFromState);
   const [suggestedMovies, setSuggestedMovies] = useState([]);
 
-  // ✅ Gate kiểm tra quyền VIP
+  // Gate kiểm tra quyền VIP
   const [gate, setGate] = useState({ checking: true, allowed: false, message: "" });
 
-  // ✅ Scroll to top when component mounts
+  // Trial mode states
+  const [isTrialMode, setIsTrialMode] = useState(false);
+  const [trialTimeLimit] = useState(15); // thời gian xem thử
+  const [currentTime, setCurrentTime] = useState(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [trialExpired, setTrialExpired] = useState(false);
+
+  // Package name mapping
+  const getPackageDisplayName = (minVipLevel) => {
+    const packageMap = {
+      'NO_ADS': 'NO ADS',
+      'PREMIUM': 'PREMIUM', 
+      'MEGA_PLUS': 'MEGA+',
+      'COMBO_PREMIUM': 'COMBO PREMIUM'
+    };
+    return packageMap[minVipLevel] || minVipLevel;
+  };
+
+  // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []); // Empty dependency array means this runs once on mount
 
-  // ✅ Also scroll to top when episode changes or data loading completes
+  //  Also scroll to top when episode changes or data loading completes
   useEffect(() => {
     if (currentEpisode?.episodeId && !dataLoading) {
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -116,7 +135,26 @@ export default function WatchPage() {
     (async () => {
       if (!currentMovie?.movieId) return;
       
-      // ✅ Kiểm tra quyền với BE cho mọi phim
+      // Reset trial states khi đổi phim
+      setIsTrialMode(false);
+      setTrialExpired(false);
+      setCurrentTime(0);
+      setShowUpgradeModal(false);
+      
+      const required = currentMovie.minVipLevel || "FREE";
+
+        // FORCED TRIAL MODE: Nếu phim cần VIP, luôn cho trial mode
+        if (required !== "FREE") {
+          console.log("🎬 VIP movie detected, forcing trial mode");
+          const packageName = getPackageDisplayName(required);
+          setIsTrialMode(true);
+          setGate({ 
+            status: 'trial', 
+            message: `Đang xem thử phim ${packageName} - 30 giây miễn phí`,
+            requiredPackage: packageName
+          });
+          return; // Không cần check BE nữa
+        }      // Kiểm tra quyền với BE cho phim FREE
       try {
         const res = await MovieService.canWatch(currentMovie.movieId, userId);
         console.log("VIP check result:", res); // Debug log
@@ -125,37 +163,19 @@ export default function WatchPage() {
         
         if (!res.allowed) {
           console.log("❌ VIP check failed:", res.message);
+          // Chỉ chặn hoàn toàn nếu là phim FREE mà vẫn không được phép xem
           setGate({ 
             status: 'not_allowed', 
             message: res.message || "Bạn chưa đủ quyền xem phim này." 
           });
         } else {
-          console.log("✅ VIP check passed");
-          // Double check: nếu phim cần VIP nhưng user chưa login
-          const required = currentMovie.minVipLevel || "FREE";
-          if (required !== "FREE" && !userId) {
-            console.log("❌ Client-side check failed: no user login for VIP content");
-            setGate({ 
-              status: 'not_allowed', 
-              message: `Phim này yêu cầu gói ${required}. Vui lòng đăng nhập và nâng cấp gói VIP để xem.` 
-            });
-          } else {
-            console.log("✅ All checks passed - allowing video");
-            setGate({ status: 'allowed', message: "" });
-          }
+          console.log("✅ VIP check passed - allowing video");
+          setGate({ status: 'allowed', message: "" });
         }
       } catch (error) {
         console.error("VIP check error:", error);
-        // Fallback: check client-side nếu BE lỗi
-        const required = currentMovie.minVipLevel || "FREE";
-        if (required !== "FREE" && !userId) {
-          setGate({ 
-            status: 'not_allowed', 
-            message: `Phim này yêu cầu gói ${required}. Vui lòng đăng nhập và nâng cấp gói VIP để xem.` 
-          });
-        } else {
-          setGate({ status: 'allowed', message: "" });
-        }
+        // Fallback: cho phép xem phim FREE khi có lỗi BE
+        setGate({ status: 'allowed', message: "" });
       }
     })();
   }, [currentMovie?.movieId, userId]);
@@ -529,10 +549,10 @@ export default function WatchPage() {
     return () => window.removeEventListener("resize", measure);
   }, []);
 
-  // -------- Init Video.js KHI video element đã render (gate allowed)
+  // -------- Init Video.js KHI video element đã render (gate allowed hoặc trial)
   useEffect(() => {
-    // Chỉ init khi gate allowed và video element tồn tại
-    if (gate.status !== 'allowed' || !videoRef.current || playerRef.current) return;
+    // Chỉ init khi gate allowed/trial và video element tồn tại
+    if (!['allowed', 'trial'].includes(gate.status) || !videoRef.current || playerRef.current) return;
 
     console.log("Initializing video player...");
     console.log("Video element exists:", !!videoRef.current);
@@ -555,6 +575,21 @@ export default function WatchPage() {
     p.on('play', () => console.log('Video: play'));
     p.on('error', (e) => console.error('Video error:', e));
 
+    // ✅ NEW: Trial mode timer
+    if (gate.status === 'trial' && isTrialMode) {
+      p.on('timeupdate', () => {
+        const time = p.currentTime();
+        setCurrentTime(time);
+        
+        if (time >= trialTimeLimit && !trialExpired) {
+          console.log('🚫 Trial time expired, pausing video');
+          p.pause();
+          setTrialExpired(true);
+          setShowUpgradeModal(true);
+        }
+      });
+    }
+
     // anti-capture
     antiCapCleanupRef.current?.();
     antiCapCleanupRef.current = initAntiCapture(p);
@@ -571,12 +606,12 @@ export default function WatchPage() {
       } catch { }
       playerRef.current = null;
     };
-  }, [gate.status]); // Trigger khi gate status thay đổi
+  }, [gate.status, isTrialMode, trialTimeLimit, trialExpired]); // Trigger khi gate status thay đổi
 
-  // -------- Mỗi khi đổi tập: chỉ đổi source (chỉ khi gate allowed)
+  // -------- Mỗi khi đổi tập: chỉ đổi source (chỉ khi gate allowed hoặc trial)
   useEffect(() => {
-    // Chỉ setup video khi gate đã cho phép
-    if (gate.status !== 'allowed') {
+    // Chỉ setup video khi gate đã cho phép hoặc trial mode
+    if (!['allowed', 'trial'].includes(gate.status)) {
       console.log("Waiting for gate check before video setup...");
       return;
     }
@@ -912,14 +947,14 @@ export default function WatchPage() {
         </div>
       )}
 
-      {/* PLAYER - only show when allowed */}
-      {gate.status === 'allowed' && (
+      {/* PLAYER - show when allowed or trial */}
+      {['allowed', 'trial'].includes(gate.status) && (
         <section className="player-wrap">
         <div
           ref={frameRef}
           className={`player-frame`}
         >
-          <div data-vjs-player>
+          <div data-vjs-player style={{ position: 'relative' }}>
             <video
               id="watch-player"
               ref={videoRef}
@@ -927,8 +962,44 @@ export default function WatchPage() {
               playsInline
               controls
             />
+            
+            {/* ✅ Trial countdown overlay - hiển thị TRONG video player */}
+            {isTrialMode && !trialExpired && (
+              <div className="trial-overlay-video">
+                <div className="trial-countdown-box">
+                  <div className="trial-package-name">
+                    Xem thử {gate.requiredPackage || 'VIP'}
+                  </div>
+                  <div className="trial-timer">
+                    <span className="timer-icon">⏱️</span>
+                    <span className="timer-text">
+                      {Math.max(0, Math.ceil(trialTimeLimit - currentTime))}s còn lại
+                    </span>
+                  </div>
+                  <div className="trial-subtitle">
+                    Nâng cấp để xem đầy đủ
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
+          {/* ✅ Trial expired overlay */}
+          {isTrialMode && trialExpired && (
+            <div className="trial-expired-overlay">
+              <div className="trial-expired-content">
+                <div className="trial-expired-icon">⏰</div>
+                <h3>Hết thời gian xem thử</h3>
+                <p>Nâng cấp {getPackageDisplayName(currentMov?.minVipLevel) || 'VIP'} để tiếp tục xem phim</p>
+                <button 
+                  className="btn-upgrade-now"
+                  onClick={() => setShowUpgradeModal(true)}
+                >
+                  Nâng cấp {getPackageDisplayName(currentMov?.minVipLevel) || 'VIP'} ngay
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Khi sticky bật, hiển thị thông tin phim phía trên */}
@@ -1304,6 +1375,15 @@ export default function WatchPage() {
           </div>
         </aside>
       </div>
+
+      {/* ✅ VIP Upgrade Modal - Component riêng */}
+      <UpgradeModal 
+        show={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentMovie={currentMov}
+        userId={userId}
+        getPackageDisplayName={getPackageDisplayName}
+      />
 
       <RatingModal
         show={showRatingModal}

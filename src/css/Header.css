@@ -849,7 +849,7 @@
     font-weight: 700;
     padding: 10px 14px;
     border-radius: 10px;
-    background: linear-gradient(to right,#ff5f6d,#ff7f50);
+    background: linear-gradient(to right, #2BC0E4 0%, #cbccb2 51%, #2BC0E4 100%) !important;
     color: #fff !important;
     text-decoration: none;
     margin-top: 8px;
@@ -860,7 +860,6 @@
 .buy-package-btn {
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(to right, #ff5f6d, #ff7f50);
   color: white;
   padding: 8px 14px;
   border-radius: 10px;

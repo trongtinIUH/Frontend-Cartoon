@@ -81,6 +81,7 @@ const authorOptions = authors.map(a => ({
     thumbnail: null,
     banner: null,
     trailerVideo: null,
+    trailerUrl: "",              // ✅ Thêm trailer URL input
     contentVideo: null,
     authorIds: [],
     slug: ""
@@ -89,6 +90,7 @@ const authorOptions = authors.map(a => ({
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(""); // Để hiển thị bước đang thực hiện
   const [uploadVideo, setUploadVideo] = useState(false);
+  const [trailerInputType, setTrailerInputType] = useState("file"); // "file" hoặc "url"
 
   // Helper function để reset form
   const resetForm = () => {
@@ -107,12 +109,14 @@ const authorOptions = authors.map(a => ({
       thumbnail: null,
       banner: null,
       trailerVideo: null,
+      trailerUrl: "",              // ✅ Reset trailer URL
       contentVideo: null,
       authorIds: [],
       slug: ""
     });
     setNewAuthor([{ name: "", authorRole: "DIRECTOR" }]);
     setIsNewAuthor(false);
+    setTrailerInputType("file");    // ✅ Reset trailer input type
   };
 
   const VIDEO_TYPES = ["video/mp4", "video/avi", "video/mkv", "video/webm", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
@@ -157,10 +161,10 @@ const authorOptions = authors.map(a => ({
     e.preventDefault();
     if (!form.title) return toast.error("Vui lòng nhập tiêu đề!");
 
-    // Yêu cầu file tương ứng theo status
-    if (form.status === "UPCOMING" && !form.trailerVideo) {
-      return toast.error("UPCOMING cần trailer (file)");
-    }
+    // Validation logic
+    if (!form.title) return toast.error("Vui lòng nhập tiêu đề!");
+
+    // COMPLETED cần video tập 1 bắt buộc
     if (form.status === "COMPLETED" && !form.contentVideo) {
       return toast.error("COMPLETED cần video tập 1 (file)");
     }
@@ -211,11 +215,17 @@ const authorOptions = authors.map(a => ({
         .forEach(k => form[k] != null && fd.append(k, form[k]));
       (form.genres || []).forEach(g => fd.append("genres", g));
       
+      // ✅ Thêm trailer URL nếu có (không phải file)
+      if (form.trailerUrl && !form.trailerVideo) {
+        fd.append("trailerUrl", form.trailerUrl);
+      }
+      
       // Chỉ thêm authors có sẵn vào Movie
       existingAuthorIds.forEach(id => fd.append("authorIds", id));
       
       if (form.thumbnail) fd.append("thumbnail", form.thumbnail);
       if (form.banner) fd.append("banner", form.banner);
+      if (form.trailerVideo) fd.append("trailerVideo", form.trailerVideo); // ✅ File trailer
       fd.append("role", "ADMIN");
 
       // Tạo Movie
@@ -260,7 +270,7 @@ const authorOptions = authors.map(a => ({
       // Bước 3: Publish movie
       setLoadingStep("Đang publish phim...");
       await MovieService.publish(createdMovie.movieId, form.status, {
-        trailerVideo: form.status === "UPCOMING"   ? form.trailerVideo : null,
+        trailerVideo: (form.status === "UPCOMING" && trailerInputType === "file") ? form.trailerVideo : null,
         episode1Video: form.status === "COMPLETED" ? form.contentVideo : null,
       });
 
@@ -551,20 +561,60 @@ const authorOptions = authors.map(a => ({
             <input type="file" className="form-control" name="banner" accept="image/*" onChange={handleChange} />
           </div>
 
-          {/* Trailer (UPCOMING only) */}
-          {form.status === "UPCOMING" && (
-           <div className="col-12">
+          {/* Trailer - Always available for all movie statuses */}
+          <div className="col-12">
             <label className="form-label"><FaVideo /> Trailer</label>
-            <input
-              type="file"
-              className="form-control"
-              name="trailerVideo"
-              accept="video/*"
-              onChange={handleChange}
-              required
-            />
+            
+            {/* Toggle giữa file và URL */}
+            <div className="d-flex gap-3 mb-2">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="trailerInputType"
+                  value="file"
+                  checked={trailerInputType === "file"}
+                  onChange={(e) => setTrailerInputType(e.target.value)}
+                />
+                <label className="form-check-label">Upload file</label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="trailerInputType"
+                  value="url"
+                  checked={trailerInputType === "url"}
+                  onChange={(e) => setTrailerInputType(e.target.value)}
+                />
+                <label className="form-check-label">Nhập URL</label>
+              </div>
+            </div>
+
+            {trailerInputType === "file" ? (
+              <input
+                type="file"
+                className="form-control"
+                name="trailerVideo"
+                accept="video/*"
+                onChange={handleChange}
+              />
+            ) : (
+              <div>
+                <input
+                  type="url"
+                  className="form-control"
+                  name="trailerUrl"
+                  value={form.trailerUrl}
+                  onChange={handleChange}
+                  placeholder="https://example.com/trailer.m3u8"
+                />
+                <div className="form-text">
+                  Hỗ trợ: .m3u8 (HLS), .mp4, hoặc URL streaming khác
+                </div>
+              </div>
+            )}
           </div>
-        )}
 
           {/* Content ep1 (COMPLETED only) */}
           {form.status === "COMPLETED" && (

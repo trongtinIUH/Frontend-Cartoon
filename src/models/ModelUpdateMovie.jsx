@@ -23,6 +23,7 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [bannerPreview, setBannerPreview] = useState("");
   const [loading, setLoading] = useState(false);
+  const [trailerInputType, setTrailerInputType] = useState("file"); // "file" hoặc "url"
 
   const [countries, setCountries] = useState([]);
   useEffect(() => { (async () => setCountries(await getCountries()))(); }, []);
@@ -55,6 +56,11 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
         setThumbnailPreview(m.thumbnailUrl || "");
         setBannerPreview(m.bannerUrl || "");
         setInitialStatus(m.status || "UPCOMING");
+        
+        // ✅ Set trailer input type based on existing data
+        if (m.trailerUrl && !m.trailerUrl.includes('.mp4') && !m.trailerUrl.includes('.avi')) {
+          setTrailerInputType("url"); // Likely an external URL
+        }
 
         const listAll = await AuthorService.getAllAuthors();
         setAllAuthors(Array.isArray(listAll) ? listAll : []);
@@ -147,13 +153,22 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
       (allIds || []).forEach(id => fd.append("authorIds", id));
       if (form.thumbnail) fd.append("thumbnail", form.thumbnail);
       if (form.banner) fd.append("banner", form.banner);
+      
+      // ✅ Thêm trailerUrl nếu có và không upload file mới
+      if (form.trailerUrl && trailerInputType === "url") {
+        fd.append("trailerUrl", form.trailerUrl);
+      }
+      if (form.trailerVideo && trailerInputType === "file") {
+        fd.append("trailerVideo", form.trailerVideo);
+      }
+      
       // Không gửi trailerVideo ở bước update — để gửi trong publish khi cần
       await MovieService.updateMovie(movieId, fd);
 
       // 3) Nếu đổi trạng thái → gọi publish (BE sẽ tạo ep1/validate trailer)
       if (initialStatus !== form.status) {
         await MovieService.publish(movieId, form.status, {
-          trailerVideo: form.status === "UPCOMING"   ? form.trailerVideo : null,
+          trailerVideo: (form.status === "UPCOMING" && trailerInputType === "file") ? form.trailerVideo : null,
           episode1Video: form.status === "COMPLETED" ? form.contentVideo : null,
         });
         setInitialStatus(form.status);
@@ -354,16 +369,68 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Video Files */}
-          {form.status === "UPCOMING" && (
-            <div className="mb-3">
-              <label className="form-label"><FaVideo /> Trailer</label>
-              <input type="file" className="form-control" name="trailerVideo" accept="video/*" onChange={handleChange}/>
-              {form.trailerUrl && (
-                <video className="mt-2 w-100" src={form.trailerUrl} controls style={{ maxHeight: 200, borderRadius: 6 }}/>
-              )}
+          {/* Trailer - Always available for all movie statuses */}
+          <div className="mb-3">
+            <label className="form-label"><FaVideo /> Trailer</label>
+            
+            {/* Toggle giữa file và URL */}
+            <div className="d-flex gap-3 mb-2">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="trailerInputType"
+                  value="file"
+                  checked={trailerInputType === "file"}
+                  onChange={(e) => setTrailerInputType(e.target.value)}
+                />
+                <label className="form-check-label">Upload file mới</label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="trailerInputType"
+                  value="url"
+                  checked={trailerInputType === "url"}
+                  onChange={(e) => setTrailerInputType(e.target.value)}
+                />
+                <label className="form-check-label">Nhập/chỉnh sửa URL</label>
+              </div>
             </div>
-          )}
+
+            {trailerInputType === "file" ? (
+              <input 
+                type="file" 
+                className="form-control" 
+                name="trailerVideo" 
+                accept="video/*" 
+                onChange={handleChange}
+              />
+            ) : (
+              <div>
+                <input
+                  type="url"
+                  className="form-control"
+                  name="trailerUrl"
+                  value={form.trailerUrl}
+                  onChange={handleChange}
+                  placeholder="https://example.com/trailer.m3u8"
+                />
+                <div className="form-text">
+                  Hỗ trợ: .m3u8 (HLS), .mp4, hoặc URL streaming khác
+                </div>
+              </div>
+            )}
+            
+            {/* Preview trailer hiện tại nếu có URL */}
+            {form.trailerUrl && (
+              <div className="mt-2">
+                <small className="text-muted">Preview trailer hiện tại:</small>
+                <video className="w-100" src={form.trailerUrl} controls style={{ maxHeight: 200, borderRadius: 6 }}/>
+              </div>
+            )}
+          </div>
 
           {form.status === "COMPLETED" && (
             <div className="mb-3">
