@@ -34,6 +34,7 @@ import FavoritesPage from './pages/FavoritesPage';
 import PromotionManagementPage from './pages/admin/PromotionManagementPage';
 
 import ProtectedRoute from './components/ProtectedRoute';
+import RevenueManagementPage from './pages/admin/RevenueManagementPage';
 
 function App() {
   const navigate = useNavigate();
@@ -92,6 +93,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/admin-movie" element={<MovieManagementPage />} />
                     <Route path="/admin-promotion" element={<PromotionManagementPage />} />
                     <Route path="/admin-author" element={<AuthorManagementPage />} />
+                    <Route path="/admin-revenue" element={<RevenueManagementPage />} />
                   </Route>
                 </Routes>
 
