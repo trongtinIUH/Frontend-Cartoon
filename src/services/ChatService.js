@@ -22,10 +22,10 @@ API.interceptors.response.use(
   }
 );
 
-export const sendMessageToServer = async (message, currentMovieId) => {
+export const sendMessageToServer = async (message, currentMovieId, conversationId) => {
   try {
-    const { data } = await API.post("/api/ai/chat", { message, currentMovieId });
-    console.log("✅ Chat response:", data);
+    const payload = { message, currentMovieId, conversationId };
+    const { data } = await API.post("/api/ai/chat", payload);
     return data;
   } catch (error) {
     console.error("❌ sendMessageToServer failed:", error);
@@ -43,10 +43,9 @@ export const sendMessageToServer = async (message, currentMovieId) => {
   }
 };
 
-export const fetchWelcome = async () => {
+export const fetchWelcome = async (conversationId) => {
   try {
-    const { data } = await API.get("/api/ai/welcome");
-    console.log("✅ Welcome response:", data);
+    const { data } = await API.get("/api/ai/welcome", { params: { conversationId } });
     return data;
   } catch (error) {
     console.error("❌ fetchWelcome failed:", error);

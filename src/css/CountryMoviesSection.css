@@ -171,18 +171,23 @@ background: linear-gradient(to right, #505c61, #283048); /* W3C, IE 10+/ Edge, F
 /* Movie Info */
 .movie-info {
   text-align: left;
+  padding: 8px 12px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .movie-title {
   font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 3px;
-  line-height: 1.2;
+  line-height: 1.3;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
+  hyphens: auto;
 }
 
  .movie-subtitle {
@@ -194,6 +199,8 @@ background: linear-gradient(to right, #505c61, #283048); /* W3C, IE 10+/ Edge, F
   line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 /* Custom Navigation Buttons */
@@ -272,8 +279,64 @@ background: linear-gradient(to right, #505c61, #283048); /* W3C, IE 10+/ Edge, F
     height: 180px;
   }
   
+  .movie-info {
+    padding: 6px 8px;
+  }
+  
+  .movie-title {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  
+  .movie-subtitle {
+    font-size: 0.7rem;
+    line-height: 1.3;
+  }
+  
   .swiper-button-prev-custom,
   .swiper-button-next-custom {
     display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .country-movies-section {
+    padding: 0 10px;
+    margin-bottom: 25px;
+  }
+  
+  .wapper {
+    padding: 12px 8px;
+  }
+  
+  .country-title {
+    font-size: 1.2rem;
+    margin-bottom: 6px;
+  }
+  
+  .view-all-btn {
+    font-size: 0.8rem;
+  }
+  
+  .country-movies-section .movie-card {
+    min-width: 140px;
+    max-width: 160px;
+  }
+  
+  .movie-info {
+    padding: 4px 6px;
+  }
+  
+  .movie-title {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    margin-bottom: 2px;
+  }
+  
+  .movie-subtitle {
+    font-size: 0.65rem;
+    line-height: 1.2;
   }
 }

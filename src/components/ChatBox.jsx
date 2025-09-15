@@ -10,6 +10,13 @@ import { useAuth } from "../context/AuthContext";
 
 const ChatBox = ({ currentMovieId }) => {
   const { MyUser } = useAuth();
+  
+  // ✅ Conversation ID for persistent chat session
+  const convRef = useRef(localStorage.getItem('ai_conv_id') || crypto.randomUUID());
+  useEffect(() => {
+    localStorage.setItem('ai_conv_id', convRef.current);
+  }, []);
+
   const [message, setMessage] = useState("");
   const [chatLog, setChatLog] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,6 +28,15 @@ const ChatBox = ({ currentMovieId }) => {
   // Ref để scroll xuống tin nhắn cuối cùng
   const chatContentRef = useRef(null);
   const messagesEndRef = useRef(null);
+
+  // Reset conversation function
+  const resetConversation = () => {
+    localStorage.removeItem('ai_conv_id');
+    convRef.current = crypto.randomUUID();
+    localStorage.setItem('ai_conv_id', convRef.current);
+    setChatLog([]);
+    setQuestionCount(0);
+  };
   
   const [quick, setQuick] = useState([
     "Có khuyến mãi hay voucher nào không?",
@@ -50,7 +66,7 @@ const ChatBox = ({ currentMovieId }) => {
     if (isOpen && chatLog.length === 0) {
       (async () => {
         try {
-          const res = await fetchWelcome();
+          const res = await fetchWelcome(convRef.current);
           const welcomeMsg = MyUser 
             ? res.answer.replace(/bạn/gi, MyUser?.my_user?.userName || MyUser?.username || "bạn")
             : res.answer;
@@ -108,7 +124,7 @@ const ChatBox = ({ currentMovieId }) => {
     }
 
     try {
-      const res = await sendMessageToServer(message, currentMovieId);
+      const res = await sendMessageToServer(message, currentMovieId, convRef.current);
       const aiMsg = {
         role: "assistant",
         content: res.answer,
@@ -153,7 +169,7 @@ const ChatBox = ({ currentMovieId }) => {
     }
 
     try {
-      const res = await sendMessageToServer(text, currentMovieId);
+      const res = await sendMessageToServer(text, currentMovieId, convRef.current);
       const aiMsg = {
         role: "assistant",
         content: res.answer,
