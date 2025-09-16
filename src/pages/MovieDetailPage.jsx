@@ -161,6 +161,12 @@ const MovieDetailPage = () => {
   const checkAndGoWatch = async (ep) => {
     if (!movie) return;
 
+    console.log("=== VIP CHECK DEBUG ===");
+    console.log("Movie:", movie.title);
+    console.log("Required VIP Level:", movie.minVipLevel);
+    console.log("User ID:", userId);
+    console.log("User Info:", MyUser?.my_user);
+
     // Trailer thì cho xem luôn
     if (movie.status === "UPCOMING") {
       if (movie.trailerUrl) {
@@ -173,19 +179,34 @@ const MovieDetailPage = () => {
 
     // Phim FREE thì ai cũng được xem
     const required = movie.minVipLevel || "FREE";
+    console.log("Required level:", required);
     
     // ✅ Kiểm tra quyền với BE
     try {
       const res = await MovieService.canWatch(movie.movieId, userId);
-      console.log("VIP check result:", res); // Debug log
+      console.log("=== BACKEND RESPONSE ===", res);
+      
       if (!res.allowed) {
-        if (res.status === 404) {
-          toast.error("Phim không tồn tại hoặc đã bị gỡ.");
-        } else {
-          toast.info(res.message || "Bạn chưa đủ quyền xem phim này.");
+        console.log("❌ Not allowed. Status:", res.status, "Message:", res.message);
+        
+        // ✅ Phim FREE mà không được phép thì chặn hoàn toàn
+        if (required === "FREE") {
+          if (res.status === 404) {
+            toast.error("Phim không tồn tại hoặc đã bị gỡ.");
+          } else {
+            toast.error(res.message || "Có lỗi khi truy cập phim này.");
+          }
+          return;
         }
+        
+        // ✅ Phim VIP mà không có quyền → Cho xem với trial mode (thông qua WatchPage)
+        console.log("🎬 VIP movie - user doesn't have access, allowing trial mode via WatchPage");
+        const secureUrl = createSecureWatchUrl(movie, ep);
+        navigate(secureUrl, { state: { episode: ep, movie, authors, episodes, seasons } });
         return;
       }
+      
+      console.log("✅ Allowed to watch!");
     } catch (error) {
       console.error("VIP check error:", error);
       toast.error("Có lỗi khi kiểm tra quyền xem. Vui lòng thử lại.");

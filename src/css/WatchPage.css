@@ -689,12 +689,13 @@ background-color: inherit;
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 6px 10px 6px 0;
-  border-color: transparent #ffffff transparent transparent;
-  transform: translate(-30%, -50%);
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M6 6h2v12H6zm3.5 6l8.5 6V6z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .vjs-next-ep .vjs-icon-placeholder::before { 
@@ -702,12 +703,13 @@ background-color: inherit;
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 6px 0 6px 10px;
-  border-color: transparent transparent transparent #ffffff;
-  transform: translate(-70%, -50%);
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 /* Subtle glow on hover */
@@ -727,6 +729,102 @@ background-color: inherit;
 .vjs-prev-ep.vjs-control::after,
 .vjs-next-ep.vjs-control::after {
   display: none;
+}
+
+/* ⭐ NEW: 10-Second Seek Controls ===== */
+.vjs-rewind-10.vjs-control, .vjs-forward-10.vjs-control {
+  width: 2.6em;
+  min-width: 2.6em;
+  height: 2.6em;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 50%;
+  margin: 0 1px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: visible;
+}
+
+.vjs-rewind-10.vjs-control:hover, .vjs-forward-10.vjs-control:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+.vjs-rewind-10.vjs-control:active, .vjs-forward-10.vjs-control:active {
+  transform: scale(0.92);
+  background: rgba(59, 130, 246, 0.35);
+}
+
+/* Rewind 10s icon */
+.vjs-rewind-10 .vjs-icon-placeholder::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2360a5fa'%3E%3Cpath d='M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z'/%3E%3Ctext x='12' y='16' text-anchor='middle' font-size='6' fill='%2360a5fa'%3E10%3C/text%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Forward 10s icon */
+.vjs-forward-10 .vjs-icon-placeholder::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2360a5fa'%3E%3Cpath d='M11.5 8c2.65 0 5.05.99 6.9 2.6L22 7v9h-9l3.62-3.62c-1.39-1.16-3.16-1.88-5.12-1.88-3.54 0-6.55 2.31-7.6 5.5l-2.37-.78C2.92 11.03 6.85 8 11.5 8z'/%3E%3Ctext x='12' y='16' text-anchor='middle' font-size='6' fill='%2360a5fa'%3E10%3C/text%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Tooltip effect on hover */
+.vjs-rewind-10.vjs-control::after {
+  content: "←10s";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.vjs-forward-10.vjs-control::after {
+  content: "→10s";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.vjs-rewind-10.vjs-control:hover::after,
+.vjs-forward-10.vjs-control:hover::after {
+  opacity: 1;
 }
 
 /* Ẩn khi không có tập trước/sau */

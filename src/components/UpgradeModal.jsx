@@ -32,56 +32,53 @@ const UpgradeModal = ({
 
   return (
     <div className="upgrade-modal-overlay" onClick={onClose}>
-      <div className="upgrade-modal" onClick={(e) => e.stopPropagation()}>
-         
-        <div className="modal-header">
-          <div className="vip-crown">👑</div>
-          <h2>Nâng cấp VIP để xem tiếp</h2>
-          <p>Bạn đã xem hết 15 giây miễn phí</p>
-        </div>
-
-        <div className="modal-content">
-          <div className="current-movie-info">
+      <div className="upgrade-modal-compact" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        
+        {/* Header with movie info */}
+        <div className="modal-header-compact">
+          <div className="movie-poster-small">
             <img 
               src={currentMovie?.poster || currentMovie?.thumbnailUrl} 
               alt={currentMovie?.title}
-              className="movie-thumb"
             />
-            <div className="movie-details">
-              <h3>{currentMovie?.title}</h3>
-              <p>Cần gói: <span className="required-package">{packageName}</span></p>
-            </div>
+            <div className="vip-badge-small">{packageName}</div>
           </div>
-
-          <div className="benefits">
-            <h4>🎬 Quyền lợi VIP:</h4>
-            <ul>
-              <li>✅ Xem không giới hạn tất cả phim VIP</li>
-              <li>✅ Chất lượng HD cao cấp</li>
-              <li>✅ Không quảng cáo</li>
-            </ul>
-          </div>
-
-          <div className="pricing-highlight">
-            <div className="price-tag">
-              <span className="amount">Mua ngay để nhận ưu đãi!</span>
-            </div>
-            <p className="price-desc">Chỉ từ 3,300₫/ngày</p>
+          <div className="movie-info-compact">
+            <h3>{currentMovie?.title}</h3>
+            <p>⏰ Hết thời gian xem thử</p>
           </div>
         </div>
 
-        <div className="modal-actions">
-          <button className="btn-upgrade-primary" onClick={handleUpgrade}>
-            🚀 Nâng cấp {packageName} ngay
+        {/* Benefits - Simple list */}
+        <div className="benefits-compact">
+          <div className="benefit-row">
+            <span>🎬</span> Xem không giới hạn
+          </div>
+          <div className="benefit-row">
+            <span>📱</span> Chất lượng HD+
+          </div>
+          <div className="benefit-row">
+            <span>🚫</span> Không quảng cáo
+          </div>
+        </div>
+
+        {/* Price */}
+        <div className="price-compact">
+          <span className="price-text">Chỉ từ <strong>3,300₫/ngày</strong></span>
+        </div>
+
+        {/* Actions */}
+        <div className="actions-compact">
+          <button className="btn-upgrade-main" onClick={handleUpgrade}>
+            💎 Nâng cấp {packageName}
           </button>
-          <button className="btn-upgrade-secondary" onClick={handleGoHome}>
-            Quay lại
-          </button>
-          {!userId && (
-            <button className="btn-upgrade-tertiary" onClick={handleLogin}>
-              Đăng nhập
-            </button>
-          )}
+          <div className="secondary-actions-compact">
+            <button className="btn-back" onClick={handleGoHome}>Quay lại</button>
+            {!userId && (
+              <button className="btn-login" onClick={handleLogin}>Đăng nhập</button>
+            )}
+          </div>
         </div>
       </div>
     </div>

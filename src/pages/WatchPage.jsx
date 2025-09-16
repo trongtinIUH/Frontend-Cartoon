@@ -15,7 +15,7 @@ import "videojs-contrib-quality-levels";
 import "videojs-hls-quality-selector";
 
 import { Funnel } from "lucide-react";
-import { faHeart, faPlus, faFlag, faShareNodes, faCirclePlay, faEye } from "@fortawesome/free-solid-svg-icons";
+import { faHeart, faPlus, faFlag, faShareNodes, faCirclePlay, faEye, faClockRotateLeft, faBackwardStep, faForwardStep } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import "../css/WatchPage.css";
@@ -143,39 +143,60 @@ export default function WatchPage() {
       
       const required = currentMovie.minVipLevel || "FREE";
 
-        // FORCED TRIAL MODE: Nếu phim cần VIP, luôn cho trial mode
-        if (required !== "FREE") {
-          console.log("🎬 VIP movie detected, forcing trial mode");
+      // ✅ ALWAYS CHECK BACKEND FIRST - Luôn kiểm tra quyền thực tế với BE
+      try {
+        console.log("🔍 Checking VIP permissions...");
+        console.log("Movie requires:", required);
+        console.log("User ID:", userId);
+        console.log("Movie ID:", currentMovie.movieId);
+        
+        const res = await MovieService.canWatch(currentMovie.movieId, userId);
+        console.log("VIP check result:", res);
+        
+        if (res.allowed) {
+          console.log("✅ User has permission - allowing full video");
+          setIsTrialMode(false);
+          setGate({ status: 'allowed', message: "" });
+          return;
+        } else {
+          console.log("❌ User doesn't have permission:", res.message);
+          
+          // Nếu phim FREE mà không được phép xem thì chặn hoàn toàn
+          if (required === "FREE") {
+            setGate({ 
+              status: 'not_allowed', 
+              message: res.message || "Bạn chưa đủ quyền xem phim này." 
+            });
+            return;
+          }
+          
+          // Nếu phim VIP mà không có quyền thì cho trial mode
+          console.log("🎬 VIP movie - user doesn't have access, starting trial mode");
           const packageName = getPackageDisplayName(required);
           setIsTrialMode(true);
           setGate({ 
             status: 'trial', 
-            message: `Đang xem thử phim ${packageName} - 30 giây miễn phí`,
+            message: `Đang xem thử phim ${packageName} - ${trialTimeLimit} giây miễn phí`,
             requiredPackage: packageName
           });
-          return; // Không cần check BE nữa
-        }      // Kiểm tra quyền với BE cho phim FREE
-      try {
-        const res = await MovieService.canWatch(currentMovie.movieId, userId);
-        console.log("VIP check result:", res); // Debug log
-        console.log("Current movie minVipLevel:", currentMovie.minVipLevel);
-        console.log("User ID:", userId);
-        
-        if (!res.allowed) {
-          console.log("❌ VIP check failed:", res.message);
-          // Chỉ chặn hoàn toàn nếu là phim FREE mà vẫn không được phép xem
-          setGate({ 
-            status: 'not_allowed', 
-            message: res.message || "Bạn chưa đủ quyền xem phim này." 
-          });
-        } else {
-          console.log("✅ VIP check passed - allowing video");
-          setGate({ status: 'allowed', message: "" });
         }
       } catch (error) {
         console.error("VIP check error:", error);
-        // Fallback: cho phép xem phim FREE khi có lỗi BE
-        setGate({ status: 'allowed', message: "" });
+        
+        // Fallback logic based on movie type
+        if (required === "FREE") {
+          console.log("🆓 FREE movie with API error - allowing access");
+          setGate({ status: 'allowed', message: "" });
+        } else {
+          console.log("💎 VIP movie with API error - defaulting to trial mode");
+          const packageName = getPackageDisplayName(required);
+          setIsTrialMode(true);
+          setGate({ 
+            status: 'trial', 
+            message: `Đang xem thử phim ${packageName} - ${trialTimeLimit} giây miễn phí`,
+            requiredPackage: packageName
+          });
+        }
       }
     })();
   }, [currentMovie?.movieId, userId]);
@@ -512,6 +533,8 @@ export default function WatchPage() {
   // refs cho nút trên control bar
   const prevBtnRef = useRef(null);
   const nextBtnRef = useRef(null);
+  const rewind10BtnRef = useRef(null);
+  const forward10BtnRef = useRef(null);
 
   // giữ “bản mới nhất” của prev/next để callback trong Video.js luôn đúng
   const prevEpRef = useRef(null);
@@ -814,9 +837,38 @@ export default function WatchPage() {
     handleClick() { goNext(); }
   }
 
+  // ⭐ NEW: Nút tua lùi 10 giây
+  class Rewind10Button extends Button {
+    constructor(player, options) {
+      super(player, options);
+      this.addClass('vjs-rewind-10');
+      this.controlText('Tua lùi 10 giây');
+    }
+    handleClick() { 
+      const currentTime = this.player().currentTime();
+      this.player().currentTime(Math.max(0, currentTime - 10));
+    }
+  }
+
+  // ⭐ NEW: Nút tua tiến 10 giây  
+  class Forward10Button extends Button {
+    constructor(player, options) {
+      super(player, options);
+      this.addClass('vjs-forward-10');
+      this.controlText('Tua tiến 10 giây');
+    }
+    handleClick() { 
+      const currentTime = this.player().currentTime();
+      const duration = this.player().duration();
+      this.player().currentTime(Math.min(duration, currentTime + 10));
+    }
+  }
+
   // đăng ký component 1 lần
   if (!videojs.getComponent('PrevEpButton')) videojs.registerComponent('PrevEpButton', PrevEpButton);
   if (!videojs.getComponent('NextEpButton')) videojs.registerComponent('NextEpButton', NextEpButton);
+  if (!videojs.getComponent('Rewind10Button')) videojs.registerComponent('Rewind10Button', Rewind10Button);
+  if (!videojs.getComponent('Forward10Button')) videojs.registerComponent('Forward10Button', Forward10Button);
 
   const cb = p.getChild('controlBar');
 
@@ -824,13 +876,18 @@ export default function WatchPage() {
   const fsIndex = cb.children().findIndex(c => c?.name?.() === 'FullscreenToggle');
   const insertIndex = fsIndex >= 0 ? fsIndex : cb.children().length;
 
-  prevBtnRef.current = cb.addChild('PrevEpButton', {}, insertIndex);
-  nextBtnRef.current = cb.addChild('NextEpButton', {}, insertIndex + 1);
+  // Thêm các nút theo thứ tự: rewind10, forward10, prev episode, next episode
+  rewind10BtnRef.current = cb.addChild('Rewind10Button', {}, insertIndex);
+  forward10BtnRef.current = cb.addChild('Forward10Button', {}, insertIndex + 1);
+  prevBtnRef.current = cb.addChild('PrevEpButton', {}, insertIndex + 2);
+  nextBtnRef.current = cb.addChild('NextEpButton', {}, insertIndex + 3);
 
   return () => {
     // gỡ khi unmount
+    rewind10BtnRef.current?.dispose?.(); rewind10BtnRef.current = null;
     prevBtnRef.current?.dispose?.(); prevBtnRef.current = null;
     nextBtnRef.current?.dispose?.(); nextBtnRef.current = null;
+    forward10BtnRef.current?.dispose?.(); forward10BtnRef.current = null;
   };
 }, [playerRef.current]); // chạy sau khi player đã được tạo
 
@@ -842,6 +899,44 @@ export default function WatchPage() {
       nextBtnRef.current.toggleClass('vjs-hidden', !nextEp);
     }
   }, [prevEp, nextEp]);
+
+  // ⭐ NEW: Keyboard shortcuts cho tua 10 giây
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const p = playerRef.current;
+      if (!p) return;
+      
+      // Chỉ hoạt động khi không có modal nào mở và không đang focus vào input
+      const isModalOpen = showRatingModal || showUpgradeModal;
+      const isInputFocused = document.activeElement?.tagName === 'INPUT' || 
+                           document.activeElement?.tagName === 'TEXTAREA' ||
+                           document.activeElement?.contentEditable === 'true';
+      
+      if (isModalOpen || isInputFocused) return;
+
+      switch(e.code) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          const currentTimeLeft = p.currentTime();
+          p.currentTime(Math.max(0, currentTimeLeft - 10));
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          const currentTimeRight = p.currentTime();
+          const duration = p.duration();
+          p.currentTime(Math.min(duration, currentTimeRight + 10));
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [playerRef.current, showRatingModal, showUpgradeModal]);
   
 
 

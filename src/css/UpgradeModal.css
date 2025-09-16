@@ -1,274 +1,303 @@
-/* ====== VIP UPGRADE MODAL ====== */
+/* UPGRADE MODAL - SUPER COMPACT VERSION */
 .upgrade-modal-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.9);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
-  backdrop-filter: blur(15px);
-  animation: fadeIn 0.3s ease-out;
+  padding: 10px;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.upgrade-modal {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border-radius: 20px;
-  padding: 0;
-  max-width: 500px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
+.upgrade-modal-compact {
+  background: #1a1a2e;
+  border-radius: 12px;
+  max-width: 320px;
+  width: 100%;
+  max-height: 85vh;
+  overflow: hidden;
   position: relative;
-  border: 2px solid rgba(255, 215, 0, 0.3);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  animation: slideUpModal 0.4s ease-out;
+  animation: modalSlide 0.3s ease-out;
+  border: 2px solid #16213e;
 }
 
-@keyframes slideUpModal {
-  from {
-    opacity: 0;
-    transform: translateY(50px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+@keyframes modalSlide {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
+/* Close Button */
 .modal-close {
   position: absolute;
-  top: 15px;
-  right: 20px;
-  background: none;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 28px;
+  color: #fff;
+  font-size: 20px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   cursor: pointer;
-  z-index: 10;
-  transition: color 0.2s;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-close:hover {
-  color: #ff6b6b;
-  background-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.modal-header {
-  text-align: center;
-  padding: 40px 30px 20px;
-  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
-  color: #1a1a2e;
-  border-radius: 20px 20px 0 0;
-}
-
-.vip-crown {
-  font-size: 48px;
-  margin-bottom: 15px;
-  animation: rotateGlow 3s linear infinite;
-}
-
-@keyframes rotateGlow {
-  0% { transform: rotate(0deg) scale(1); }
-  25% { transform: rotate(-5deg) scale(1.05); }
-  75% { transform: rotate(5deg) scale(1.05); }
-  100% { transform: rotate(0deg) scale(1); }
-}
-
-.modal-header h2 {
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.modal-header p {
-  font-size: 16px;
-  opacity: 0.8;
-  margin: 0;
-}
-
-.modal-content {
-  padding: 30px;
-  color: white;
-}
-
-.current-movie-info {
+/* Header Section */
+.modal-header-compact {
   display: flex;
-  gap: 15px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  margin-bottom: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  align-items: center;
+  padding: 15px 12px 12px;
+  gap: 10px;
+  background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
 }
 
-.movie-thumb {
-  width: 60px;
-  height: 80px;
+.movie-poster-small {
+  position: relative;
+  width: 50px;
+  height: 70px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.movie-poster-small img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+}
+
+.vip-badge-small {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+  color: #000;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
   border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-.movie-details h3 {
-  font-size: 18px;
-  margin-bottom: 5px;
+.movie-info-compact h3 {
+  margin: 0 0 4px 0;
   color: #fff;
-}
-
-.movie-details p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.required-package {
-  color: #ffd700;
-  font-weight: bold;
-}
-
-.benefits {
-  margin-bottom: 25px;
-}
-
-.benefits h4 {
-  font-size: 18px;
-  margin-bottom: 15px;
-  color: #ffd700;
-}
-
-.benefits ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.benefits li {
-  padding: 8px 0;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  line-height: 1.3;
 }
 
-.pricing-highlight {
-  text-align: center;
-  padding: 25px;
-  background: rgba(255, 215, 0, 0.1);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  margin-bottom: 25px;
-}
-
-.price-tag {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 5px;
-  margin-bottom: 10px;
-}
-
-.currency {
-  font-size: 20px;
-  color: #ffd700;
-}
-
-.amount {
-  font-size: 36px;
-  font-weight: bold;
-  color: #ffd700;
-}
-
-.period {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.price-desc {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+.movie-info-compact p {
   margin: 0;
-}
-
-.modal-actions {
-  padding: 20px 30px 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.btn-upgrade-primary {
-  background: linear-gradient(45deg, #ffd700, #ffb347);
-  color: #1a1a2e;
-  border: none;
-  padding: 15px 25px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-}
-
-.btn-upgrade-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(255, 215, 0, 0.5);
-}
-
-.btn-upgrade-secondary {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  padding: 12px 25px;
-  border-radius: 12px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-upgrade-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.btn-upgrade-tertiary {
-  background: none;
   color: #ff6b6b;
-  border: none;
-  padding: 10px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Benefits Section */
+.benefits-compact {
+  padding: 12px;
+  border-bottom: 1px solid #16213e;
+}
+
+.benefit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  color: #fff;
+  font-size: 13px;
+}
+
+.benefit-row span {
   font-size: 14px;
+  width: 18px;
+  text-align: center;
+}
+
+/* Price Section */
+.price-compact {
+  text-align: center;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.price-text {
+  color: #fff;
+  font-size: 14px;
+}
+
+.price-text strong {
+  font-size: 16px;
+  color: #ffd93d;
+}
+
+/* Actions Section */
+.actions-compact {
+  padding: 12px;
+}
+
+.btn-upgrade-main {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  text-decoration: underline;
-  transition: color 0.2s;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
-.btn-upgrade-tertiary:hover {
-  color: #ff5252;
+.btn-upgrade-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .upgrade-modal {
-    margin: 20px;
-    max-height: 85vh;
+.secondary-actions-compact {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-back,
+.btn-login {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-back:hover,
+.btn-login:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .upgrade-modal-overlay {
+    padding: 5px;
   }
   
-  .modal-header {
-    padding: 30px 20px 15px;
+  .upgrade-modal-compact {
+    max-width: 300px;
+    margin: 5px;
+    max-height: 80vh;
   }
   
-  .modal-content {
-    padding: 20px;
+  .modal-header-compact {
+    padding: 12px 10px 10px;
+    gap: 8px;
   }
   
-  .current-movie-info {
-    flex-direction: column;
-    text-align: center;
+  .movie-poster-small {
+    width: 40px;
+    height: 55px;
   }
   
-  .movie-thumb {
-    margin: 0 auto;
+  .movie-info-compact h3 {
+    font-size: 13px;
+  }
+  
+  .movie-info-compact p {
+    font-size: 11px;
+  }
+  
+  .benefit-row {
+    font-size: 12px;
+    padding: 3px 0;
+  }
+  
+  .benefits-compact {
+    padding: 10px;
+  }
+  
+  .price-compact {
+    padding: 10px;
+  }
+  
+  .price-text {
+    font-size: 13px;
+  }
+  
+  .price-text strong {
+    font-size: 15px;
+  }
+  
+  .actions-compact {
+    padding: 10px;
+  }
+  
+  .btn-upgrade-main {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .btn-back,
+  .btn-login {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .upgrade-modal-compact {
+    max-width: 280px;
+    max-height: 75vh;
+  }
+  
+  .modal-header-compact {
+    padding: 10px 8px 8px;
+    gap: 6px;
+  }
+  
+  .movie-poster-small {
+    width: 35px;
+    height: 50px;
+  }
+  
+  .movie-info-compact h3 {
+    font-size: 12px;
+  }
+  
+  .movie-info-compact p {
+    font-size: 10px;
+  }
+  
+  .benefit-row {
+    font-size: 11px;
+  }
+  
+  .benefits-compact {
+    padding: 8px;
+  }
+  
+  .price-compact {
+    padding: 8px;
+  }
+  
+  .actions-compact {
+    padding: 8px;
   }
 }

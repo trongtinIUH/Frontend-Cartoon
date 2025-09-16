@@ -23,6 +23,7 @@ const ChatBox = ({ currentMovieId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
+  const [showQuickSuggestions, setShowQuickSuggestions] = useState(false); // ✅ NEW: state để control quick suggestions
   const MAX_QUESTIONS_GUEST = 3; // Giới hạn 3 câu hỏi cho khách
   
   // Ref để scroll xuống tin nhắn cuối cùng
@@ -207,7 +208,14 @@ const ChatBox = ({ currentMovieId }) => {
       <div className="chatbox-container">
         <div className="chatbox-header">
           <span>Chat AI CartoonToo</span>
-          <div>
+          <div className="header-actions">
+            <button 
+              className="chatbox-suggestion-btn" 
+              onClick={() => setShowQuickSuggestions(!showQuickSuggestions)}
+              title={showQuickSuggestions ? "Ẩn gợi ý nhanh" : "Hiện gợi ý nhanh"}
+            >
+              💡
+            </button>
             {!isFullScreen ? (
               <button className="chatbox-zoom-btn" onClick={() => setIsOpen(false)} title="Thu gọn">
                 <FontAwesomeIcon icon={faUpRightAndDownLeftFromCenter} />
@@ -282,8 +290,8 @@ const ChatBox = ({ currentMovieId }) => {
           ))}
           {loading && <div className="chatbox-message assistant">AI đang trả lời...</div>}
           
-          {/* Hiển thị quick suggestions khi chat trống hoặc chỉ có welcome message */}
-          {(chatLog.length === 0 || (chatLog.length === 1 && chatLog[0].role === "assistant")) && (
+          {/* Hiển thị quick suggestions khi chat trống hoặc chỉ có welcome message HOẶC khi user bật manually */}
+          {(showQuickSuggestions || chatLog.length === 0 || (chatLog.length === 1 && chatLog[0].role === "assistant")) && (
             <div className="quick-suggestions">
               <div className="quick-title">💡 Bạn có thể hỏi:</div>
               <div className="quick-chips">
@@ -291,7 +299,10 @@ const ChatBox = ({ currentMovieId }) => {
                   <button 
                     key={idx} 
                     className="quick-chip"
-                    onClick={() => sendQuick(q)}
+                    onClick={() => {
+                      sendQuick(q);
+                      setShowQuickSuggestions(false); // Ẩn đi sau khi click
+                    }}
                   >
                     {q}
                   </button>
