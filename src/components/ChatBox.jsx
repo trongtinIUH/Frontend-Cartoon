@@ -129,8 +129,8 @@ const ChatBox = ({ currentMovieId }) => {
       const aiMsg = {
         role: "assistant",
         content: res.answer,
-        suggestions: res.showSuggestions ? (res.suggestions || []) : [],
-        showSuggestions: !!res.showSuggestions,
+        suggestions: Array.isArray(res.suggestions) ? res.suggestions : [],
+        showSuggestions: (res.showSuggestions ?? (res.suggestions?.length > 0)),
         promos: res.showPromos ? (res.promos || []) : [],
         showPromos: !!res.showPromos
       };
