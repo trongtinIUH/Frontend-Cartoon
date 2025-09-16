@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 import RatingModal from "../components/RatingModal";
 import UpgradeModal from "../components/UpgradeModal";
+import ReportIssueModal from "../models/ReportIssueModal";
 import AuthorService from "../services/AuthorService";
 import EpisodeService from "../services/EpisodeService";
 import MovieService from "../services/MovieService";
@@ -21,6 +22,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../css/WatchPage.css";
 import { initAntiCapture } from "../utils/antiCapture";
 import { parseWatchUrl, createWatchUrl } from "../utils/urlUtils";
+// import testReportAPI from "../utils/debugReport";
+// import { debugLocalStorage } from "../utils/debugLocalStorage";
 
 /* import phần bình luận */
 import { toast } from "react-toastify";
@@ -72,6 +75,7 @@ export default function WatchPage() {
   const [authors, setAuthors] = useState(state?.authors || []);
 
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [ratings, setRatings] = useState([]);
 
   // current movie/episode (nguồn sự thật)
@@ -129,6 +133,14 @@ export default function WatchPage() {
     if (state?.episodes?.length) setEpsOfSeason(state.episodes);
     if (state?.seasons?.length) setSeasons(state.seasons);
   }, [state?.episode?.episodeId, state?.movie?.movieId]);
+
+  // 🔧 Debug utilities - có thể gọi từ console
+  useEffect(() => {
+    // Debug utilities temporarily disabled
+    // window.debugLocalStorage = debugLocalStorage;
+    // window.testReportAPI = testReportAPI;
+    // console.log("🛠️ Debug utilities available: window.debugLocalStorage(), window.testReportAPI()");
+  }, []);
 
   // ✅ Kiểm tra quyền VIP khi có currentMovie
   useEffect(() => {
@@ -1129,9 +1141,11 @@ export default function WatchPage() {
             <button className="at-item">
               <FontAwesomeIcon icon={faShareNodes} /> <span>Chia sẻ</span>
             </button>
-            <button className="at-item danger">
-              <FontAwesomeIcon icon={faFlag} /> <span>Báo lỗi</span>
-            </button>
+            {MyUser && (
+              <button className="at-item danger" onClick={() => setShowReportModal(true)}>
+                <FontAwesomeIcon icon={faFlag} /> <span>Báo lỗi</span>
+              </button>
+            )}
           </div>
 
           {/* nhóm 2: các toggle */}
@@ -1486,6 +1500,16 @@ export default function WatchPage() {
         total={totalRatings}
         onClose={() => setShowRatingModal(false)}
         onSubmit={handleRateSubmit}
+      />
+
+      <ReportIssueModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        movieId={currentMov?.movieId}
+        movieTitle={currentMov?.title}
+        episodeId={currentEpisode?.episodeId}
+        episodeTitle={currentEpisode?.title}
+        currentTime={currentTime}
       />
     </div>
   );

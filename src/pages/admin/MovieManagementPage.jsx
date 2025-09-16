@@ -1,8 +1,12 @@
 import React, { useEffect, useMemo, useState, Suspense, useCallback  } from "react";
 import Sidebar from "../../components/Sidebar";
 import { toast } from "react-toastify";
-import { FaPlus, FaSearch, FaSync, FaTrash, FaEdit, FaListUl, FaFilm } from "react-icons/fa";
+import { FaPlus, FaSearch, FaSync, FaTrash, FaEdit, FaListUl, FaFilm, FaExclamationTriangle } from "react-icons/fa";
 import MovieService from "../../services/MovieService";
+import ReportService from "../../services/ReportService";
+import IssueReportsModal from "../../models/IssueReportsModal";
+import { IssueReportButton } from "../../components/IssueStatusIcon";
+// import { testReportFlow } from "../../utils/testReportFlow";
 import "../../css/admin/admin-movie.css";
 
 // ✅ modal rời (đặt ở src/models)
@@ -23,6 +27,8 @@ const statusBadge = (status) => {
 export default function MovieManagementPage() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [issueCounts, setIssueCounts] = useState({}); // Track số lượng báo lỗi theo movieId
+  const [issueStatistics, setIssueStatistics] = useState({}); // Track trạng thái báo lỗi theo movieId
 
   // UI states
   const [keyword, setKeyword] = useState("");
@@ -33,6 +39,7 @@ export default function MovieManagementPage() {
   const [openAdd, setOpenAdd] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [openEpisodeFor, setOpenEpisodeFor] = useState(null);
+  const [issueReportsFor, setIssueReportsFor] = useState(null);
 
 
 useEffect(() => {
@@ -47,15 +54,79 @@ useEffect(() => {
   return () => window.removeEventListener("keydown", onKey);
 }, []);
 
+// 🔧 Debug utilities disabled
+// useEffect(() => {
+//   window.testReportFlow = testReportFlow;
+//   console.log("🛠️ Debug available: window.testReportFlow('movieId')");
+// }, []);
+
 const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await MovieService.getAllMovies();
-      setMovies(Array.isArray(data) ? data : []);
+      const movieList = Array.isArray(data) ? data : [];
+      setMovies(movieList);
+      
+      // Load issue counts và statistics cho từng phim
+      loadIssueData(movieList);
     } catch {
       toast.error("Không tải được danh sách phim");
     } finally { setLoading(false); }
   }, []);
+
+  const loadIssueData = async (movieList) => {
+    const counts = {};
+    const statistics = {};
+    
+    try {
+      // Extract movie IDs
+      const movieIds = movieList.map(movie => movie.movieId || movie.id);
+      
+      // Load statistics for all movies at once
+      const moviesStats = await ReportService.getMoviesIssueStatistics(movieIds);
+      
+      // Process results
+      movieList.forEach(movie => {
+        const movieId = movie.movieId || movie.id;
+        const stats = moviesStats[movieId];
+        
+        if (stats) {
+          counts[movieId] = stats.total;
+          statistics[movieId] = {
+            statuses: stats.statuses,
+            statusCounts: stats.statusCounts,
+            hasOpenIssues: stats.hasOpenIssues,
+            hasInProgressIssues: stats.hasInProgressIssues,
+            hasResolvedIssues: stats.hasResolvedIssues,
+            hasInvalidIssues: stats.hasInvalidIssues
+          };
+        } else {
+          counts[movieId] = 0;
+          statistics[movieId] = {
+            statuses: [],
+            statusCounts: {},
+            hasOpenIssues: false,
+            hasInProgressIssues: false,
+            hasResolvedIssues: false,
+            hasInvalidIssues: false
+          };
+        }
+      });
+      
+      setIssueCounts(counts);
+      setIssueStatistics(statistics);
+      
+    } catch (error) {
+      console.error('Error loading issue data:', error);
+      toast.error('Không thể tải thông tin báo lỗi');
+    }
+  };
+
+  // Legacy method - keeping for backward compatibility
+  const loadIssueCounts = async (movieList) => {
+    await loadIssueData(movieList);
+  };
+  
   useEffect(() => { load(); }, []);
   
 const resetAll = useCallback((reload = false) => {
@@ -100,6 +171,51 @@ const resetAll = useCallback((reload = false) => {
     } catch { toast.error("Không thể xoá"); }
   };
 
+  const handleOpenIssueReports = async (movie) => {
+    const movieId = movie.movieId || movie.id;
+    setIssueReportsFor({
+      movieId: movieId,
+      movieTitle: movie.title
+    });
+    
+    // Refresh issue data cho phim này
+    try {
+      const moviesStats = await ReportService.getMoviesIssueStatistics([movieId]);
+      const stats = moviesStats[movieId];
+      
+      if (stats) {
+        setIssueCounts(prev => ({
+          ...prev,
+          [movieId]: stats.total
+        }));
+        
+        setIssueStatistics(prev => ({
+          ...prev,
+          [movieId]: {
+            statuses: stats.statuses,
+            statusCounts: stats.statusCounts,
+            hasOpenIssues: stats.hasOpenIssues,
+            hasInProgressIssues: stats.hasInProgressIssues,
+            hasResolvedIssues: stats.hasResolvedIssues,
+            hasInvalidIssues: stats.hasInvalidIssues
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error refreshing issue data:', error);
+    }
+  };
+
+  const handleIssueModalClose = () => {
+    const movieId = issueReportsFor?.movieId;
+    setIssueReportsFor(null);
+    
+    // Reload issue data when modal closes (in case statuses were updated)
+    if (movieId) {
+      loadIssueData([{ movieId: movieId }]);
+    }
+  };
+
   return (
     <div className="d-flex bg-white min-vh-100">
       <Sidebar />
@@ -115,6 +231,15 @@ const resetAll = useCallback((reload = false) => {
               <div className="d-flex align-items-center gap-2">
                 <FaFilm /> <span className="small text-muted">Tổng số</span>
                 <span className="badge bg-dark ms-1">{movies.length}</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="d-flex align-items-center gap-2">
+                <FaExclamationTriangle className="text-warning" /> 
+                <span className="small text-muted">Báo lỗi</span>
+                <span className="badge bg-warning ms-1">
+                  {Object.values(issueCounts).reduce((sum, count) => sum + count, 0)}
+                </span>
               </div>
             </div>
             <button className="btn btn-outline-secondary"  onClick={() => resetAll(true)}>
@@ -240,7 +365,7 @@ const resetAll = useCallback((reload = false) => {
                   <th>Năm</th>
                   <th>Loại</th>
                   <th>Trạng thái</th>
-                  <th style={{width: 220}}>Thao tác</th>
+                  <th style={{width: 280}}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -280,6 +405,12 @@ const resetAll = useCallback((reload = false) => {
                                   onClick={()=>setOpenEpisodeFor(m)}>
                             <FaListUl className="me-1"/> Tập
                           </button>
+                          <IssueReportButton
+                            movieId={id}
+                            issueData={issueStatistics}
+                            onClick={() => handleOpenIssueReports(m)}
+                            issueCounts={issueCounts}
+                          />
                           <button className="btn btn-sm btn-outline-danger"
                                   onClick={()=>handleDeleteSelected(new Set([id]))}>
                             <FaTrash />
@@ -319,6 +450,14 @@ const resetAll = useCallback((reload = false) => {
               movieId={openEpisodeFor.movieId || openEpisodeFor.id}
               onClose={()=>setOpenEpisodeFor(null)}
               onSuccess={()=> setOpenEpisodeFor(null)}
+            />
+          )}
+          {issueReportsFor && (
+            <IssueReportsModal
+              isOpen={true}
+              onClose={handleIssueModalClose}
+              movieId={issueReportsFor.movieId}
+              movieTitle={issueReportsFor.movieTitle}
             />
           )}
         </Suspense>
