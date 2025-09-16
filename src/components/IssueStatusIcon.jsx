@@ -24,7 +24,7 @@ export const IssueStatusIcon = ({ issueStatuses, count = 0 }) => {
     const currentPriority = statusPriority[current] || 0;
     const highestPriority = statusPriority[highest] || 0;
     return currentPriority > highestPriority ? current : highest;
-  }, 'OPEN');
+  }, 'RESOLVED'); // Mặc định là RESOLVED thay vì OPEN
 
   // Mapping icon và màu sắc cho từng trạng thái
   const statusConfig = {
@@ -50,7 +50,7 @@ export const IssueStatusIcon = ({ issueStatuses, count = 0 }) => {
     }
   };
 
-  const config = statusConfig[highestPriorityStatus] || statusConfig['OPEN'];
+  const config = statusConfig[highestPriorityStatus] || statusConfig['RESOLVED'];
   const IconComponent = config.icon;
 
   return (
@@ -67,6 +67,14 @@ export const IssueStatusIcon = ({ issueStatuses, count = 0 }) => {
 export const IssueReportButton = ({ movieId, issueData, onClick, issueCounts }) => {
   const count = issueCounts[movieId] || 0;
   const statuses = issueData[movieId]?.statuses || [];
+  
+  // Kiểm tra xem có báo lỗi chưa được giải quyết không
+  const hasUnresolvedIssues = statuses.some(status => 
+    status === 'OPEN' || status === 'IN_PROGRESS'
+  );
+  
+  // Màu nền badge dựa trên trạng thái
+  const badgeColor = hasUnresolvedIssues ? 'bg-danger' : 'bg-success';
 
   return (
     <button 
@@ -77,15 +85,18 @@ export const IssueReportButton = ({ movieId, issueData, onClick, issueCounts }) 
       Báo lỗi
       {count > 0 && (
         <span 
-          className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+          className={`position-absolute top-0 start-100 translate-middle badge rounded-pill ${badgeColor}`}
           style={{fontSize: '0.6rem', zIndex: 1}}
         >
           {count}
-          <span className="visually-hidden">báo lỗi mới</span>
+          <span className="visually-hidden">
+            {hasUnresolvedIssues ? 'báo lỗi chưa giải quyết' : 'báo lỗi đã giải quyết'}
+          </span>
         </span>
       )}
     </button>
   );
 };
 
-export default { IssueStatusIcon, IssueReportButton };
+const IssueStatusIconComponents = { IssueStatusIcon, IssueReportButton };
+export default IssueStatusIconComponents;

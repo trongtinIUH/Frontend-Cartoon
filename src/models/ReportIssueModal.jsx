@@ -28,30 +28,26 @@ const ReportIssueModal = ({
     {
       value: 'VIDEO_PLAYBACK',
       label: 'Lỗi video',
-      description: 'Video không phát, bị lag, giật, tối hoặc không có hình ảnh',
       icon: Video,
       color: '#e74c3c'
     },
     {
       value: 'AUDIO_SYNC',
       label: 'Lỗi âm thanh',
-      description: 'Không có tiếng, âm thanh và hình ảnh không đồng bộ',
       icon: Volume2,
       color: '#f39c12'
     },
     {
       value: 'SUBTITLE_MISSING',
       label: 'Lỗi phụ đề',
-      description: 'Phụ đề bị thiếu, sai hoặc không hiển thị',
       icon: Subtitles,
       color: '#9b59b6'
     },
     {
       value: 'OTHER',
       label: 'Lỗi khác',
-      description: 'Các vấn đề khác không thuộc danh mục trên',
       icon: HelpCircle,
-      color: '#34495e'
+      color: '#6b7280'
     }
   ];
 
@@ -65,8 +61,8 @@ const ReportIssueModal = ({
       return;
     }
 
-    if (!formData.issueType || !formData.issueDetail.trim()) {
-      toast.error('Vui lòng chọn loại lỗi và mô tả chi tiết!');
+    if (!formData.issueType) {
+      toast.error('Vui lòng chọn loại lỗi!');
       return;
     }
 
@@ -78,7 +74,7 @@ const ReportIssueModal = ({
         episodeId: episodeId ? String(episodeId) : null, // episodeId mapping sang seasonId
         episodeNumber: 1, // Mặc định episode 1, có thể customize sau
         issueType: formData.issueType, // VIDEO_PLAYBACK, AUDIO_SYNC, SUBTITLE_MISSING, OTHER
-        issueDetail: formData.issueDetail.trim(),
+        issueDetail: formData.issueDetail.trim() || 'Người dùng chưa cung cấp mô tả chi tiết',
         timeStamp: formData.timeStamp
       };
 
@@ -129,22 +125,12 @@ const ReportIssueModal = ({
               <AlertTriangle size={24} color="#e74c3c" />
             </div>
             <div className="header-text">
-              <h2>Báo lỗi phim</h2>
-              <p>Giúp chúng tôi cải thiện chất lượng phục vụ</p>
+              <h2>Báo lỗi</h2>
             </div>
           </div>
           <button className="close-button" onClick={onClose}>
             <X size={20} />
           </button>
-        </div>
-
-        {/* Movie Info */}
-        <div className="movie-info-section">
-          <div className="movie-info">
-            <h3>{movieTitle}</h3>
-            {episodeTitle && <span className="episode-info">{episodeTitle}</span>}
-            <span className="time-info">Thời điểm: {formatTime(formData.timeStamp)}</span>
-          </div>
         </div>
 
         {/* Form */}
@@ -162,11 +148,10 @@ const ReportIssueModal = ({
                     onClick={() => setFormData(prev => ({ ...prev, issueType: type.value }))}
                   >
                     <div className="issue-type-icon" style={{ color: type.color }}>
-                      <IconComponent size={20} />
+                      <IconComponent size={16} />
                     </div>
                     <div className="issue-type-content">
                       <h4>{type.label}</h4>
-                      <p>{type.description}</p>
                     </div>
                   </div>
                 );
@@ -196,18 +181,15 @@ const ReportIssueModal = ({
 
           {/* Issue Detail */}
           <div className="form-section">
-            <label className="section-label">Mô tả chi tiết *</label>
+            <label className="section-label">Mô tả chi tiết</label>
             <textarea
               value={formData.issueDetail}
               onChange={(e) => setFormData(prev => ({ ...prev, issueDetail: e.target.value }))}
-              placeholder="Vui lòng mô tả chi tiết về lỗi bạn gặp phải. Ví dụ: Video bị lag từ phút 15:30, âm thanh chậm hơn hình ảnh 2 giây..."
+              placeholder="Mô tả chi tiết lỗi (tùy chọn)"
               className="detail-textarea"
-              rows={4}
-              maxLength={500}
+              rows={2}
+              maxLength={200}
             />
-            <div className="char-count">
-              {formData.issueDetail.length}/500 ký tự
-            </div>
           </div>
 
           {/* Buttons */}
@@ -218,12 +200,12 @@ const ReportIssueModal = ({
               onClick={onClose}
               disabled={isSubmitting}
             >
-              Hủy
+              Đóng
             </button>
             <button
               type="submit"
               className="submit-button"
-              disabled={isSubmitting || !formData.issueType || !formData.issueDetail.trim()}
+              disabled={isSubmitting || !formData.issueType}
             >
               {isSubmitting ? (
                 <>
@@ -231,16 +213,11 @@ const ReportIssueModal = ({
                   Đang gửi...
                 </>
               ) : (
-                'Gửi báo lỗi'
+                'Gửi đi'
               )}
             </button>
           </div>
         </form>
-
-        {/* Footer */}
-        <div className="report-modal-footer">
-          <p>💡 Báo lỗi của bạn sẽ được xem xét và xử lý trong thời gian sớm nhất</p>
-        </div>
       </div>
     </div>
   );

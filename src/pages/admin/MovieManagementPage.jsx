@@ -15,7 +15,7 @@ const ModelUpdateMovie = React.lazy(() => import("../../models/ModelUpdateMovie"
 const ModelAddNewEpisode = React.lazy(() => import("../../models/ModelAddNewEpisode"));
 
 
-const defaultFilters = { status: "", movieType: "", year: "", genre: "" };
+const defaultFilters = { status: "", movieType: "", year: "", genre: "", issueStatus: "" };
 
 
 const statusBadge = (status) => {
@@ -138,13 +138,61 @@ const resetAll = useCallback((reload = false) => {
 
   // filter giống giao diện 2 (search + dropdown…)
   const filtered = useMemo(() => {
-    return (movies || [])
+    let result = (movies || [])
       .filter((m) => !keyword || (m.title || "").toLowerCase().includes(keyword.toLowerCase()))
       .filter((m) => !filters.status || m.status === filters.status)
       .filter((m) => !filters.movieType || m.movieType === filters.movieType)
       .filter((m) => !filters.year || String(m.releaseYear) === String(filters.year))
       .filter((m) => !filters.genre || (m.genres || []).includes(filters.genre));
-  }, [movies, keyword, filters]);
+
+    // Filter by issue status
+    if (filters.issueStatus) {
+      result = result.filter((m) => {
+        const movieId = m.movieId || m.id;
+        const movieStatuses = issueStatistics[movieId]?.statuses || [];
+        
+        switch (filters.issueStatus) {
+          case 'OPEN':
+            return movieStatuses.includes('OPEN');
+          case 'IN_PROGRESS':
+            return movieStatuses.includes('IN_PROGRESS');
+          case 'RESOLVED':
+            return movieStatuses.includes('RESOLVED') && !movieStatuses.includes('OPEN') && !movieStatuses.includes('IN_PROGRESS');
+          case 'INVALID':
+            return movieStatuses.includes('INVALID');
+          case 'HAS_ISSUES':
+            return (issueCounts[movieId] || 0) > 0;
+          case 'NO_ISSUES':
+            return (issueCounts[movieId] || 0) === 0;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Sort: phim có lỗi chưa giải quyết lên đầu
+    result.sort((a, b) => {
+      const aId = a.movieId || a.id;
+      const bId = b.movieId || b.id;
+      const aStatuses = issueStatistics[aId]?.statuses || [];
+      const bStatuses = issueStatistics[bId]?.statuses || [];
+      
+      // Priority: OPEN > IN_PROGRESS > RESOLVED > NO_ISSUES
+      const getPriority = (statuses) => {
+        if (statuses.includes('OPEN')) return 4;
+        if (statuses.includes('IN_PROGRESS')) return 3;
+        if (statuses.includes('RESOLVED')) return 2;
+        return 1; // No issues
+      };
+      
+      const aPriority = getPriority(aStatuses);
+      const bPriority = getPriority(bStatuses);
+      
+      return bPriority - aPriority; // Sort descending (higher priority first)
+    });
+
+    return result;
+  }, [movies, keyword, filters, issueStatistics, issueCounts]);
 
   // select & bulk delete
   const allChecked = filtered.length > 0 && filtered.every(m => selected.has(m.movieId || m.id));
@@ -226,7 +274,7 @@ const resetAll = useCallback((reload = false) => {
             <h2 className="fw-bold mb-1">QUẢN LÝ PHIM</h2>
             <div className="text-muted">Quản trị danh mục phim, tập, thông tin…</div>
           </div>
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2 flex-wrap">
             <div className="stat-card">
               <div className="d-flex align-items-center gap-2">
                 <FaFilm /> <span className="small text-muted">Tổng số</span>
@@ -235,20 +283,47 @@ const resetAll = useCallback((reload = false) => {
             </div>
             <div className="stat-card">
               <div className="d-flex align-items-center gap-2">
-                <FaExclamationTriangle className="text-warning" /> 
-                <span className="small text-muted">Báo lỗi</span>
-                <span className="badge bg-warning ms-1">
-                  {Object.values(issueCounts).reduce((sum, count) => sum + count, 0)}
+                <FaExclamationTriangle className="text-danger" /> 
+                <span className="small text-muted">Lỗi mới</span>
+                <span className="badge bg-danger ms-1">
+                  {Object.values(issueStatistics).filter(stat => stat.statuses.includes('OPEN')).length}
                 </span>
               </div>
             </div>
-            <button className="btn btn-outline-secondary"  onClick={() => resetAll(true)}>
-            <FaSync className={`me-1`} />Làm mới
-            </button>
+            <div className="stat-card">
+              <div className="d-flex align-items-center gap-2">
+                <FaExclamationTriangle className="text-warning" /> 
+                <span className="small text-muted">Đang xử lý</span>
+                <span className="badge bg-warning ms-1">
+                  {Object.values(issueStatistics).filter(stat => stat.statuses.includes('IN_PROGRESS')).length}
+                </span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="d-flex align-items-center gap-2">
+                <FaExclamationTriangle className="text-success" /> 
+                <span className="small text-muted">Đã giải quyết</span>
+                <span className="badge bg-success ms-1">
+                  {Object.values(issueStatistics).filter(stat => 
+                    stat.statuses.includes('RESOLVED') && 
+                    !stat.statuses.includes('OPEN') && 
+                    !stat.statuses.includes('IN_PROGRESS')
+                  ).length}
+                </span>
+              </div>
+            </div>
+            <div className="d-flex gap-2">
+              <button className="btn btn-sm btn-outline-secondary" onClick={() => resetAll(true)}>
+                <FaSync className="me-1" />Làm mới
+              </button>
+              <button className="btn btn-sm btn-primary" onClick={()=>setOpenAdd(true)}>
+                <FaPlus className="me-1"/> Thêm mới
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ===== TOOLBAR (search + filter + thêm mới) – giống hình 2 ===== */}
+        {/* ===== TOOLBAR (search + filter) – gọn gàng chuyên nghiệp ===== */}
         <div className="card border-0 shadow-sm mb-3">
           <div className="card-body">
             <div className="row g-3 align-items-end">
@@ -264,6 +339,19 @@ const resetAll = useCallback((reload = false) => {
                   />
                   <span className="input-group-text"><FaSearch /></span>
                 </div>
+              </div>
+              <div className="col-6 col-lg-2">
+                <label className="form-label">Trạng thái báo lỗi</label>
+                <select className="form-select" value={filters.issueStatus}
+                        onChange={(e)=>setFilters(s=>({...s,issueStatus:e.target.value}))}>
+                  <option value="">Tất cả</option>
+                  <option value="OPEN">🔴 Lỗi mới</option>
+                  <option value="IN_PROGRESS">🟡 Đang xử lý</option>
+                  <option value="RESOLVED">🟢 Đã giải quyết</option>
+                  <option value="INVALID">⚫ Không hợp lệ</option>
+                  <option value="HAS_ISSUES">⚠️ Có báo lỗi</option>
+                  <option value="NO_ISSUES">✅ Không có lỗi</option>
+                </select>
               </div>
               <div className="col-6 col-lg-2">
                 <label className="form-label">Trạng thái</label>
@@ -287,12 +375,6 @@ const resetAll = useCallback((reload = false) => {
                 <label className="form-label">Năm</label>
                 <input className="form-control" type="number" placeholder="VD: 2025"
                        value={filters.year} onChange={(e)=>setFilters(s=>({...s,year:e.target.value}))}/>
-              </div>
-              <div className="col-6 col-lg-2 d-grid">
-                <label className="form-label invisible">.</label>
-                <button className="btn btn-gradient" onClick={()=>setOpenAdd(true)}>
-                  <FaPlus className="me-2"/> Thêm mới
-                </button>
               </div>
             </div>
           </div>
