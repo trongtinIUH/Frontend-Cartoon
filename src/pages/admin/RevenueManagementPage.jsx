@@ -28,6 +28,23 @@ const RevenueManagementPage = () => {
         monthlyTransactions: 0,
     });
 
+    const [quickStats, setQuickStats] = useState({
+        todayRevenue: 0,
+        weekRevenue: 0,
+        growthPercent: 0,
+        popularPackage: "",
+    });
+
+    // Fetch quick stats
+    useEffect(() => {
+        RevenueService.getQuickStats()
+            .then((res) => {
+                setQuickStats(res.data);
+            })
+            .catch((err) => console.error(err));
+    }, []);
+
+
     // Fetch chart data
     useEffect(() => {
         if (filter === "day") {
@@ -47,11 +64,11 @@ const RevenueManagementPage = () => {
     }, [filter, selectedMonth, selectedYear]);
 
     // Fetch summary data (cho 4 card)
-    //   useEffect(() => {
-    //     RevenueService.getSummary()
-    //       .then((res) => setRevenueData(res.data))
-    //       .catch((err) => console.error(err));
-    //   }, []);
+    useEffect(() => {
+        RevenueService.getSummary()
+            .then((res) => setRevenueData(res.data))
+            .catch((err) => console.error(err));
+    }, []);
 
     const chartConfig = {
         labels: chartData.labels || [],
@@ -88,7 +105,7 @@ const RevenueManagementPage = () => {
                     <div className="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
                         <select
                             className="form-select"
-                            style={{ minWidth: '120px' }}
+                            style={{ minWidth: '150px' }}
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
                         >
@@ -207,7 +224,7 @@ const RevenueManagementPage = () => {
                                 </span>
                             </div>
                             <div className="card-body">
-                                <Bar data={chartConfig} options={chartOptions} height={300} />
+                                <Bar data={chartConfig} options={chartOptions} height={150} />
                             </div>
                         </div>
                     </div>
@@ -221,20 +238,20 @@ const RevenueManagementPage = () => {
                                 <div className="quick-stats">
                                     <div className="stat-item d-flex justify-content-between mb-3">
                                         <span>Doanh thu hôm nay:</span>
-                                        <strong className="text-success">2.500.000₫</strong>
+                                        <strong className="text-success">{quickStats.todayRevenue.toLocaleString("vi-VN")}₫</strong>
                                     </div>
                                     <div className="stat-item d-flex justify-content-between mb-3">
                                         <span>Doanh thu tuần:</span>
-                                        <strong className="text-info">15.200.000₫</strong>
+                                        <strong className="text-info">{quickStats.weekRevenue.toLocaleString("vi-VN")}₫</strong>
                                     </div>
                                     <div className="stat-item d-flex justify-content-between mb-3">
                                         <span>Tăng trưởng:</span>
-                                        <strong className="text-warning">+12.5%</strong>
+                                        <strong className="text-warning">{quickStats.growthPercent}%</strong>
                                     </div>
                                     <hr />
                                     <div className="stat-item d-flex justify-content-between">
                                         <span>Gói phổ biến nhất:</span>
-                                        <strong>Premium</strong>
+                                        <strong>{quickStats.popularPackage}</strong>
                                     </div>
                                 </div>
                             </div>

@@ -22,7 +22,18 @@ const RevenueService = {
     return axiosInstance.get(`${API_BASE_URL}/year`, {
       params: { from, to }
     });
+  },
+
+  // tổng quan doanh thu
+  getSummary: () => {
+    return axiosInstance.get(`${API_BASE_URL}/summary`);
+  },
+
+  // thống kê nhanh
+  getQuickStats: () => {
+    return axiosInstance.get(`${API_BASE_URL}/quick-stats`);
   }
+
 };
 
 export default RevenueService;
