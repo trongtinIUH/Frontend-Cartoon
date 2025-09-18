@@ -11,7 +11,7 @@ import {
     Tooltip,
     Legend,
 } from "chart.js";
-import RevenueService from "../../services/RevenueSerivce";
+import RevenueService from "../../services/DataAnalyzerSerivce";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 

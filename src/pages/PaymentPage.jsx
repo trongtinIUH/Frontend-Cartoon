@@ -123,12 +123,21 @@ const PaymentPage = () => {
     try {
       const promos = await PromotionService.getAllPromotions();
       setPromotions(promos);
-
-      const promo = promos.find(p => p.promotionType === "VOUCHER");
+      console.log("All promotions:", promos);
 
       const info = await PromotionService.getVoucherInfo(voucherCode.trim().toUpperCase());
-      setVoucherInfo({ ...info, promoStatus: promo?.status });
-      return { ...info, promoStatus: promo?.status };
+      console.log("Voucher info from API:", info);
+      
+      // Tìm promotion theo promotionId từ voucher info
+      const promo = promos.find(p => 
+        p.promotionId === info.promotionId
+      );
+      console.log("Found promotion:", promo);
+
+      const voucherData = { ...info, promoStatus: promo?.status };
+      setVoucherInfo(voucherData);
+      console.log("Final voucher data with status:", voucherData);
+      return voucherData;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         setVoucherInfo(null);
@@ -151,6 +160,7 @@ const PaymentPage = () => {
     if (!selectedDurationPackage) return;
     const info = await fetchVoucherInfo();
     if (!info) return;
+    console.log("Voucher info:", info);
 
     if (info?.promoStatus !== "ACTIVE") {
       toast.error("Mã giảm giá không còn hiệu lực.");
