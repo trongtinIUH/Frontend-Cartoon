@@ -169,6 +169,16 @@ const Sidebar = () => {
                       <i className="fas fa-dollar-sign me-2" /> Doanh thu
                     </NavLink>
                   </li>
+                  <li className="nav-item">
+                    <NavLink
+                      to="/admin-movie-stats"
+                      className={({ isActive }) =>
+                        `nav-link sidebar-sublink d-flex align-items-center ${isActive ? "active" : ""}`
+                      }
+                    >
+                      <i className="fas fa-film me-2" /> Phim
+                    </NavLink>
+                  </li>
                 </ul>
               </li>
 

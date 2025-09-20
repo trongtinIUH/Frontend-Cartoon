@@ -21,6 +21,9 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "hls.js": "^1.6.7",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "lodash": "^4.17.21",
     "lucide-react": "^0.516.0",
     "react": "^19.1.0",
@@ -41,7 +44,8 @@
     "videojs-contrib-quality-levels": "^4.1.0",
     "videojs-hls-quality-selector": "^2.0.0",
     "videojs-http-source-selector": "^1.1.6",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "homepage": "https://trongtiniuh.github.io/Frontend-Cartoon",
   "scripts": {
