@@ -32,7 +32,12 @@ const RevenueService = {
   // thống kê nhanh
   getQuickStats: () => {
     return axiosInstance.get(`${API_BASE_URL}/revenue/quick-stats`);
-  }
+  },
+
+  // 5 giao dich gần nhất
+  getRecentTransactions: () => {
+    return axiosInstance.get(`${API_BASE_URL}/revenue/recent-transactions`);
+  },
 
 };
 

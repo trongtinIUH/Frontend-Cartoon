@@ -12,6 +12,7 @@ import {
     Legend,
 } from "chart.js";
 import RevenueService from "../../services/DataAnalyzerSerivce";
+import ExportService from "../../services/ExportService";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -20,6 +21,7 @@ const RevenueManagementPage = () => {
     const [selectedMonth, setSelectedMonth] = useState("2025-09");
     const [selectedYear, setSelectedYear] = useState("2025");
     const [chartData, setChartData] = useState({ labels: [], data: [] });
+    const [recentTransactions, setRecentTransactions] = useState([]);
 
     const [revenueData, setRevenueData] = useState({
         totalRevenue: 0,
@@ -94,13 +96,35 @@ const RevenueManagementPage = () => {
         },
     };
 
+    useEffect(() => {
+        RevenueService.getRecentTransactions()
+            .then((res) => setRecentTransactions(res.data))
+            .catch((err) => console.error(err));
+    }, []);
+
+    const handleExportDashboard = () => {
+        ExportService.exportRevenueReport()
+            .then((res) => {
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", "dashboard_report.xlsx");
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            })
+            .catch((err) => {
+                console.error("Export error:", err);
+                alert("Xuất báo cáo thất bại!");
+            });
+    };
+
     return (
         <div className="d-flex flex-column flex-lg-row bg-light min-vh-100">
             <Sidebar />
             <div className="revenue-content flex-grow-1">
                 <div className="revenue-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
                     <h2 className="mb-3 mb-md-0 fw-bold text-dark">QUẢN LÝ DOANH THU</h2>
-
                     {/* Bộ lọc và date picker */}
                     <div className="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
                         <select
@@ -256,18 +280,19 @@ const RevenueManagementPage = () => {
                                 </div>
                             </div>
                         </div>
+                        <div className="d-grid mt-3" onClick={handleExportDashboard}>
+                            <button className="btn btn-outline-primary btn-sm">
+                                <i className="fas fa-download me-1"></i> Xuất báo cáo
+                            </button>
+                        </div>
                     </div>
                 </div>
-
                 {/* Recent Transactions */}
                 <div className="row">
                     <div className="col-12">
                         <div className="card">
                             <div className="card-header bg-white d-flex justify-content-between align-items-center">
                                 <h5 className="card-title mb-0">Giao dịch gần đây</h5>
-                                <button className="btn btn-outline-primary btn-sm">
-                                    <i className="fas fa-download me-1"></i> Xuất báo cáo
-                                </button>
                             </div>
                             <div className="card-body p-0">
                                 <div className="table-responsive">
@@ -283,46 +308,26 @@ const RevenueManagementPage = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td>#12345</td>
-                                                <td>Nguyễn Văn A</td>
-                                                <td>Premium Monthly</td>
-                                                <td className="text-success fw-bold">299.000₫</td>
-                                                <td>15/09/2025</td>
-                                                <td><span className="badge bg-success">Thành công</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td>#12344</td>
-                                                <td>Trần Thị B</td>
-                                                <td>Basic Monthly</td>
-                                                <td className="text-success fw-bold">99.000₫</td>
-                                                <td>15/09/2025</td>
-                                                <td><span className="badge bg-success">Thành công</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td>#12343</td>
-                                                <td>Lê Văn C</td>
-                                                <td>Premium Yearly</td>
-                                                <td className="text-success fw-bold">2.990.000₫</td>
-                                                <td>14/09/2025</td>
-                                                <td><span className="badge bg-warning">Đang xử lý</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td>#12342</td>
-                                                <td>Phạm Thị D</td>
-                                                <td>Basic Yearly</td>
-                                                <td className="text-success fw-bold">990.000₫</td>
-                                                <td>14/09/2025</td>
-                                                <td><span className="badge bg-success">Thành công</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td>#12341</td>
-                                                <td>Hoàng Văn E</td>
-                                                <td>Premium Monthly</td>
-                                                <td className="text-danger fw-bold">299.000₫</td>
-                                                <td>13/09/2025</td>
-                                                <td><span className="badge bg-danger">Thất bại</span></td>
-                                            </tr>
+                                            {recentTransactions.map((tx, idx) => (
+                                                <tr key={idx}>
+                                                    <td>#{tx.orderId}</td>
+                                                    <td>{tx.userName}</td>
+                                                    <td>{tx.packageId}</td>
+                                                    <td className={tx.status === "PAID" ? "text-success fw-bold" : "text-danger fw-bold"}>
+                                                        {tx.finalAmount.toLocaleString("vi-VN")}₫
+                                                    </td>
+                                                    <td>{new Date(tx.createdAt).toLocaleDateString("vi-VN")}</td>
+                                                    <td>
+                                                        {tx.status === "PAID" ? (
+                                                            <span className="badge bg-success">Thành công</span>
+                                                        ) : tx.status === "PENDING" ? (
+                                                            <span className="badge bg-warning">Đang xử lý</span>
+                                                        ) : (
+                                                            <span className="badge bg-danger">Thất bại</span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                 </div>
