@@ -34,7 +34,20 @@ const UserService = {
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
+    },
+
+    getAllUsers: async (page, size, keyword = "") => {
+        try {
+            const response = await axiosInstance.get(API_BASE_URL, {
+                params: { page: page - 1, size, keyword },
+            });
+            const total = Number(response.headers["x-total-count"] ?? 0);
+            return { items: response.data, total };
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
     }
+
 
 };
 
