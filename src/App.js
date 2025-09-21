@@ -17,7 +17,6 @@ import Layout from "./layout/Layout";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import './css/GlobalZoomFix.css'; // CSS fix cho vấn đề zoom
 import DashboardPage from './pages/admin/DashboardPage';
 import MovieManagementPage from './pages/admin/MovieManagementPage';
 // Cleanup auth data cũ
