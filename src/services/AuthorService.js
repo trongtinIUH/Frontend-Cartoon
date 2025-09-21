@@ -14,7 +14,7 @@ const AuthorService = {
     const params = new URLSearchParams();
     authorIds.forEach(id => params.append("authorIds", id));
     params.append("movieId", movieId);
-    return (await axios.post(`${API_BASE_URL}/add-movie?${params.toString()}`)).data;
+    return (await axios.post(`${API_BASE_URL}/add-movie`, null, { params })).data;
   },
 
   getAuthorsByMovieId: async (movieId) =>

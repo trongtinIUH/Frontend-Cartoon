@@ -260,6 +260,14 @@ const authorOptions = authors.map(a => ({
           try {
             await AuthorService.addMovieToMultipleAuthors(createdAuthorIds, createdMovie.movieId);
             console.log("✅ Authors linked to movie successfully");
+            
+            // Đồng bộ lại toàn bộ authors cho movie (sử dụng backend service setAuthorsForMovie)
+            const allAuthorIds = [...existingAuthorIds, ...createdAuthorIds];
+            const updateFormData = new FormData();
+            allAuthorIds.forEach(id => updateFormData.append("authorIds", id));
+            await MovieService.updateMovie(createdMovie.movieId, updateFormData);
+            console.log("✅ Movie updated with complete author list");
+            
           } catch (linkError) {
             console.warn("⚠️ Failed to link some authors to movie:", linkError);
             // Không dừng process vì movie đã tạo thành công
