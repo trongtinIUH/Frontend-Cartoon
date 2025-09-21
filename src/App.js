@@ -17,6 +17,7 @@ import Layout from "./layout/Layout";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './css/GlobalZoomFix.css'; // CSS fix cho vấn đề zoom
 import DashboardPage from './pages/admin/DashboardPage';
 import MovieManagementPage from './pages/admin/MovieManagementPage';
 // Cleanup auth data cũ
@@ -36,6 +37,7 @@ import PromotionManagementPage from './pages/admin/PromotionManagementPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import RevenueManagementPage from './pages/admin/RevenueManagementPage';
 import MovieStatsPage from './pages/admin/MovieStatsPage';
+import MemberManagementPage from './pages/admin/MemberManagementPage';
 
 function App() {
   const navigate = useNavigate();
@@ -96,6 +98,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/admin-author" element={<AuthorManagementPage />} />
                     <Route path="/admin-revenue" element={<RevenueManagementPage />} />
                     <Route path="/admin-movie-stats" element={<MovieStatsPage />} />
+                    <Route path="/admin-member" element={<MemberManagementPage />} />
                   </Route>
                 </Routes>
 

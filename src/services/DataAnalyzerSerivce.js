@@ -35,6 +35,11 @@ const RevenueService = {
     return axiosInstance.get(`${API_BASE_URL}/revenue/quick-stats`);
   },
 
+  // 5 giao dich gần nhất
+  getRecentTransactions: () => {
+    return axiosInstance.get(`${API_BASE_URL}/revenue/recent-transactions`);
+  },
+
   // ======= MOVIE ANALYTICS =======
   // Tổng quan thống kê phim
   getMovieSummary: (year, month) => {
