@@ -20,11 +20,6 @@ const UpgradeModal = ({
     navigate('/buy-package');
   };
 
-  const handleGoHome = () => {
-    onClose();
-    navigate(-1);
-  };
-
   const handleLogin = () => {
     onClose();
     navigate('/login');
@@ -73,12 +68,11 @@ const UpgradeModal = ({
           <button className="btn-upgrade-main" onClick={handleUpgrade}>
             💎 Nâng cấp {packageName}
           </button>
-          <div className="secondary-actions-compact">
-            <button className="btn-back" onClick={handleGoHome}>Quay lại</button>
-            {!userId && (
+          {!userId && (
+            <div className="secondary-actions-compact">
               <button className="btn-login" onClick={handleLogin}>Đăng nhập</button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import ReactDOM from "react-dom/client";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -16,7 +17,7 @@ import "videojs-contrib-quality-levels";
 import "videojs-hls-quality-selector";
 
 import { Funnel } from "lucide-react";
-import { faHeart, faPlus, faFlag, faShareNodes, faCirclePlay, faEye, faClockRotateLeft, faBackwardStep, faForwardStep } from "@fortawesome/free-solid-svg-icons";
+import { faHeart, faPlus, faFlag, faShareNodes, faCirclePlay, faEye, faClockRotateLeft, faBackwardStep, faForwardStep, faGear } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import "../css/WatchPage.css";
@@ -116,6 +117,13 @@ export default function WatchPage() {
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
   }, [currentEpisode?.episodeId, dataLoading]);
+
+  // -------- Video Settings States
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [selectedQuality, setSelectedQuality] = useState('Auto (720p)');
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [currentSettingsView, setCurrentSettingsView] = useState('main'); // 'main', 'speed', 'quality'
 
   // -------- computed
   const totalRatings = ratings.length;
@@ -547,6 +555,7 @@ export default function WatchPage() {
   const nextBtnRef = useRef(null);
   const rewind10BtnRef = useRef(null);
   const forward10BtnRef = useRef(null);
+  const settingsBtnRef = useRef(null);
 
   // giữ “bản mới nhất” của prev/next để callback trong Video.js luôn đúng
   const prevEpRef = useRef(null);
@@ -876,11 +885,43 @@ export default function WatchPage() {
     }
   }
 
+  // ⭐ NEW: Settings button  
+  class SettingsButton extends Button {
+    constructor(player, options) {
+      super(player, options);
+      this.addClass('vjs-settings-button');
+      this.controlText('Cài đặt');
+    }
+    
+    createEl() {
+      const el = super.createEl();
+      // Add icon placeholder for React component
+      el.innerHTML = '<span class="vjs-icon-placeholder"></span>';
+      
+      // Use ReactDOM to render FontAwesome component
+      setTimeout(() => {
+        const iconPlaceholder = el.querySelector('.vjs-icon-placeholder');
+        if (iconPlaceholder) {
+          iconPlaceholder.innerHTML = '';
+          const root = ReactDOM.createRoot(iconPlaceholder);
+          root.render(<FontAwesomeIcon icon={faGear} style={{ fontSize: '16px', color: 'white' }} />);
+        }
+      }, 0);
+      
+      return el;
+    }
+    
+    handleClick() { 
+      setShowSettingsMenu(prev => !prev);
+    }
+  }
+
   // đăng ký component 1 lần
   if (!videojs.getComponent('PrevEpButton')) videojs.registerComponent('PrevEpButton', PrevEpButton);
   if (!videojs.getComponent('NextEpButton')) videojs.registerComponent('NextEpButton', NextEpButton);
   if (!videojs.getComponent('Rewind10Button')) videojs.registerComponent('Rewind10Button', Rewind10Button);
   if (!videojs.getComponent('Forward10Button')) videojs.registerComponent('Forward10Button', Forward10Button);
+  if (!videojs.getComponent('SettingsButton')) videojs.registerComponent('SettingsButton', SettingsButton);
 
   const cb = p.getChild('controlBar');
 
@@ -888,11 +929,12 @@ export default function WatchPage() {
   const fsIndex = cb.children().findIndex(c => c?.name?.() === 'FullscreenToggle');
   const insertIndex = fsIndex >= 0 ? fsIndex : cb.children().length;
 
-  // Thêm các nút theo thứ tự: rewind10, forward10, prev episode, next episode
+  // Thêm các nút theo thứ tự: rewind10, forward10, prev episode, next episode, settings
   rewind10BtnRef.current = cb.addChild('Rewind10Button', {}, insertIndex);
   forward10BtnRef.current = cb.addChild('Forward10Button', {}, insertIndex + 1);
   prevBtnRef.current = cb.addChild('PrevEpButton', {}, insertIndex + 2);
   nextBtnRef.current = cb.addChild('NextEpButton', {}, insertIndex + 3);
+  settingsBtnRef.current = cb.addChild('SettingsButton', {}, insertIndex + 4);
 
   return () => {
     // gỡ khi unmount
@@ -900,6 +942,7 @@ export default function WatchPage() {
     prevBtnRef.current?.dispose?.(); prevBtnRef.current = null;
     nextBtnRef.current?.dispose?.(); nextBtnRef.current = null;
     forward10BtnRef.current?.dispose?.(); forward10BtnRef.current = null;
+    settingsBtnRef.current?.dispose?.(); settingsBtnRef.current = null;
   };
 }, [playerRef.current]); // chạy sau khi player đã được tạo
 
@@ -912,14 +955,14 @@ export default function WatchPage() {
     }
   }, [prevEp, nextEp]);
 
-  // ⭐ NEW: Keyboard shortcuts cho tua 10 giây
+  // control videojs
   useEffect(() => {
     const handleKeyDown = (e) => {
       const p = playerRef.current;
       if (!p) return;
       
       // Chỉ hoạt động khi không có modal nào mở và không đang focus vào input
-      const isModalOpen = showRatingModal || showUpgradeModal;
+      const isModalOpen = showRatingModal || showUpgradeModal || showSettingsMenu;
       const isInputFocused = document.activeElement?.tagName === 'INPUT' || 
                            document.activeElement?.tagName === 'TEXTAREA' ||
                            document.activeElement?.contentEditable === 'true';
@@ -927,6 +970,14 @@ export default function WatchPage() {
       if (isModalOpen || isInputFocused) return;
 
       switch(e.code) {
+        case 'Space':
+          e.preventDefault();
+          if (p.paused()) {
+            p.play();
+          } else {
+            p.pause();
+          }
+          break;
         case 'ArrowLeft':
           e.preventDefault();
           const currentTimeLeft = p.currentTime();
@@ -943,12 +994,21 @@ export default function WatchPage() {
       }
     };
 
+    const handleClickOutside = (e) => {
+      if (showSettingsMenu && !e.target.closest('.settings-menu') && !e.target.closest('.vjs-settings-button') && !e.target.closest('.video-settings-container')) {
+        setShowSettingsMenu(false);
+        setCurrentSettingsView('main');
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('click', handleClickOutside);
     
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('click', handleClickOutside);
     };
-  }, [playerRef.current, showRatingModal, showUpgradeModal]);
+  }, [playerRef.current, showRatingModal, showUpgradeModal, showSettingsMenu]);
   
 
 
@@ -1090,6 +1150,182 @@ export default function WatchPage() {
               </div>
             )}
           </div>
+
+          {/* ✅ Settings menu - positioned above control bar */}
+          {showSettingsMenu && (
+            <div className="video-settings-container">
+              <div className="settings-menu">
+                {currentSettingsView === 'main' && (
+                  <>
+                    <div className="settings-header">
+                      <h4>Cài đặt</h4>
+                      <button 
+                        className="settings-close"
+                        onClick={() => {
+                          setShowSettingsMenu(false);
+                          setCurrentSettingsView('main');
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    
+                    <div className="settings-section">
+                      <div className="settings-item" onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Quality clicked');
+                        setCurrentSettingsView('quality');
+                      }}>
+                        <span className="settings-label">Chất lượng</span>
+                        <div className="settings-value">
+                          <span>{selectedQuality}</span>
+                          <span className="settings-arrow">›</span>
+                        </div>
+                      </div>
+                      
+                      <div className="settings-item" onClick={() => setSubtitlesEnabled(!subtitlesEnabled)}>
+                        <span className="settings-label">Phụ đề</span>
+                        <div className="settings-value">
+                          <span>{subtitlesEnabled ? 'Bật' : 'Tắt'}</span>
+                          <span className="settings-arrow">›</span>
+                        </div>
+                      </div>
+                      
+                      <div className="settings-item" onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Speed clicked');
+                        setCurrentSettingsView('speed');
+                      }}>
+                        <span className="settings-label">Tốc độ</span>
+                        <div className="settings-value">
+                          <span>{playbackRate}x</span>
+                          <span className="settings-arrow">›</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+                
+                {currentSettingsView === 'speed' && (
+                  <>
+                    <div className="settings-header">
+                      <button 
+                        className="back-btn"
+                        onClick={() => setCurrentSettingsView('main')}
+                      >
+                        ‹
+                      </button>
+                      <h4>Tốc độ phát</h4>
+                      <button 
+                        className="settings-close"
+                        onClick={() => {
+                          setShowSettingsMenu(false);
+                          setCurrentSettingsView('main');
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="speed-options">
+                      {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(speed => (
+                        <div 
+                          key={speed}
+                          className={`speed-option ${playbackRate === speed ? 'active' : ''}`}
+                          onClick={() => {
+                            setPlaybackRate(speed);
+                            const player = playerRef.current;
+                            if (player) {
+                              player.playbackRate(speed);
+                            }
+                            setCurrentSettingsView('main');
+                          }}
+                        >
+                          {speed}x {speed === 1 && '(Bình thường)'}
+                          {playbackRate === speed && <span className="check">✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                
+                {currentSettingsView === 'quality' && (
+                  <>
+                    <div className="settings-header">
+                      <button 
+                        className="back-btn"
+                        onClick={() => setCurrentSettingsView('main')}
+                      >
+                        ‹
+                      </button>
+                      <h4>Chất lượng video</h4>
+                      <button 
+                        className="settings-close"
+                        onClick={() => {
+                          setShowSettingsMenu(false);
+                          setCurrentSettingsView('main');
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="quality-options">
+                      {['Auto (720p)', 'FHD 1080p', 'HD 720p', '480p', '360p'].map(quality => (
+                        <div 
+                          key={quality}
+                          className={`quality-option ${selectedQuality === quality ? 'active' : ''}`}
+                          onClick={() => {
+                            setSelectedQuality(quality);
+                            // Apply quality change to player
+                            const player = playerRef.current;
+                            if (player && player.qualityLevels) {
+                              const qualityLevels = player.qualityLevels();
+                              
+                              if (quality === 'Auto (720p)') {
+                                // Enable auto quality selection
+                                for (let i = 0; i < qualityLevels.length; i++) {
+                                  qualityLevels[i].enabled = true;
+                                }
+                                console.log('🎥 Set quality to Auto');
+                              } else {
+                                // Disable auto quality selection first
+                                for (let i = 0; i < qualityLevels.length; i++) {
+                                  qualityLevels[i].enabled = false;
+                                }
+                                
+                                // Enable only the selected quality
+                                let targetHeight;
+                                if (quality === 'FHD 1080p') targetHeight = 1080;
+                                else if (quality === 'HD 720p') targetHeight = 720;
+                                else if (quality === '480p') targetHeight = 480;
+                                else if (quality === '360p') targetHeight = 360;
+                                
+                                for (let i = 0; i < qualityLevels.length; i++) {
+                                  const level = qualityLevels[i];
+                                  if (level.height === targetHeight) {
+                                    level.enabled = true;
+                                    console.log(`🎥 Set quality to ${quality}:`, level);
+                                    break;
+                                  }
+                                }
+                              }
+                            } else {
+                              console.log(`🎥 Quality changed to ${quality} (HLS not available)`);
+                            }
+                            setCurrentSettingsView('main');
+                          }}
+                        >
+                          {quality}
+                          {selectedQuality === quality && <span className="check">✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
           
           {/* ✅ Trial expired overlay */}
           {isTrialMode && trialExpired && (

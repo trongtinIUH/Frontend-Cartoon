@@ -102,7 +102,7 @@
 }
 
 /* Chart Cards */
-.card {
+.movie-stats-content .card {
   border-radius: 12px;
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -110,34 +110,34 @@
   background: #fff;
 }
 
-.card-header {
+.movie-stats-content .card-header {
   border-bottom: 1px solid #e9ecef;
   background: #fff !important;
   border-radius: 12px 12px 0 0 !important;
   padding: 1.25rem;
 }
 
-.card-header h5 {
+.movie-stats-content .card-header h5 {
   color: #2c3e50;
   font-weight: 600;
   margin-bottom: 0;
   font-size: 1.1rem;
 }
 
-.card-body {
+.movie-stats-content .card-body {
   padding: 1.5rem;
 }
 
 @media (max-width: 768px) {
-  .card-header {
+  .movie-stats-content .card-header {
     padding: 1rem;
   }
   
-  .card-header h5 {
+  .movie-stats-content .card-header h5 {
     font-size: 1rem;
   }
   
-  .card-body {
+  .movie-stats-content .card-body {
     padding: 1rem;
   }
 }
@@ -167,12 +167,12 @@
 }
 
 /* Tables */
-.table {
+.movie-stats-content .table {
   margin-bottom: 0;
   font-size: 0.9rem;
 }
 
-.table th {
+.movie-stats-content .table th {
   background-color: #f8f9fa;
   border-bottom: 2px solid #dee2e6;
   font-weight: 600;
@@ -182,50 +182,50 @@
   white-space: nowrap;
 }
 
-.table td {
+.movie-stats-content .table td {
   padding: 0.75rem;
   vertical-align: middle;
   border-bottom: 1px solid #f1f3f4;
 }
 
-.table tbody tr:hover {
+.movie-stats-content .table tbody tr:hover {
   background-color: #f8f9fa;
 }
 
-.table .fw-semibold {
+.movie-stats-content .table .fw-semibold {
   font-weight: 600;
   color: #2c3e50;
 }
 
-.table .text-muted {
+.movie-stats-content .table .text-muted {
   font-size: 0.8rem;
 }
 
 /* Movie thumbnail in table */
-.table img {
+.movie-stats-content .table img {
   border-radius: 4px;
   object-fit: cover;
 }
 
 @media (max-width: 768px) {
-  .table {
+  .movie-stats-content .table {
     font-size: 0.8rem;
   }
   
-  .table th, .table td {
+  .movie-stats-content .table th, .movie-stats-content .table td {
     padding: 0.5rem;
   }
   
-  .table img {
+  .movie-stats-content .table img {
     width: 30px !important;
     height: 45px !important;
   }
   
-  .table .fw-semibold {
+  .movie-stats-content .table .fw-semibold {
     font-size: 0.8rem;
   }
   
-  .table .text-muted {
+  .movie-stats-content .table .text-muted {
     font-size: 0.7rem;
   }
 }
@@ -356,25 +356,25 @@
 }
 
 /* Custom scrollbar for tables */
-.table-responsive {
+.movie-stats-content .table-responsive {
   border-radius: 8px;
 }
 
-.table-responsive::-webkit-scrollbar {
+.movie-stats-content .table-responsive::-webkit-scrollbar {
   height: 6px;
 }
 
-.table-responsive::-webkit-scrollbar-track {
+.movie-stats-content .table-responsive::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 3px;
 }
 
-.table-responsive::-webkit-scrollbar-thumb {
+.movie-stats-content .table-responsive::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
 }
 
-.table-responsive::-webkit-scrollbar-thumb:hover {
+.movie-stats-content .table-responsive::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
 
@@ -390,23 +390,23 @@
   }
 }
 
-.card, .movie-stats-card {
+.movie-stats-content .card, .movie-stats-card {
   animation: fadeInUp 0.6s ease-out;
 }
 
 /* Badge styles */
-.badge {
+.movie-stats-content .badge {
   font-size: 0.75rem;
   padding: 0.35em 0.65em;
 }
 
 /* Chart container improvements */
-.card .card-body canvas {
+.movie-stats-content .card .card-body canvas {
   max-height: 350px;
 }
 
 @media (max-width: 768px) {
-  .card .card-body canvas {
+  .movie-stats-content .card .card-body canvas {
     max-height: 250px;
   }
 }
@@ -458,17 +458,17 @@
 
 /* Fix for small screens table overflow */
 @media (max-width: 576px) {
-  .table-responsive {
+  .movie-stats-content .table-responsive {
     font-size: 0.75rem;
   }
   
-  .table th:not(:first-child),
-  .table td:not(:first-child) {
+  .movie-stats-content .table th:not(:first-child),
+  .movie-stats-content .table td:not(:first-child) {
     min-width: 80px;
   }
   
-  .table th:first-child,
-  .table td:first-child {
+  .movie-stats-content .table th:first-child,
+  .movie-stats-content .table td:first-child {
     min-width: 40px;
   }
 }
