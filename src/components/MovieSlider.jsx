@@ -55,7 +55,7 @@ const MovieSlider = () => {
                   style={{
                     backgroundImage: `url(${movie.bannerUrl || movie.thumbnailUrl})`,
                     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                    backgroundSize: 'cover', backgroundPosition: 'center',
+                    backgroundSize: 'contain', backgroundPosition: 'center',
                     filter: 'brightness(0.6)', zIndex: 1, transition: 'background-image 0.5s'
                   }}
                 />

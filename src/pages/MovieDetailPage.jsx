@@ -771,32 +771,7 @@ const handleWatch = (episode) => {
                         Xem Ngay
                       </button>
 
-                      {/* Button Xem Trailer - hiển thị cho tất cả phim có trailer */}
-                      {movie.trailerUrl && (
-                        <button
-                          className="btn d-flex align-items-center gap-2 px-4 py-2 fw-bold shadow"
-                          onClick={() => document.getElementById("trailer-section")?.scrollIntoView({ behavior: "smooth" })}
-                          style={{
-                            flex: '1',
-                            background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
-                            border: 'none',
-                            color: 'white',
-                            borderRadius: '8px',
-                            transition: 'all 0.3s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faPlay} className="play-icon" />
-                          Xem Trailer
-                        </button>
-                      )}
+
                     </div>
 
                     <div

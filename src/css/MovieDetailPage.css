@@ -596,9 +596,12 @@
 
 .detail-hero{
   position: relative;
-  height: clamp(300px, 40vw, 460px);
+  height: clamp(420px, 56vh, 760px);
   overflow: hidden;
   isolation: isolate;
+}
+@media (min-width: 1200px){
+  .detail-hero{ height: clamp(520px, 62vh, 860px); } /* màn to hơn thì hero lớn hơn */
 }
 
 /* Hero banner rõ nét như RoPhim */
