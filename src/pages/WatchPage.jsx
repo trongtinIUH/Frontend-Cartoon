@@ -582,7 +582,8 @@ export default function WatchPage() {
       html5: { vhs: { overrideNative: false } },
     });
 
-    p.hlsQualitySelector?.({ displayCurrentQuality: true });
+    //vì có nút option nên thời cmt 
+    //p.hlsQualitySelector?.({ displayCurrentQuality: false });
 
     p.on('error', (e) => console.error('Video error:', e));
 

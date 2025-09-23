@@ -92,7 +92,49 @@ const authorOptions = authors.map(a => ({
   const [uploadVideo, setUploadVideo] = useState(false);
   const [trailerInputType, setTrailerInputType] = useState("file"); // "file" hoặc "url"
 
-  // Helper function để reset form
+  // ==== Validators (khớp BE) ====
+const RE_TITLE = /^[\p{L}\p{N}\s]{1,200}$/u;          // chữ có dấu, số, khoảng trắng
+// Duration formats supported:
+const RE_DURATION = /^\d{1,4}(?:\s*(?:p|phút|phut)(?:\s*\/\s*tập)?)?\s*$/i;
+
+const [errors, setErrors] = useState({});
+
+// ==== Hàm validate tất cả field ====
+function validate(values, trailerInputType) {
+  const e = {};
+
+  if (!values.title?.trim()) e.title = "Vui lòng nhập tiêu đề.";
+  else if (!RE_TITLE.test(values.title.trim()))
+    e.title = "Chỉ gồm chữ (có dấu), số và khoảng trắng, tối đa 200 ký tự.";
+
+  if (values.originalTitle?.trim() && !RE_TITLE.test(values.originalTitle.trim()))
+    e.originalTitle = "Chỉ gồm chữ/số/khoảng trắng, tối đa 200 ký tự.";
+
+  if (values.releaseYear) {
+    const y = Number(values.releaseYear);
+    if (Number.isNaN(y) || y < 1900 || y > 2100)
+      e.releaseYear = "Năm phát hành phải trong khoảng 1900–2100.";
+  }
+
+  if (values.duration?.trim() && !RE_DURATION.test(values.duration.trim()))
+    e.duration = "Thời lượng dạng 120p hoặc 120 phút.";
+
+
+  if (values.status === "COMPLETED" && !values.contentVideo)
+    e.contentVideo = "Vui lòng chọn video tập 1.";
+
+  // file type FE check (UX)
+  if (values.thumbnail && !isValidImageFile(values.thumbnail))
+    e.thumbnail = "Chỉ chấp nhận ảnh jpg, png, gif, webp, bmp.";
+  if (values.banner && !isValidImageFile(values.banner))
+    e.banner = "Chỉ chấp nhận ảnh jpg, png, gif, webp, bmp.";
+  if (values.trailerVideo && !isValidVideoFile(values.trailerVideo))
+    e.trailerVideo = "Chỉ chấp nhận video mp4/avi/mkv/webm…";
+
+  return e;
+}
+  
+// Helper function để reset form
   const resetForm = () => {
     setForm({
       title: "",
@@ -127,6 +169,10 @@ const authorOptions = authors.map(a => ({
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
+
+      // clear lỗi của field đang nhập
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
+
     if (type === "file") {
       const file = files[0];
       if (name === "video" && !isValidVideoFile(file)) {
@@ -159,10 +205,16 @@ const authorOptions = authors.map(a => ({
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title) return toast.error("Vui lòng nhập tiêu đề!");
-
-    // Validation logic
-    if (!form.title) return toast.error("Vui lòng nhập tiêu đề!");
+    const errs = validate(form, trailerInputType);
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      // focus field đầu tiên bị lỗi (nếu có)
+      const first = Object.keys(errs)[0];
+      const el = document.querySelector(`[name="${first}"]`);
+      if (el?.focus) el.focus();
+      return;
+    }
+    setErrors({});
 
     // COMPLETED cần video tập 1 bắt buộc
     if (form.status === "COMPLETED" && !form.contentVideo) {
@@ -378,15 +430,15 @@ const authorOptions = authors.map(a => ({
         <form onSubmit={handleSubmit} encType="multipart/form-data" className="row g-3">
           {/* Title & Original Title */}
           <div className="col-md-8">
-            <label className="form-label">Tiêu đề</label>
+            <label className="form-label req">Tiêu đề</label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${errors.title ? "is-invalid" : ""}`}
               name="title"
               value={form.title}
               onChange={handleChange}
               required
-            />
+            />{errors.title && <div className="invalid-feedback">{errors.title}</div>}
           </div>
           <div className="col-md-4">
             <label className="form-label">Năm phát hành</label>
@@ -416,14 +468,14 @@ const authorOptions = authors.map(a => ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Tên gốc (Original Title)</label>
+            <label className="form-label req">Tên gốc (Original Title)</label>
             <input
               type="text"
-              className="form-control"
+               className={`form-control ${errors.originalTitle ? "is-invalid" : ""}`}
               name="originalTitle"
               value={form.originalTitle}
               onChange={handleChange}
-            />
+            />{errors.originalTitle && <div className="invalid-feedback">{errors.originalTitle}</div>}
           </div>
           <div className="col-md-6">
             <label className="form-label">Slug (tuỳ chọn)</label>
