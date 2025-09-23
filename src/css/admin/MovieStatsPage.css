@@ -170,7 +170,7 @@
 .movie-stats-content .table {
   margin-bottom: 0;
   font-size: 0.9rem;
-}
+} */
 
 .movie-stats-content .table th {
   background-color: #f8f9fa;
@@ -199,13 +199,13 @@
 
 .movie-stats-content .table .text-muted {
   font-size: 0.8rem;
-}
+} */
 
 /* Movie thumbnail in table */
 .movie-stats-content .table img {
   border-radius: 4px;
   object-fit: cover;
-}
+} 
 
 @media (max-width: 768px) {
   .movie-stats-content .table {

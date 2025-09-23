@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import '../css/BuyPackagePage.css';
 import SubscriptionPackageService from '../services/SubscriptionPackageService';
 
 const featureTitles = [
@@ -56,14 +57,14 @@ const BuyPackagePage = () => {
 
 
   return (
-    <div className="min-vh-100 bg-dark text-white" style={{ paddingTop: '50px', paddingBottom: '50px' }}>
+    <div className="buy-package-page">
       <div className="container">
         {/* Package Selection */}
         <div className="mb-5">
           <div className="table-responsive mt-5">
-            <table className="table table-striped text-center table-dark align-middle">
+            <table className="table table-dark buy-package-table">
               <thead className="p-0 m-0">
-                <tr>
+                <tr className="bg-secondary">
                   <th className="text-start">
                     <h2 className="mb-0 text-white">Mua gói</h2>
                   </th>
@@ -74,7 +75,7 @@ const BuyPackagePage = () => {
                         alt={pkg.namePackage}
                         className="img-fluid rounded-top"
                         style={{
-                          width: '100%',        
+                          width: '100%',
                           height: '150px',
                           objectFit: 'cover',
                           display: 'block'
@@ -98,18 +99,7 @@ const BuyPackagePage = () => {
                       return (
                         <td key={pkg.packageId}>
                           <div
-                            style={{
-                              display: 'inline-block',
-                              width: '20px',
-                              height: '20px',
-                              borderRadius: '50%',
-                              backgroundColor: hasFeature ? '#4bc1fa' : 'gray',
-                              color: 'black',
-                              fontWeight: 'bold',
-                              fontSize: '0.75rem',
-                              lineHeight: '18px',
-                              textAlign: 'center',
-                            }}
+                            className={`feature-badge ${hasFeature ? 'active' : 'inactive'}`}
                           >
                             {hasFeature ? '✓' : '✕'}
                           </div>
@@ -124,7 +114,7 @@ const BuyPackagePage = () => {
                     <td key={pkg.packageId}>
                       <span
                         type="button"
-                        className="btn btn-outline-secondary px-3 text-white"
+                        className="btn btn-outline-secondary btn-choose-package"
                         onClick={() => handleSelectPackage(pkg)}
                       >
                         Chọn gói này

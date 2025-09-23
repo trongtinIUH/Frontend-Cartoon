@@ -1,247 +1,148 @@
 /* Revenue Management Page Styles */
 
 .revenue-content {
-  padding: 20px;
-  background-color: #f8f9fa;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  min-height: 100vh;
+  margin-left: 0;
+}
+
+/* Responsive margin for sidebar */
+@media (min-width: 992px) {
+  .revenue-content {
+    margin-left: 250px; /* Adjust based on sidebar width */
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .revenue-content {
+    padding: 1rem;
+    margin-left: 0;
+  }
 }
 
 .revenue-header {
   margin-bottom: 2rem;
-  gap: 1rem;
 }
 
 .revenue-header h2 {
   color: #2c3e50;
   font-weight: 700;
+  font-size: 2rem;
+  margin-bottom: 0;
 }
 
-.revenue-header .form-select,
-.revenue-header .form-control {
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-}
-
-.revenue-header .form-select:focus,
-.revenue-header .form-control:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+@media (max-width: 768px) {
+  .revenue-header h2 {
+    font-size: 1.5rem;
+  }
 }
 
 /* Revenue Cards */
 .revenue-card {
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  height: 100%;
+  color: #fff;
 }
 
 .revenue-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .revenue-card .card-body {
   padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.revenue-card i {
+  opacity: 0.9;
+  margin-right: 1rem;
+  font-size: 2.5rem;
 }
 
 .revenue-card .card-title {
   font-size: 0.9rem;
   font-weight: 600;
   opacity: 0.9;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
 }
 
 .revenue-card .card-value {
+  font-size: 2rem;
   font-weight: 700;
-  font-size: 1.5rem;
+  line-height: 1.2;
+  margin-bottom: 0;
 }
 
-/* Chart Placeholder */
-.chart-placeholder {
-  position: relative;
-}
-
-.chart-message {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-}
-
-/* Quick Stats */
-.quick-stats .stat-item {
-  padding: 0.5rem 0;
-  font-size: 0.95rem;
-}
-
-/* Cards */
-.card {
-  border: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-}
-
-.card-header {
-  border-bottom: 1px solid #e9ecef;
-  padding: 1rem 1.25rem;
-}
-
-.card-title {
-  color: #2c3e50;
-  font-weight: 600;
-}
-
-/* Table */
-.table th {
-  font-weight: 600;
-  color: #495057;
-  border-top: none;
-  padding: 1rem 0.75rem;
-}
-
-.table td {
-  padding: 0.75rem;
-  vertical-align: middle;
-}
-
-.table-hover tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-/* Badges */
-.badge {
-  font-size: 0.75rem;
-  padding: 0.375rem 0.75rem;
-}
-
-/* Responsive Design */
-@media (max-width: 1199px) {
-  .revenue-content {
-    margin-left: 0;
-  }
-}
-
-@media (max-width: 991px) {
-  .revenue-content {
-    padding: 15px;
-    margin-left: 0;
-    margin-top: 0;
-  }
-
-  .revenue-header {
-    align-items: stretch !important;
-    gap: 0.5rem;
-  }
-
-  .revenue-header h2 {
-    font-size: 1.5rem;
-    text-align: center;
-    margin-bottom: 1rem;
-  }
-
-  .revenue-header .d-flex {
-    width: 100%;
-  }
-
-  .revenue-card .card-value {
-    font-size: 1.3rem;
-  }
-
+@media (max-width: 768px) {
   .revenue-card .card-body {
     padding: 1rem;
   }
 
-  .card-header {
-    padding: 0.75rem 1rem;
-  }
-
-  .table-responsive {
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 767px) {
-  .revenue-content {
-    padding: 10px;
-  }
-
-  .revenue-header h2 {
-    font-size: 1.3rem;
-  }
-
-  .revenue-card {
-    margin-bottom: 1rem;
+  .revenue-card i {
+    font-size: 1.8rem;
+    margin-right: 0.75rem;
   }
 
   .revenue-card .card-value {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
 
-  .quick-stats .stat-item {
-    font-size: 0.85rem;
-  }
-
-  .table {
+  .revenue-card .card-title {
     font-size: 0.8rem;
   }
+}
 
-  .table th,
-  .table td {
-    padding: 0.5rem 0.25rem;
-  }
+/* Color variants */
+.revenue-card.bg-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
 
-  .btn-sm {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
+.revenue-card.bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.revenue-card.bg-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
+}
+
+.revenue-card.bg-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+}
+
+/* Grid responsive adjustments */
+.row.g-3 {
+  --bs-gutter-x: 1rem;
+  --bs-gutter-y: 1rem;
+}
+
+@media (max-width: 576px) {
+  .row.g-3 {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.75rem;
   }
 }
 
-@media (max-width: 575px) {
-  .revenue-card .card-body {
-    padding: 0.75rem;
-  }
-
-  .revenue-card .card-value {
-    font-size: 1.1rem;
-  }
-
-  .card-header {
-    padding: 0.5rem 0.75rem;
-  }
-
-  .card-header .card-title {
-    font-size: 0.9rem;
-  }
-
-  .d-flex.justify-content-between.align-items-center {
-    flex-direction: column;
-    align-items: stretch !important;
-  }
-
-  .d-flex.justify-content-between.align-items-center .btn {
-    margin-top: 0.5rem;
-    width: 100%;
-  }
+/* Equal height for cards */
+.row .col-12.col-sm-6.col-lg-3 {
+  display: flex;
+  margin-bottom: 1rem;
 }
 
-/* Desktop Sidebar Offset */
-@media (min-width: 992px) {
-  .revenue-content {
-    margin-left: 250px;
-    padding: 30px;
-  }
+.row .col-12.col-sm-6.col-lg-3 .revenue-card {
+  width: 100%;
 }
 
 /* Animation for cards */
-.revenue-card {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.revenue-card:nth-child(1) { animation-delay: 0.1s; }
-.revenue-card:nth-child(2) { animation-delay: 0.2s; }
-.revenue-card:nth-child(3) { animation-delay: 0.3s; }
-.revenue-card:nth-child(4) { animation-delay: 0.4s; }
-
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -253,20 +154,6 @@
   }
 }
 
-/* Custom scrollbar for table */
-.table-responsive::-webkit-scrollbar {
-  height: 6px;
-}
-
-.table-responsive::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+.revenue-card {
+  animation: fadeInUp 0.6s ease-out;
 }

@@ -1,10 +1,9 @@
 /* Sidebar mặc định (desktop) */
 .sidebar {
-  width: 300px;
-  height: 620px;
-  margin-left: 50px;
+  background: #111;
   border-radius: 50px;
-  flex: 0 0 300px;
+  padding: 20px;
+  height: 100%;
 }
 
 .sidebar-nav {

@@ -115,6 +115,16 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
       return;
     }
 
+    if (payload.minOrderAmount <= payload.discountValue + 10000) {
+      toast.error("Đơn tối thiểu phải lớn hơn giá trị giảm ít nhất 10,000đ.");
+      return;
+    }
+
+    if (payload.discountType === "PERCENTAGE" && (payload.minOrderAmount < payload.maxDiscountAmount + 10000)) {
+      toast.error("Đơn tối thiểu phải lớn hơn hoặc bằng Giảm tối đa + 10,000đ.");
+      return;
+    }
+
     try {
       setSavingVoucher(true);
       await PromotionService.updatePromotionVoucher(
@@ -151,7 +161,16 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
   // tao voucher 
   const handleSaveVoucher = async () => {
     // validate cơ bản
-    if (!voucherForm.voucherCode.trim()) return toast.error("Vui lòng nhập mã voucher.");
+    const code = voucherForm.voucherCode.trim().toUpperCase();
+
+    // Validate cơ bản
+    if (!code) return toast.error("Vui lòng nhập mã voucher.");
+
+    // Check trùng với danh sách vouchers hiện tại
+    if ((packages || []).some(v => v.voucherCode?.toUpperCase() === code)) {
+      return toast.error("Mã voucher đã tồn tại.");
+    }
+    // if (!voucherForm.voucherCode.trim()) return toast.error("Vui lòng nhập mã voucher.");
     if (!voucherForm.discountType) return toast.error("Vui lòng chọn loại giảm.");
     if (!voucherForm.maxUsage || voucherForm.maxUsage <= 0) return toast.error("Tổng lượt sử dụng phải > 0.");
     if (!voucherForm.discountValue || voucherForm.discountValue <= 0) return toast.error("Giá trị giảm phải > 0.");
@@ -162,6 +181,12 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
     if (voucherForm.maxDiscountAmount && voucherForm.maxDiscountAmount <= 0) return toast.error("Giảm tối đa phải >= 0.");
     if (voucherForm.discountType === "PERCENTAGE" && (voucherForm.discountValue < 1 || voucherForm.discountValue > 100))
       return toast.error("Phần trăm giảm phải từ 1 đến 100.");
+    if (voucherForm.minOrderAmount <= voucherForm.discountValue + 10000) {
+      return toast.error("Đơn tối thiểu phải lớn hơn giá trị giảm ít nhất 10,000đ.");
+    }
+    if (voucherForm.discountType === "PERCENTAGE" && (voucherForm.minOrderAmount < voucherForm.maxDiscountAmount + 10000)) {
+      return toast.error("Đơn tối thiểu phải lớn hơn hoặc bằng Giảm tối đa + 10,000đ.");
+    }
 
     setSavingVoucher(true);
     try {
@@ -256,8 +281,8 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
       return;
     }
 
-    if (discount < 1 || discount > 100) {
-      toast.error("Giảm giá phải từ 1% đến 100%");
+    if (discount < 1 || discount > 99) {
+      toast.error("Giảm giá phải từ 1% đến 90%");
       return;
     }
 
@@ -311,14 +336,13 @@ const PromotionDetailModal = ({ open, onClose, promotion, packages = [], onAdd, 
   const saveEdit = async (row) => {
     try {
       const percentNum = Number(tempPercentPackage);
-      if (!Number.isFinite(percentNum) || percentNum < 1 || percentNum > 100) {
-        toast.error("Giảm giá phải từ 1% đến 100%");
+      if (!Number.isFinite(percentNum) || percentNum < 1 || percentNum > 90) {
+        toast.error("Giảm giá phải từ 1% đến 90%");
         return;
       }
       setSaving(true);
 
       const pkgs = Array.isArray(row.packageId) ? row.packageId : [row.packageId];
-      console.log("Updating promotionId:", row.promotionId, "packages:", pkgs, "to percent:", percentNum);
 
       await PromotionService.updatePromotionPackage(row.promotionId, pkgs, percentNum);
 

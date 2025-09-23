@@ -1,0 +1,118 @@
+/* Container nền tối */
+.buy-package-page {
+  min-height: 100vh;
+  background: #212529; /* bg-dark */
+  color: #fff;
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+
+/* Table */
+.buy-package-page .buy-package-table {
+  margin-top: 2rem;
+  border-collapse: collapse;
+}
+
+.buy-package-page .buy-package-table th,
+.buy-package-page .buy-package-table td {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.buy-package-page .buy-package-table thead tr {
+  background: #495057; /* bg-secondary */
+}
+
+.buy-package-page .buy-package-table thead th h2 {
+  margin: 0;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Hình ảnh gói */
+.buy-package-page .buy-package-table img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+  border-radius: 0.5rem 0.5rem 0 0;
+  margin-bottom: 0.5rem;
+}
+
+/* Giá và mô tả */
+.buy-package-page .buy-package-price {
+  font-weight: 600;
+  color: #fff;
+}
+
+.buy-package-page .buy-package-duration {
+  font-size: 0.85rem;
+  color: #adb5bd; /* text-secondary */
+}
+
+/* Ô tính năng */
+.buy-package-page .feature-cell {
+  text-align: center;
+}
+
+.buy-package-page .feature-badge {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 20px;
+  text-align: center;
+  color: #000;
+}
+
+.buy-package-page .feature-badge.active {
+  background-color: #4bc1fa; /* xanh */
+}
+
+.buy-package-page .feature-badge.inactive {
+  background-color: gray;
+}
+
+/* Nút chọn gói */
+.buy-package-page .btn-choose-package {
+  border-radius: 6px;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+  color: #fff;
+}
+
+.buy-package-page .btn-choose-package:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.buy-package-page .btn-choose-package:active {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .buy-package-page .buy-package-table thead th h2 {
+    font-size: 1.25rem;
+  }
+
+  .buy-package-page .buy-package-table img {
+    height: 100px;
+  }
+
+  .buy-package-page .btn-choose-package {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+  }
+
+  .buy-package-page .feature-badge {
+    width: 16px;
+    height: 16px;
+    font-size: 0.65rem;
+    line-height: 16px;
+  }
+}
