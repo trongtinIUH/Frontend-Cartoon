@@ -175,7 +175,7 @@ const MovieStatsPage = () => {
             .catch((err) => console.error(err));
 
         // Top movies by rating
-        RevenueService.getTopByRating(5, 5)
+        RevenueService.getTopByRating(5, 1)
             .then((res) => setTopMoviesByRating(res.data))
             .catch((err) => console.error(err));
     }, []);

@@ -189,7 +189,7 @@ export default function HotFavoriteCharts() {
 
           <div className="chart-list">
             {hotTop5.map((m, idx) => (
-              <ChartItem key={m.movieId} index={idx + 1} trend="stand" movie={m} />
+              <ChartItem key={m.movieId} index={idx + 1} trend={idx < 3 ? "up" : "stand"} movie={m} />
             ))}
             <div className="item-more mt-2">
               <button type="button" className="small linklike" onClick={() => setModalType("hot")}>

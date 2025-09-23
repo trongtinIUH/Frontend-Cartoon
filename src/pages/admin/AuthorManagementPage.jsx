@@ -154,8 +154,8 @@ export default function AuthorManagementPage() {
             <button className="btn btn-outline-secondary" onClick={()=>reset(true)}>
               <FaSync className="me-1" /> Làm mới
             </button>
-            <button className="btn btn-primary shadow-sm" onClick={()=>setOpenAdd(true)}>
-              <FaPlus className="me-2"/> Thêm mới
+            <button className="btn btn-primary btn-sm shadow-sm" onClick={()=>setOpenAdd(true)}>
+              <FaPlus className="me-1"/> Thêm mới
             </button>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function AuthorManagementPage() {
             onScroll={handleScroll}
           >
             <table className="table table-hover align-middle mb-0">
-              <thead className="table-dark sticky-top">
+              <thead className="sticky-top bg-white">
                 <tr>
                   <th style={{width:42}}></th>
                   <th>#</th>
