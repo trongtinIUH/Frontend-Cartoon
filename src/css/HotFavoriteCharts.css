@@ -1,0 +1,94 @@
+/* vùng bọc */
+.charts-mini {
+  margin-top: 24px;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  background: var(--top-bg-default, #202331);
+  border: 1px solid var(--border-color, #ffffff10);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* cột */
+.it-col {
+  padding: 1.5rem 2rem;
+  width: auto;
+  border-left: 1px solid #fff1;
+}
+.it-col:first-child {
+  border-left: none;
+}
+
+/* tiêu đề */
+.comm-title {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: .75rem;
+}
+.comm-title .ct-icon {
+  color: var(--primary-color, #FFD875);
+}
+
+/* danh sách */
+.chart-list { margin-top: .5rem; }
+.chart-item {
+  display: grid;
+  grid-template-columns: 32px 22px 40px auto;
+  gap: .75rem;
+  align-items: center;
+  padding: .35rem 0;
+}
+.chart-item + .chart-item { border-top: 1px dashed #ffffff14; }
+
+.chart-item .pos {
+  color: #cfcfd6;
+  width: 32px;
+  text-align: left;
+  font-weight: 700;
+}
+.chart-item .dev {
+  width: 22px;
+  text-align: center;
+  font-size: .9rem;
+}
+.dev-stand { color: #98a0b3; }
+.dev-up    { color: #7ddc6b; }
+.dev-down  { color: #ff6b81; }
+
+.chart-item .v-thumbnail {
+  width: 40px; height: 60px;
+  border-radius: 6px; overflow: hidden; flex-shrink: 0;
+}
+.chart-item .v-thumbnail img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.chart-item .name {
+  margin: 0;
+  font-size: .95rem;
+  font-weight: 600;
+  color: #fff;
+}
+.chart-item .name a { color: inherit; text-decoration: none; }
+.chart-item .name a:hover { color: var(--primary-color, #FFD875); }
+
+.item-more { margin-top: .5rem; }
+.item-more .small {
+  font-size: .85rem;
+  color: var(--text-base, #aaa);
+  text-decoration: none;
+}
+.item-more .small:hover { color: #fff; }
+
+/* responsive */
+@media (max-width: 992px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .it-col { border-left: none; border-top: 1px solid #fff1; }
+  .it-col:first-child { border-top: none; }
+}

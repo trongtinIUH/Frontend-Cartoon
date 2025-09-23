@@ -5,6 +5,8 @@ import MovieService from "../services/MovieService";
 import MovieSlider from "../components/MovieSlider";
 import TopicSection from "../components/TopicSection";
 import CountryMoviesSection from "../components/CountryMoviesSection";
+import Top10MoviesSection from "../components/Top10MoviesSection";
+import HotFavoriteCharts from "../components/HotFavoriteCharts";
 
 const MOVIES_PER_PAGE = 20;
 
@@ -62,6 +64,11 @@ const MainPage = () => {
         gradient="linear-gradient(235deg, #fff 30%, rgb(255, 0, 153) 130%)"
         link={`/danh-muc/quoc-gia/us-uk`}
       />
+      
+      <Top10MoviesSection />
+
+      <HotFavoriteCharts />   
+      
       <div className="main-page container-xl">
         <h2 className="section-title">Danh sách phim mới trong tháng</h2>
           <div className="newlist">

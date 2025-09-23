@@ -23,8 +23,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../css/WatchPage.css";
 import { initAntiCapture } from "../utils/antiCapture";
 import { parseWatchUrl, createWatchUrl } from "../utils/urlUtils";
-// import testReportAPI from "../utils/debugReport";
-// import { debugLocalStorage } from "../utils/debugLocalStorage";
 
 /* import phần bình luận */
 import { toast } from "react-toastify";
@@ -142,14 +140,6 @@ export default function WatchPage() {
     if (state?.seasons?.length) setSeasons(state.seasons);
   }, [state?.episode?.episodeId, state?.movie?.movieId]);
 
-  // 🔧 Debug utilities - có thể gọi từ console
-  useEffect(() => {
-    // Debug utilities temporarily disabled
-    // window.debugLocalStorage = debugLocalStorage;
-    // window.testReportAPI = testReportAPI;
-    // console.log("🛠️ Debug utilities available: window.debugLocalStorage(), window.testReportAPI()");
-  }, []);
-
   // ✅ Kiểm tra quyền VIP khi có currentMovie
   useEffect(() => {
     (async () => {
@@ -165,22 +155,13 @@ export default function WatchPage() {
 
       // ✅ ALWAYS CHECK BACKEND FIRST - Luôn kiểm tra quyền thực tế với BE
       try {
-        console.log("🔍 Checking VIP permissions...");
-        console.log("Movie requires:", required);
-        console.log("User ID:", userId);
-        console.log("Movie ID:", currentMovie.movieId);
-        
         const res = await MovieService.canWatch(currentMovie.movieId, userId);
-        console.log("VIP check result:", res);
         
         if (res.allowed) {
-          console.log("✅ User has permission - allowing full video");
           setIsTrialMode(false);
           setGate({ status: 'allowed', message: "" });
           return;
         } else {
-          console.log("❌ User doesn't have permission:", res.message);
-          
           // Nếu phim FREE mà không được phép xem thì chặn hoàn toàn
           if (required === "FREE") {
             setGate({ 
@@ -191,7 +172,6 @@ export default function WatchPage() {
           }
           
           // Nếu phim VIP mà không có quyền thì cho trial mode
-          console.log("🎬 VIP movie - user doesn't have access, starting trial mode");
           const packageName = getPackageDisplayName(required);
           setIsTrialMode(true);
           setGate({ 
@@ -205,10 +185,8 @@ export default function WatchPage() {
         
         // Fallback logic based on movie type
         if (required === "FREE") {
-          console.log("🆓 FREE movie with API error - allowing access");
           setGate({ status: 'allowed', message: "" });
         } else {
-          console.log("💎 VIP movie with API error - defaulting to trial mode");
           const packageName = getPackageDisplayName(required);
           setIsTrialMode(true);
           setGate({ 
@@ -228,8 +206,6 @@ export default function WatchPage() {
       const targetMovieId = params.movieId || urlData?.movieId;
       const targetEpisodeId = params.episodeId || urlData?.episodeId;
 
-      console.log("Loading episode data:", { targetMovieId, targetEpisodeId });
-
       if (targetMovieId && targetEpisodeId) {
         setDataLoading(true);
         try {
@@ -239,7 +215,6 @@ export default function WatchPage() {
           ]);
           if (cancelled) return;
 
-          console.log("Loaded episode data:", { epData, mvData });
           setCurrentEpisode(epData);
           setCurrentMovie(mvData?.movie || mvData);
 
@@ -597,9 +572,6 @@ export default function WatchPage() {
   useEffect(() => {
     // Chỉ init khi gate allowed/trial và video element tồn tại
     if (!['allowed', 'trial'].includes(gate.status) || !videoRef.current || playerRef.current) return;
-
-    console.log("Initializing video player...");
-    console.log("Video element exists:", !!videoRef.current);
     
     const p = videojs(videoRef.current, {
       controls: true,
@@ -612,11 +584,6 @@ export default function WatchPage() {
 
     p.hlsQualitySelector?.({ displayCurrentQuality: true });
 
-    // Event listeners for debugging
-    p.on('loadstart', () => console.log('Video: loadstart'));
-    p.on('loadeddata', () => console.log('Video: loadeddata'));
-    p.on('canplay', () => console.log('Video: canplay'));
-    p.on('play', () => console.log('Video: play'));
     p.on('error', (e) => console.error('Video error:', e));
 
     // ✅ NEW: Trial mode timer
@@ -626,7 +593,6 @@ export default function WatchPage() {
         setCurrentTime(time);
         
         if (time >= trialTimeLimit && !trialExpired) {
-          console.log('🚫 Trial time expired, pausing video');
           p.pause();
           setTrialExpired(true);
           setShowUpgradeModal(true);
@@ -639,8 +605,6 @@ export default function WatchPage() {
     antiCapCleanupRef.current = initAntiCapture(p);
 
     playerRef.current = p;
-    
-    console.log("Video player initialized successfully:", p);
 
     return () => {
       antiCapCleanupRef.current?.();
@@ -656,24 +620,14 @@ export default function WatchPage() {
   useEffect(() => {
     // Chỉ setup video khi gate đã cho phép hoặc trial mode
     if (!['allowed', 'trial'].includes(gate.status)) {
-      console.log("Waiting for gate check before video setup...");
       return;
     }
 
     const originalUrl = (currentEpisode || episodeFromState)?.videoUrl;
     const p = playerRef.current;
     
-    console.log("🎬 Video setup check:", {
-      gateStatus: gate.status,
-      currentEpisode,
-      episodeFromState,
-      originalUrl,
-      playerExists: !!p
-    });
-    
     if (!originalUrl) {
       console.error("❌ No video URL found!");
-      console.log("Episode data:", { currentEpisode, episodeFromState });
       return;
     }
     
@@ -685,12 +639,9 @@ export default function WatchPage() {
     // Use video URL directly 
     setOptimizedUrl(originalUrl); // Update state
     
-    console.log("🚀 Setting video source:", originalUrl);
-    
     // Test URL trước khi set
     fetch(originalUrl, { method: 'HEAD' })
       .then(response => {
-        console.log("🔗 Video URL status:", response.status, response.statusText);
         if (!response.ok) {
           console.error("❌ Video URL not accessible:", response.status);
         }
@@ -783,12 +734,6 @@ export default function WatchPage() {
   if (!p) return;
   p.fluid(!isTheater);   // Theater: false, Normal: true
 }, [isTheater]);
-
-
-  // -------- Debug
-  useEffect(() => {
-    // console.log("Video element in DOM:", !!videoRef.current, videoRef.current?.isConnected);
-  }, [currentEpisode]);
 
   // -------- Drag mini-player (sticky)
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -1174,7 +1119,6 @@ export default function WatchPage() {
                       <div className="settings-item" onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Quality clicked');
                         setCurrentSettingsView('quality');
                       }}>
                         <span className="settings-label">Chất lượng</span>
@@ -1195,7 +1139,6 @@ export default function WatchPage() {
                       <div className="settings-item" onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Speed clicked');
                         setCurrentSettingsView('speed');
                       }}>
                         <span className="settings-label">Tốc độ</span>
@@ -1287,7 +1230,6 @@ export default function WatchPage() {
                                 for (let i = 0; i < qualityLevels.length; i++) {
                                   qualityLevels[i].enabled = true;
                                 }
-                                console.log('🎥 Set quality to Auto');
                               } else {
                                 // Disable auto quality selection first
                                 for (let i = 0; i < qualityLevels.length; i++) {
@@ -1305,13 +1247,10 @@ export default function WatchPage() {
                                   const level = qualityLevels[i];
                                   if (level.height === targetHeight) {
                                     level.enabled = true;
-                                    console.log(`🎥 Set quality to ${quality}:`, level);
                                     break;
                                   }
                                 }
                               }
-                            } else {
-                              console.log(`🎥 Quality changed to ${quality} (HLS not available)`);
                             }
                             setCurrentSettingsView('main');
                           }}

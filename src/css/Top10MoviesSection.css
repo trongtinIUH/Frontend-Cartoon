@@ -1,0 +1,678 @@
+/* Top 10 Movies Section Styles */
+.top10-section {
+  margin: 40px 0;
+  padding: 0 15px;
+  overflow: visible; /* Allow popup to show */
+}
+
+.top10-section .container-xl {
+  max-width: 1320px;
+  margin: 0 auto;
+  overflow: visible; /* Allow popup to show */
+}
+
+.cards-row.cards-slide.wide {
+  position: relative;
+  margin-bottom: 30px;
+  overflow: visible; /* Keep visible to show ranking numbers */
+}
+
+.row-header {
+  margin-bottom: 20px;
+}
+
+.row-header .category-name {
+  color: var(--category-name, #fff);
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.row-content {
+  position: relative;
+  overflow: visible; /* Keep visible to show content */
+}
+
+.cards-slide-wrapper.top-up {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 15px;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* Hide scrollbars completely */
+.cards-slide-wrapper.top-up::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.cards-slide-wrapper.top-up {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
+/* Navigation Buttons */
+.sw-navigation {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+}
+
+.sw-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-3, #2F3346);
+  border: 1px solid var(--border-color, #ffffff10);
+  border-radius: 6px;
+  color: var(--text-base, #aaa);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sw-button:hover:not(.swiper-button-disabled) {
+  background: var(--primary-color, #FFD875);
+  color: var(--primary-button-text, #191B24);
+  border-color: var(--primary-color, #FFD875);
+}
+
+.sw-button.swiper-button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.sw-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Swiper Container */
+.swiper.swiper-initialized.swiper-horizontal.swiper-backface-hidden {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  width: 100%;
+  touch-action: pan-x;   /* vẫn cho phép swipe */
+  padding-top: 15px;
+  cursor: grab;
+  user-select: none;
+  position: relative;
+}
+
+
+.swiper.swiper-initialized.swiper-horizontal.swiper-backface-hidden:active {
+  cursor: grabbing;
+}
+
+/* Force hide all scrollbars */
+.swiper.swiper-initialized.swiper-horizontal.swiper-backface-hidden::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+.swiper.swiper-initialized.swiper-horizontal.swiper-backface-hidden {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
+.swiper-wrapper {
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smoother easing */
+  will-change: transform;
+  touch-action: pan-x; /* Allow horizontal panning */
+  overflow: visible; /* Keep visible to show all movies */
+  position: relative;
+  width: max-content; /* Ensure wrapper is wide enough for all items */
+}
+
+/* Force hide scrollbars on wrapper too */
+.swiper-wrapper::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.swiper-slide {
+  flex-shrink: 0;
+  padding-right: 16px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+  width: 232.667px; /* Fixed width like rophim */
+  margin-right: 16px;
+}
+
+/* Movie Item */
+.sw-item {
+  position: relative;
+  background: transparent;
+  border-radius: 6px;
+  overflow: visible;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-top: 15px;
+  z-index: 1;
+  width: 100%;
+}
+
+.sw-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-large, 0 0 20px 20px rgba(0,0,0,.1));
+}
+
+/* Thumbnail */
+.v-thumbnail {
+  position: relative;
+  display: block;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  border-radius: 6px;
+  width: 100%;
+  height: auto;
+}
+
+.v-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.v-thumbnail:hover img {
+  transform: scale(1.05);
+}
+
+.v-thumbnail .mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.v-thumbnail:hover .mask {
+  opacity: 1;
+}
+
+/* Info Section */
+.info.info-v.w-chart {
+  padding: 12px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  background: transparent;
+}
+
+.info .number {
+  position: absolute;
+  top: -25px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  background: var(--primary-color, #FFD875);
+  color: var(--primary-button-text, #191B24);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  z-index: 100;
+  border: 2px solid var(--bg-color, #191B24);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.item-title.lim-1 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-title.lim-1 a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.item-title.lim-1 a:hover {
+  color: var(--primary-color, #FFD875);
+}
+
+.alias-title.lim-1 {
+  color: var(--text-base, #aaa);
+  font-size: 12px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0 0 6px 0;
+}
+
+.info-line {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.tag-small {
+  background: var(--bg-4, #3E435C);
+  color: var(--text-base, #ececec);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.tag-small strong {
+  font-weight: 600;
+}
+
+/* VIP Badges */
+.tag-small.no-ads-badge {
+  background: #4CAF50;
+  color: #fff;
+}
+
+.tag-small.premium-badge {
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  color: #000;
+}
+
+.tag-small.mega-plus-badge {
+  background: linear-gradient(45deg, #8A2BE2, #FF1493);
+  color: #fff;
+}
+
+.tag-small.combo-badge {
+  background: linear-gradient(45deg, #FF6347, #FFD700, #32CD32, #1E90FF);
+  color: #fff;
+}
+
+/* Loading State */
+.top10-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color, #ffffff10);
+  border-top: 3px solid var(--primary-color, #FFD875);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Animation */
+.effect-fade-in {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .swiper-slide {
+    width: 200px;
+  }
+}
+
+@media (max-width: 992px) {
+  .swiper-slide {
+    width: 180px;
+  }
+  
+  .sw-navigation {
+    top: -45px;
+  }
+  
+  .row-header .category-name {
+    font-size: 20px;
+  }
+  
+  .sw-button {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .sw-button svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .swiper-slide {
+    width: 150px;
+    padding-right: 12px;
+  }
+  
+  .top10-section {
+    margin: 30px 0;
+    padding: 0 10px;
+  }
+  
+  .row-header .category-name {
+    font-size: 18px;
+  }
+  
+  .sw-navigation {
+    top: -40px;
+    gap: 6px;
+  }
+  
+  .sw-button {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .sw-button svg {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .info.info-v.w-chart {
+    padding: 8px 0;
+    gap: 4px;
+  }
+  
+  .item-title.lim-1 {
+    font-size: 13px;
+  }
+  
+  .alias-title.lim-1 {
+    font-size: 11px;
+  }
+  
+  .info .number {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    top: -20px;
+    left: 6px;
+    border: 2px solid var(--bg-color, #191B24);
+  }
+}
+
+@media (max-width: 576px) {
+  .swiper-slide {
+    width: 140px;
+    padding-right: 8px;
+  }
+  
+  .top10-section {
+    margin: 20px 0;
+    padding: 0 5px;
+  }
+  
+  .row-header .category-name {
+    font-size: 16px;
+  }
+  
+  .sw-navigation {
+    display: none;
+  }
+  
+  .info.info-v.w-chart {
+    padding: 6px 0;
+  }
+  
+  .item-title.lim-1 {
+    font-size: 12px;
+  }
+  
+  .alias-title.lim-1 {
+    font-size: 10px;
+  }
+  
+  .info-line {
+    gap: 4px;
+  }
+  
+  .tag-small {
+    padding: 1px 4px;
+    font-size: 9px;
+  }
+  
+  .info .number {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    top: -18px;
+    left: 5px;
+    border: 2px solid var(--bg-color, #191B24);
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .sw-item:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .v-thumbnail:hover img {
+    transform: none;
+  }
+  
+  .v-thumbnail:hover .mask {
+    opacity: 0;
+  }
+  
+  .item-title.lim-1 a:hover {
+    color: inherit;
+  }
+}
+/* --- Popup (đặt lại để dùng transform neo theo mép card) --- */
+.movie-preview-popup {
+  position: fixed;             /* theo viewport */
+  width: 480px;
+  background: var(--bg-2, #282B3A);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  z-index: 2147483647;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .2s ease, transform .2s ease, visibility .2s;
+  pointer-events: auto;
+  border: 1px solid var(--border-color, #ffffff10);
+}
+.movie-preview-popup.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Mũi tên theo hướng */
+.movie-preview-popup.is-top::after,
+.movie-preview-popup.is-bottom::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+}
+.movie-preview-popup.is-top::after {
+  top: 100%;                   /* mũi tên nằm dưới popup, chĩa xuống card */
+  margin-top: 0;
+  border-top: 8px solid var(--bg-2, #282B3A);
+}
+.movie-preview-popup.is-bottom::after {
+  bottom: 100%;                /* mũi tên nằm trên popup, chĩa lên card */
+  margin-bottom: 0;
+  border-bottom: 8px solid var(--bg-2, #282B3A);
+}
+
+/* phần còn lại giữ nguyên của bạn */
+
+.preview-content {
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.preview-poster {
+  width: 80px;
+  height: 120px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.preview-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.preview-original-title {
+  font-size: 13px;
+  color: var(--text-base, #aaa);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.preview-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0;
+}
+
+.preview-tag {
+  background: var(--bg-4, #3E435C);
+  color: var(--text-base, #aaa);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.preview-description {
+  font-size: 13px;
+  color: var(--text-base, #aaa);
+  line-height: 1.4;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.preview-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.preview-btn.primary {
+  background: var(--primary-color, #FFD875);
+  color: var(--primary-button-text, #191B24);
+}
+
+.preview-btn.primary:hover {
+  background: var(--primary-color-hover, #FFDE8A);
+}
+
+.preview-btn.secondary {
+  background: var(--bg-4, #3E435C);
+  color: var(--text-base, #aaa);
+}
+
+.preview-btn.secondary:hover {
+  background: var(--bg-5, #535D8E);
+  color: #fff;
+}
+
+/* Adjust sw-item for popup positioning */
+.sw-item {
+  position: relative;
+}
+/* Icon spacing trong nút */
+.preview-btn .svg-inline--fa {
+  margin-right: 6px;
+  font-size: 1em;
+  line-height: 1;
+}
+
+/* Trạng thái đã thích (đổi nhẹ màu nền/viền) */
+.preview-btn.is-liked {
+  background: #e74c3c22;      /* đỏ nhạt */
+  color: #ff6961;
+  border: 1px solid #ff696133;
+}
+.preview-btn.is-liked:hover {
+  background: #e74c3c33;
+  color: #ff6b6b;
+}
