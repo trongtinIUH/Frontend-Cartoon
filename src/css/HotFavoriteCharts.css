@@ -79,6 +79,7 @@
 .chart-item .name a:hover { color: var(--primary-color, #FFD875); }
 
 .item-more { margin-top: .5rem; }
+.item-more :hover { background-color: transparent !important; }
 .item-more .small {
   font-size: .85rem;
   color: var(--text-base, #aaa);
@@ -91,4 +92,148 @@
   .charts-grid { grid-template-columns: 1fr; }
   .it-col { border-left: none; border-top: 1px solid #fff1; }
   .it-col:first-child { border-top: none; }
+}
+/* Modal backdrop */
+.charts-modal-backdrop{
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1050;
+}
+
+/* Modal panel */
+.charts-modal{
+  width: min(760px, 92vw);
+  max-height: 80vh;
+  background: var(--top-bg-default,#202331);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+
+.charts-modal-header{
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; border-bottom: 1px solid #ffffff14;
+}
+.charts-modal-header h3{ margin: 0; color: #fff; font-size: 18px; }
+.charts-modal-close{
+  margin-left: auto; background: transparent; border: 0; color: #aaa; font-size: 20px; cursor: pointer;
+}
+.charts-modal-close:hover{ color: #fff; }
+
+.charts-modal-list{
+  padding: 8px 16px 16px;
+  overflow: auto;
+}
+
+/* Reuse chart-item styles in modal (stack) */
+.charts-modal .chart-item{ padding: 10px 6px; border-bottom: 1px dashed #ffffff10; }
+
+/* link-look button */
+.linklike{
+  background: none; border: 0; padding: 0; color: var(--primary-text,#FFD875);
+  cursor: pointer; text-decoration: none;
+}
+.linklike:hover{ color: var(--primary-color-hover,#FFDE8A); text-decoration: underline; }
+/* ----- Override mọi rule button global bên trong modal ----- */
+.charts-modal button,
+.charts-modal .linklike {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  width: auto !important;
+  outline: none !important;
+}
+
+/* Nút đóng: kích thước gọn, không nền xanh khi hover */
+.charts-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px !important;
+  height: 32px;
+  border-radius: 8px;
+  color: #c9c9d4;
+  cursor: pointer;
+}
+.charts-modal-close:hover {
+  background: rgba(255,255,255,.06) !important; /* hoặc bỏ dòng này nếu muốn trong suốt hoàn toàn */
+  color: #fff;
+}
+.charts-modal-close:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Tránh header bị đổi nền xanh khi hover (nếu có rule global) */
+.charts-modal-header:hover {
+  background: var(--top-bg-default, #202331) !important;
+}
+
+/* Nếu có rule global làm list hover xanh, tắt luôn trong modal */
+.charts-modal .chart-item:hover {
+  background: transparent !important;
+}
+
+
+/* ===== Mobile: 2 khối nằm ngang, kéo trượt ===== */
+@media (max-width: 768px) {
+  .charts-mini {
+    /* mở rộng full-bleed nhưng vẫn giữ padding  */
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .charts-grid {
+    display: flex;                 /* ← thay grid bằng flex ngang */
+    overflow-x: auto;              /* kéo ngang */
+    gap: 12px;
+    scroll-snap-type: x mandatory; /* snap từng khối */
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  /* Ẩn đường kẻ giữa các cột ở mobile */
+  .it-col { 
+    flex: 0 0 88vw;                /* mỗi khối ~ 88% chiều rộng viewport */
+    min-width: 88vw;
+    border-left: none;
+    border-top: none;
+    scroll-snap-align: start;      /* snap đầu khối */
+    padding: 16px;                 /* gọn hơn */
+  }
+
+  /* Ẩn scrollbar (tuỳ trình duyệt) */
+  .charts-grid::-webkit-scrollbar { display: none; }
+  .charts-grid { scrollbar-width: none; }
+
+  /* item nhỏ hơn một chút */
+  .chart-item {
+    grid-template-columns: 28px 20px 36px auto;
+    gap: .6rem;
+    padding: .3rem 0;
+  }
+  .chart-item .v-thumbnail { width: 36px; height: 54px; }
+  .chart-item .name { font-size: .9rem; }
+  .item-more .small { font-size: .8rem; }
+}
+
+/* Tablet dọc (768–992): mỗi khối chiếm 70–75vw để còn “nhô” khối kế bên */
+@media (min-width: 769px) and (max-width: 992px) {
+  .charts-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 16px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .it-col {
+    flex: 0 0 72vw;
+    min-width: 72vw;
+    border-left: none;
+    scroll-snap-align: start;
+  }
+  .charts-grid::-webkit-scrollbar { display: none; }
+  .charts-grid { scrollbar-width: none; }
 }

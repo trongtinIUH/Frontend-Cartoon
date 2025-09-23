@@ -51,7 +51,14 @@ const WishlistService = {
     } catch (error) {
       console.error('Error checking wishlist existence:', error);
     }
-  }
+  },
+
+  //top phim được yêu thích
+  getTopFavorites: async (limit = 5) => {
+  const res = await axiosInstance.get(`${API_BASE_URL}/top`, { params: { limit } });
+  return res.data; 
+},
+
 };
 
 export default WishlistService;
