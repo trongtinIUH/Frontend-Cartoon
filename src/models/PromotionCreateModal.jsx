@@ -13,6 +13,7 @@ export default function PromotionCreateModal({ open, onClose, onCreated  }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const today = new Date().toISOString().split("T")[0];
   const setField = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
 
   useEffect(() => {
@@ -128,6 +129,7 @@ export default function PromotionCreateModal({ open, onClose, onCreated  }) {
                       type="date"
                       className={`text-black form-control ${errors.startDate ? "is-invalid" : ""}`}
                       value={form.startDate}
+                      min={today}
                       onChange={(e) => setField("startDate", e.target.value)}
                     />
                     {errors.startDate && <div className="invalid-feedback">{errors.startDate}</div>}
@@ -138,7 +140,7 @@ export default function PromotionCreateModal({ open, onClose, onCreated  }) {
                       type="date"
                       className={`text-black form-control ${errors.endDate ? "is-invalid" : ""}`}
                       value={form.endDate}
-                      min={form.startDate || undefined}
+                      min={form.startDate || today}
                       onChange={(e) => setField("endDate", e.target.value)}
                     />
                     {errors.endDate && <div className="invalid-feedback">{errors.endDate}</div>}

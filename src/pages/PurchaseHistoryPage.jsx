@@ -27,10 +27,6 @@ const PurchaseHistoryPage = () => {
             })
             .catch(err => {
                 console.error("Error fetching purchase history:", err);
-            })
-            .finally(() => {
-                // Có thể thêm logic nào đó sau khi lấy dữ liệu xong
-                console.log("Lấy lịch sử mua gói thành công");
             });
     }, [MyUser]);
 

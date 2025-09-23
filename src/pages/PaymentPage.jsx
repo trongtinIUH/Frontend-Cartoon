@@ -127,9 +127,9 @@ const PaymentPage = () => {
 
       const info = await PromotionService.getVoucherInfo(voucherCode.trim().toUpperCase());
       console.log("Voucher info from API:", info);
-      
+
       // Tìm promotion theo promotionId từ voucher info
-      const promo = promos.find(p => 
+      const promo = promos.find(p =>
         p.promotionId === info.promotionId
       );
       console.log("Found promotion:", promo);

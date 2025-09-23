@@ -167,12 +167,12 @@
 }
 
 /* Tables */
-.table {
+/* .table {
   margin-bottom: 0;
   font-size: 0.9rem;
-}
+} */
 
-.table th {
+/* .table th {
   background-color: #f8f9fa;
   border-bottom: 2px solid #dee2e6;
   font-weight: 600;
@@ -199,13 +199,13 @@
 
 .table .text-muted {
   font-size: 0.8rem;
-}
+} */
 
 /* Movie thumbnail in table */
-.table img {
+/* .table img {
   border-radius: 4px;
   object-fit: cover;
-}
+} */
 
 @media (max-width: 768px) {
   .table {

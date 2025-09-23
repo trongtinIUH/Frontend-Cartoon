@@ -169,7 +169,7 @@ const RevenueManagementPage = () => {
                 {/* Cards thống kê */}
                 <div className="row g-3 mb-4">
                     <div className="col-12 col-sm-6 col-lg-3">
-                        <div className="revenue-card bg-primary text-white">
+                        <div className="revenue-card bg-primary text-white h-100">
                             <div className="card-body p-3 d-flex align-items-center">
                                 <i className="fas fa-dollar-sign fa-2x"></i>
                                 <div className="ms-3">

@@ -47,6 +47,10 @@ const ProfilePage = () => {
         userName: displayName,
         gender,
       };
+      // check userName không được để trống
+      if (!userData.userName.trim()) {
+        return toast.error("Tên hiển thị không được để trống.");
+      }
 
       // Gọi API update user
       await UserService.updateUserById(userId, userData, avatarFile);
