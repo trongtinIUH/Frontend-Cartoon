@@ -55,7 +55,7 @@ const Sidebar = () => {
           </div><hr />
         </div>
 
-        {/* User card */}
+        {/* User card
         <div className="px-3 py-3">
           <div className="sidebar-tile d-flex align-items-center gap-3 user-card">
             <img
@@ -70,7 +70,7 @@ const Sidebar = () => {
               <small className="text-white-50">Quản trị viên</small>
             </div>
           </div>
-        </div>
+        </div> */}
         
         {/* Menu */}
         <div className="sidebar-scroll px-3 pb-4">
