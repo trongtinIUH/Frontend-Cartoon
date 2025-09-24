@@ -1,8 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import EpisodeService from "../services/EpisodeService";
 import SeasonService from "../services/SeasonService";
+import MovieService from "../services/MovieService";
 import "../css/ModelAddNewEpisode.css";
 import { toast } from "react-toastify";
+
+
+// ==== Validators (khớp BE) ====
+const RE_TITLE = /^[\p{L}\p{N}\s\-:,.!?]{1,200}$/u; // cho phép chữ có dấu, số, khoảng trắng & - : , . ! ?
+
+
+const prettyError = (msg) =>
+  toast.error(`❌ ${msg}`, { autoClose: 2500, theme: "colored" });
+
 
 const VIDEO_TYPES = [
   "video/mp4","video/avi","video/mkv","video/webm",
@@ -13,6 +23,7 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
   const [seasons, setSeasons] = useState([]);
   const [seasonId, setSeasonId] = useState("");
   const [episodes, setEpisodes] = useState([]);
+  const [movieType, setMovieType] = useState(null);
 
   // create | edit
   const [mode, setMode] = useState("create");
@@ -21,6 +32,8 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
     episodeNumber: "",
     video: null
   });
+
+ 
 
   // tạo season mới
   const [showNewSeason, setShowNewSeason] = useState(false);
@@ -43,6 +56,16 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
   useEffect(() => {
     (async () => {
       try {
+        // first fetch movie detail to know movieType (SINGLE vs SERIES)
+        try {
+          const mvData = await MovieService.getMovieDetail(movieId);
+          const mv = mvData?.movie || mvData || {};
+          setMovieType(mv?.movieType || mv?.movie_type || mv?.type || null);
+        } catch (err) {
+          // ignore movie fetch error, proceed to load seasons
+          setMovieType(null);
+        }
+
         const list = await SeasonService.getSeasonsByMovie(movieId);
         const arr = Array.isArray(list) ? list.sort((a,b)=>a.seasonNumber-b.seasonNumber) : [];
         setSeasons(arr);
@@ -51,10 +74,18 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
           setSeasonId(sid);
           await loadEpisodes(sid, true);
         } else {
-          setShowNewSeason(true);
-          setNewSeason({ seasonNumber: 1, title: "Phần 1", releaseYear: "" });
+          // only allow auto-showing new season form for non-SINGLE movies
+          if (movieType !== 'SINGLE') {
+            setShowNewSeason(true);
+            setNewSeason({ seasonNumber: 1, title: "Phần 1", releaseYear: "" });
+          } else {
+            // SINGLE movies should not have seasons
+            setShowNewSeason(false);
+            setSeasonId("");
+          }
         }
-      } catch {
+      } catch (e) {
+        console.error(e);
         toast.error("Không tải được season");
       }
     })();
@@ -109,8 +140,9 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!seasonId) return toast.error("Vui lòng chọn season");
-    if (!form.title?.trim()) return toast.error("Nhập tiêu đề tập");
-    if (!form.episodeNumber) return toast.error("Nhập số tập");
+    const title = (form.title || "").trim();
+    if (!title) return toast.error("Nhập tiêu đề tập");
+    if (!RE_TITLE.test(title)) return toast.error("Tiêu đề tập không hợp lệ");
     if (mode === "create" && !form.video) return toast.error("Chọn file video để upload");
 
     setLoading(true);
@@ -164,6 +196,9 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
 
   const handleCreateSeason = async (e) => {
     e.preventDefault();
+    if (movieType === 'SINGLE') {
+      return toast.error('Không thể tạo Season cho phim loại SINGLE');
+    }
     if (!newSeason.seasonNumber || Number(newSeason.seasonNumber) < 1) {
       return toast.error("seasonNumber phải >= 1");
     }
@@ -208,9 +243,23 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
               </div>
               <div className="col-md-6">
                 <label className="form-label">&nbsp;</label><br/>
-                <button type="button" className="btn btn-create-season" onClick={toggleNewSeason}>
+                <button
+                  type="button"
+                  className="btn btn-create-season"
+                  onClick={() => {
+                    if (movieType === 'SINGLE') {
+                      toast.info('Không thể tạo Season cho phim loại SINGLE');
+                      return;
+                    }
+                    toggleNewSeason();
+                  }}
+                  disabled={movieType === 'SINGLE'}
+                >
                   {showNewSeason ? "Đóng tạo Season" : "Tạo Season mới"}
                 </button>
+                {movieType === 'SINGLE' && (
+                  <div className="text-muted small mt-1">Phim loại SINGLE không hỗ trợ Season.</div>
+                )}
               </div>
             </div>
 
@@ -277,7 +326,8 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
               <label className="form-label">Số tập</label>
               <input type="number" min={1} className="form-control" name="episodeNumber"
                      value={form.episodeNumber} onChange={handleChange}
-                     disabled={mode === "edit"}/>
+                     disabled={mode !== "edit"} />
+              <div className="form-text">Số tập được tự động tăng khi thêm tập mới; trường này bị vô hiệu hóa khi thêm mới.</div>
             </div>
 
             <div className="mb-3">

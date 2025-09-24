@@ -25,6 +25,52 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [trailerInputType, setTrailerInputType] = useState("file"); // "file" hoặc "url"
 
+  // ==== Lỗi hiển thị dưới field ====
+const [errors, setErrors] = useState({});
+
+// ==== Regex khớp BE ====
+const RE_TITLE    = /^[\p{L}\p{N}\s]{1,200}$/u;  // chữ có dấu, số, khoảng trắng
+const RE_DURATION = /^\d{1,4}(?:\s*(?:p|phút|phut)(?:\s*\/\s*tập)?)?\s*$/i;   // "120p" hoặc "120 phút"
+
+function validateMovie(values, trailerInputType, initialStatus) {
+  const e = {};
+
+  if (!values.title?.trim()) e.title = "Vui lòng nhập tiêu đề.";
+  else if (!RE_TITLE.test(values.title.trim()))
+    e.title = "Chỉ gồm chữ (có dấu), số và khoảng trắng, tối đa 200 ký tự.";
+
+  if (values.originalTitle?.trim() && !RE_TITLE.test(values.originalTitle.trim()))
+    e.originalTitle = "Chỉ gồm chữ/số/khoảng trắng, tối đa 200 ký tự.";
+
+  if (values.releaseYear) {
+    const y = Number(values.releaseYear);
+    if (!Number.isInteger(y) || y < 1900 || y > 2100)
+      e.releaseYear = "Năm phát hành phải trong khoảng 1900–2100.";
+  }
+
+  if (values.duration?.trim() && !RE_DURATION.test(values.duration.trim()))
+    e.duration = "Thời lượng dạng 120p hoặc 120 phút.";
+
+  // Khi đổi trạng thái, nhắc bắt buộc file tương ứng (FE enforce để UX mượt)
+  const switchingToCompleted = initialStatus !== "COMPLETED" && values.status === "COMPLETED";
+  const switchingToUpcoming  = initialStatus !== "UPCOMING"  && values.status === "UPCOMING";
+  if (switchingToCompleted && !values.contentVideo)
+    e.contentVideo = "Chọn video Tập 1 khi chuyển sang COMPLETED.";
+  if (switchingToUpcoming && !(values.trailerVideo || values.trailerUrl))
+    e.trailerVideo = "UPCOMING yêu cầu trailer (file hoặc URL).";
+
+  // File types (UX check)
+  const VIDEO_TYPES = ["video/mp4","video/avi","video/mkv","video/webm","video/quicktime","video/x-msvideo","video/x-matroska"];
+  const IMG_TYPES   = ["image/jpeg","image/png","image/gif","image/webp","image/bmp"];
+  if (values.thumbnail && !IMG_TYPES.includes(values.thumbnail.type)) e.thumbnail = "Ảnh thumbnail không hợp lệ.";
+  if (values.banner && !IMG_TYPES.includes(values.banner.type))       e.banner = "Ảnh banner không hợp lệ.";
+  if (values.trailerVideo && !VIDEO_TYPES.includes(values.trailerVideo.type)) e.trailerVideo = "Trailer phải là video hợp lệ.";
+  if (values.contentVideo && !VIDEO_TYPES.includes(values.contentVideo.type)) e.contentVideo = "Video tập 1 phải là video hợp lệ.";
+
+  return e;
+}
+
+
   const [countries, setCountries] = useState([]);
   useEffect(() => { (async () => setCountries(await getCountries()))(); }, []);
 
@@ -36,6 +82,7 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
     () => (allAuthors || []).map(a => ({ value: a.authorId, label: `${a.name} (${a.authorRole})` })),
     [allAuthors]
   );
+  
 
   useEffect(() => {
     (async () => {
@@ -80,6 +127,8 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
 
   const handleChange = (e) => {
     const { name, value, files, type } = e.target;
+     // clear lỗi khi người dùng sửa lại
+  if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
     if (type === "file") {
       const file = files?.[0];
       if (!file) return;
@@ -114,7 +163,16 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title) return toast.error("Vui lòng nhập tiêu đề");
+    const errs = validateMovie(form, trailerInputType, initialStatus);
+      if (Object.keys(errs).length) {
+        setErrors(errs);
+        const first = Object.keys(errs)[0];
+        const el = document.querySelector(`[name="${first}"]`);
+        el?.focus?.();
+        return;
+      }
+      setErrors({});
+
     const switchingToCompleted = initialStatus !== "COMPLETED" && form.status === "COMPLETED";
     const switchingToUpcoming  = initialStatus !== "UPCOMING"  && form.status === "UPCOMING";
 
@@ -197,8 +255,12 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
           {/* Title & Original Title */}
           <div className="row g-3 mb-3">
             <div className="col-md-8">
-              <label className="form-label">Tiêu đề</label>
-              <input className="form-control" name="title" value={form.title} onChange={handleChange}/>
+              <label className="form-label req">Tiêu đề</label>
+              <input 
+              className={`form-control ${errors.title ? "is-invalid" : ""}`} 
+              name="title" value={form.title} 
+              onChange={handleChange}/>
+              {errors.title && <div className="invalid-feedback text-danger">{errors.title}</div>}
             </div>
             <div className="col-md-4">
               <label className="form-label">Năm phát hành</label>
@@ -220,12 +282,12 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
               <label className="form-label">Tên gốc (Original Title)</label>
               <input 
                 type="text" 
-                className="form-control" 
+                className={`form-control ${errors.originalTitle ? "is-invalid" : ""}`}
                 name="originalTitle" 
                 value={form.originalTitle} 
                 onChange={handleChange}
                 placeholder="Tên phim gốc (nếu có)"
-              />
+              /> {errors.originalTitle && <div className="invalid-feedback text-danger">{errors.originalTitle}</div>}
             </div>
             <div className="col-md-6">
               <label className="form-label">Slug</label>
@@ -299,9 +361,11 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
           <div className="row g-3 mb-3">
             <div className="col-md-6">
               <label className="form-label"><FaClock /> Thời lượng</label>
-              <input type="text" className="form-control" name="duration" value={form.duration}
+              <input type="text" 
+              className={`form-control ${errors.duration ? "is-invalid" : ""}`}
+               name="duration" value={form.duration}
                      onChange={handleChange} placeholder="VD: 120p (phút)"/>
-              <div className="form-text">Định dạng đề nghị: <code>120p</code> (phút).</div>
+              {errors.duration && <div className="invalid-feedback text-danger">{errors.duration}</div>}
             </div>
             <div className="col-md-6">
               <label className="form-label">Chủ đề</label>

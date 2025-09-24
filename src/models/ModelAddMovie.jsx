@@ -410,12 +410,13 @@ function validate(values, trailerInputType) {
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">VIP tối thiểu</label>
+            <label className="form-label">Gói tối thiểu</label>
             <select
               name="minVipLevel"
               className="form-select"
               value={form.minVipLevel}
               onChange={handleChange}
+              required
             >
               <option value="FREE">FREE</option>
               <option value="NO_ADS">NoAds</option>
@@ -438,7 +439,7 @@ function validate(values, trailerInputType) {
               value={form.title}
               onChange={handleChange}
               required
-            />{errors.title && <div className="invalid-feedback">{errors.title}</div>}
+            />{errors.title && <div className="invalid-feedback text-danger">{errors.title}</div>}
           </div>
           <div className="col-md-4">
             <label className="form-label">Năm phát hành</label>
@@ -451,6 +452,7 @@ function validate(values, trailerInputType) {
               value={form.releaseYear}
               onChange={handleChange}
               placeholder="VD: 2025"
+              required
             />
           </div>
           
@@ -458,13 +460,14 @@ function validate(values, trailerInputType) {
             <label className="form-label"><FaClock /> Thời lượng</label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${errors.duration ? "is-invalid" : ""}`}
               name="duration"
               value={form.duration}
               onChange={handleChange}
               placeholder='VD: 120p (phút)'
+              required
             />
-            <div className="form-text">Định dạng đề nghị: <code>120p</code> (phút).</div>
+            {errors.duration && <div className="invalid-feedback text-danger">{errors.duration}</div>}
           </div>
 
           <div className="col-md-6">
@@ -475,7 +478,8 @@ function validate(values, trailerInputType) {
               name="originalTitle"
               value={form.originalTitle}
               onChange={handleChange}
-            />{errors.originalTitle && <div className="invalid-feedback">{errors.originalTitle}</div>}
+              required
+            />{errors.originalTitle && <div className="invalid-feedback text-danger">{errors.originalTitle}</div>}
           </div>
           <div className="col-md-6">
             <label className="form-label">Slug (tuỳ chọn)</label>
@@ -524,7 +528,7 @@ function validate(values, trailerInputType) {
           {/* Country / Topic / Type */}
           <div className="col-md-4">
             <label className="form-label"><FaGlobe /> Quốc gia</label>
-            <select name="country" className="form-select" value={form.country} onChange={handleChange}>
+            <select name="country" className="form-select" value={form.country} onChange={handleChange} required>
               <option value="">-- Chọn quốc gia --</option>
               {countries.map((c, i) => (
                 <option key={i} value={c}>{c}</option>
@@ -533,7 +537,7 @@ function validate(values, trailerInputType) {
           </div>
           <div className="col-md-4">
             <label className="form-label">Chủ đề</label>
-            <select name="topic" className="form-select" value={form.topic} onChange={handleChange}>
+            <select name="topic" className="form-select" value={form.topic} onChange={handleChange} required>
               <option value="">-- Chọn chủ đề --</option>
               {TOPICS.map((t, i) => (
                 <option key={i} value={t}>{t}</option>
@@ -542,7 +546,7 @@ function validate(values, trailerInputType) {
           </div>
           <div className="col-md-4">
             <label className="form-label">Loại phim</label>
-            <select name="movieType" className="form-select" value={form.movieType} onChange={handleChange}>
+            <select name="movieType" className="form-select" value={form.movieType} onChange={handleChange} required>
               <option value="SINGLE">Phim lẻ</option>
               <option value="SERIES">Phim bộ</option>
             </select>
