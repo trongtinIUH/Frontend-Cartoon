@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import SubscriptionPackageService from "../../services/SubscriptionPackageService";
+import CreateSubscriptionPackageModal from "../../models/CreateSubscriptionPackageModal";
 
 const SubscriptionPackageManagementPage = () => {
     const [subscriptionPackages, setSubscriptionPackages] = useState([]);
+    const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+    
     const loadSubscriptionPackages = async () => {
         try {
             const data = await SubscriptionPackageService.getAllPackages();
@@ -14,7 +17,23 @@ const SubscriptionPackageManagementPage = () => {
     }
     useEffect(() => {
         loadSubscriptionPackages();
-    }, []);
+    }, [loadSubscriptionPackages]);
+
+    const handleCreateModalOpen = () => {
+        setCreateModalOpen(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Bạn có chắc chắn muốn xóa gói đăng ký này?")) {
+            try {
+                await SubscriptionPackageService.deletePackage(id);
+                setSubscriptionPackages(subscriptionPackages.filter(pkg => pkg.id !== id));
+            } catch (err) {
+                console.error("Lỗi xóa gói đăng ký:", err);
+            }
+        }
+    };
+
     return (
         <div className="d-flex bg-white min-vh-100">
             <Sidebar />
@@ -43,7 +62,7 @@ const SubscriptionPackageManagementPage = () => {
                                 </form>
                             </div>
                             <div className="mt-2 mt-md-0">
-                                <button type="button" className="btn btn-primary  px-5">
+                                <button type="button" className="btn btn-primary  px-5" onClick={handleCreateModalOpen}>
                                     <i className="fa fa-plus me-2"></i>
                                     Tạo gói đăng ký
                                 </button>
@@ -64,13 +83,14 @@ const SubscriptionPackageManagementPage = () => {
                             </thead>
                             <tbody>
                                 {subscriptionPackages.map((pkg) => (
-                                    <tr key={pkg.id}>
+                                    <tr key={pkg.packageId}>
                                         <td>{pkg.namePackage}</td>
                                         <td>{pkg.applicablePackageType}</td>
-                                        <td>{pkg.durationInDays} tháng</td>
+                                        <td>{pkg.durationInDays} ngày</td>
                                         <td>{pkg.features.join(", ")}</td>
-                                        <td>
-                                            
+                                        <td style={{ minWidth: '150px' }}>
+                                            <span className="btn btn-sm btn-warning me-2">Sửa</span>
+                                            <span className="btn btn-sm btn-danger" onClick={() => handleDelete(pkg.packageId)}>Xóa</span>
                                         </td>
                                     </tr>
                                 ))}
@@ -78,6 +98,11 @@ const SubscriptionPackageManagementPage = () => {
                         </table>
                     </div>
                 </div>
+                <CreateSubscriptionPackageModal
+                    isOpen={isCreateModalOpen}
+                    onClose={() => setCreateModalOpen(false)}
+                    onCreated={loadSubscriptionPackages}
+                />
             </div>
         </div>
     );

@@ -1,8 +1,34 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
+import PricingService from "../../services/PricingService";
+import CreatePriceListModal from "../../models/CreatePriceListModal";
+import PriceListDetailModal from "../../models/PriceListDetailModal";
 
 const PriceListManagementPage = () => {
     const [priceLists, setPriceLists] = useState([]);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [selectedPriceList, setSelectedPriceList] = useState(null);
+
+    useEffect(() => {
+        fetchPriceLists();
+    }, []);
+
+    const fetchPriceLists = async () => {
+        try {
+            const data = await PricingService.getAllPriceList();
+            setPriceLists(data);
+        } catch (error) {
+            console.error("Failed to fetch price lists:", error);
+        }
+    };
+    const handleOpenCreateModal = () => {
+        setIsCreateModalOpen(true);
+    };
+    const handleOpenDetailModal = (priceList) => {
+        setSelectedPriceList(priceList);
+        setIsDetailModalOpen(true);
+    };
     return (
         <div className="d-flex bg-white min-vh-100">
             <Sidebar />
@@ -31,7 +57,7 @@ const PriceListManagementPage = () => {
                                 </form>
                             </div>
                             <div className="mt-2 mt-md-0">
-                                <button type="button" className="btn btn-primary  px-5">
+                                <button type="button" className="btn btn-primary  px-5" onClick={handleOpenCreateModal}>
                                     <i className="fa fa-plus me-2"></i>
                                     Tạo bảng giá
                                 </button>
@@ -51,11 +77,38 @@ const PriceListManagementPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-
+                                {priceLists.map((priceList) => (
+                                    <tr key={priceList.id}>
+                                        <td>{priceList.name}</td>
+                                        <td>{priceList.startDate}</td>
+                                        <td>{priceList.endDate}</td>
+                                        <td>
+                                            <span className={`badge ${priceList.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'}`}>
+                                                {priceList.status === 'ACTIVE' ? 'Hoạt động' : 'Hết hạn'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button className="btn btn-sm btn-warning me-2" onClick={() => handleOpenDetailModal(priceList)}
+                                                style={{ borderRadius: '10px', padding: '5px 10px', fontSize: '14px' }}>
+                                                <i className="fa fa-eye"></i> Xem chi tiết
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
                 </div>
+                <CreatePriceListModal
+                    isOpen={isCreateModalOpen}
+                    onClose={() => setIsCreateModalOpen(false)}
+                    onCreated={fetchPriceLists}
+                />
+                <PriceListDetailModal
+                    isOpen={isDetailModalOpen}
+                    onClose={() => setIsDetailModalOpen(false)}
+                    priceList={selectedPriceList}
+                />
             </div>
         </div>
     );
