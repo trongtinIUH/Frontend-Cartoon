@@ -38,6 +38,8 @@ import RevenueManagementPage from './pages/admin/RevenueManagementPage';
 import MovieStatsPage from './pages/admin/MovieStatsPage';
 import MemberManagementPage from './pages/admin/MemberManagementPage';
 import AnalyticsPage from './pages/admin/AnalyticsPage';
+import SubscriptionPackageManagementPage from './pages/admin/SubscriptionPackageManagementPage';
+import PriceListManagementPage from './pages/admin/PriceListManagementPage';
 
 function App() {
   const navigate = useNavigate();
@@ -100,6 +102,8 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/admin-revenue" element={<RevenueManagementPage />} />
                     <Route path="/admin-movie-stats" element={<MovieStatsPage />} />
                     <Route path="/admin-member" element={<MemberManagementPage />} />
+                    <Route path="/admin-subscription-package" element={<SubscriptionPackageManagementPage />} />
+                    <Route path="/admin-price-list" element={<PriceListManagementPage />} />
                   </Route>
                 </Routes>
 

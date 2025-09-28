@@ -71,7 +71,7 @@ const BuyPackagePage = () => {
                   {packages.map((pkg) => (
                     <th key={pkg.id} className="text-center align-middle p-0 m-0">
                       <img
-                        src={pkg.namePackage}
+                        src={pkg.imageUrl}
                         alt={pkg.namePackage}
                         className="img-fluid rounded-top"
                         style={{

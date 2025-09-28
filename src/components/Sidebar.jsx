@@ -134,6 +134,28 @@ const Sidebar = () => {
 
               <li className="nav-item">
                 <NavLink
+                  to="/admin-subscription-package"
+                  className={({ isActive }) =>
+                    `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+                  }
+                >
+                  <i className="fa-solid fa-box-open me-2" /> <span>Quản lý gói đăng ký</span>
+                </NavLink>
+              </li>
+
+              <li className="nav-item">
+                <NavLink
+                  to="/admin-price-list"
+                  className={({ isActive }) =>
+                    `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+                  }
+                >
+                  <i className="fa-solid fa-money-check-dollar me-2" /> <span>Quản lý bảng giá</span>
+                </NavLink>
+              </li>
+
+              <li className="nav-item">
+                <NavLink
                   to="/admin-promotion"
                   className={({ isActive }) =>
                     `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
