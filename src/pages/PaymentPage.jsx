@@ -7,6 +7,7 @@ import PaymentService from "../services/PaymentService";
 import { toast } from "react-toastify";
 import PromotionService from "../services/PromotionService";
 import axios from "axios";
+import PromotionDetailService from "../services/PromotionDetailService";
 
 const PaymentPage = () => {
   const location = useLocation();
@@ -125,7 +126,7 @@ const PaymentPage = () => {
       setPromotions(promos);
       console.log("All promotions:", promos);
 
-      const info = await PromotionService.getVoucherInfo(voucherCode.trim().toUpperCase());
+      const info = await PromotionDetailService.getVoucherInfo(voucherCode.trim().toUpperCase());
       console.log("Voucher info from API:", info);
 
       // Tìm promotion theo promotionId từ voucher info
@@ -179,7 +180,7 @@ const PaymentPage = () => {
     }
 
     try {
-      const result = await PromotionService.applyVoucherCode({
+      const result = await PromotionDetailService.applyVoucherCode({
         voucherCode: voucherCode.trim(),
         userId: MyUser.my_user.userId,
         packageId: selectedDurationPackage.packageId,

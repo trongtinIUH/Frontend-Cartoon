@@ -4,7 +4,21 @@ import axiosInstance from "../api/axiosInstance";
 const API_BASE_URL = 'http://localhost:8080/subscription-packages';
 const SubscriptionPackageService = {
 
-    //get all packages
+    // get all packages
+    getAll: async () => {
+        try {
+            const response = await axiosInstance.get(`${API_BASE_URL}`);
+            if (response.status !== 200) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            response.data.sort((a, b) => a.price - b.price);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
+    //get all packages vs promotions
     getAllPackages: async () => {
         try {
             const response = await axiosInstance.get(`${API_BASE_URL}/all`);

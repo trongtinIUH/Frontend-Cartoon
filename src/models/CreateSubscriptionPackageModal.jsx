@@ -92,7 +92,7 @@ const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated }) => {
                                     />
                                     {errors.packageName && <div className="invalid-feedback">{errors.packageName}</div>}
                                 </div>
-                                <div className="mb-3">
+                                {/* <div className="mb-3">
                                     <label className="form-label">Hình ảnh <span className="text-danger">*</span></label>
                                     <input
                                         type="file"
@@ -100,7 +100,7 @@ const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated }) => {
                                         onChange={(e) => setField("packageImage", e.target.files[0])}
                                     />
                                     {errors.packageImage && <div className="invalid-feedback">{errors.packageImage}</div>}
-                                </div>
+                                </div> */}
                                 <div className="mb-3">
                                     <label className="form-label">Loại gói <span className="text-danger">*</span></label>
                                     <select

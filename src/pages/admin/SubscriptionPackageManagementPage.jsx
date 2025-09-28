@@ -9,7 +9,7 @@ const SubscriptionPackageManagementPage = () => {
     
     const loadSubscriptionPackages = async () => {
         try {
-            const data = await SubscriptionPackageService.getAllPackages();
+            const data = await SubscriptionPackageService.getAll();
             setSubscriptionPackages(data);
         } catch (err) {
             console.error("Lỗi load gói đăng ký:", err);
@@ -84,7 +84,7 @@ const SubscriptionPackageManagementPage = () => {
                             <tbody>
                                 {subscriptionPackages.map((pkg) => (
                                     <tr key={pkg.packageId}>
-                                        <td>{pkg.namePackage}</td>
+                                        <td>{pkg.packageName}</td>
                                         <td>{pkg.applicablePackageType}</td>
                                         <td>{pkg.durationInDays} ngày</td>
                                         <td>{pkg.features.join(", ")}</td>

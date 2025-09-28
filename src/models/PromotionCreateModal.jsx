@@ -3,7 +3,6 @@ import PromotionService from "../services/PromotionService";
 
 const initialForm = {
   promotionName: "",
-  promotionType: "PACKAGE",
   description: "",
   startDate: "",
   endDate: ""
@@ -32,7 +31,6 @@ export default function PromotionCreateModal({ open, onClose, onCreated  }) {
   const validate = () => {
     const e = {};
     if (!form.promotionName.trim()) e.promotionName = "Tên không được để trống";
-    if (!form.promotionType) e.promotionType = "Loại không được để trống";
     if (!form.description.trim()) e.description = "Mô tả không được để trống";
     if (!form.startDate) e.startDate = "Ngày bắt đầu không được để trống";
     if (!form.endDate) e.endDate = "Ngày kết thúc không được để trống";
@@ -54,7 +52,6 @@ export default function PromotionCreateModal({ open, onClose, onCreated  }) {
       setSubmitting(true);
       const payload = {
         promotionName: form.promotionName.trim(),
-        promotionType: form.promotionType,
         description: form.description?.trim() || "",
         startDate: form.startDate,
         endDate: form.endDate,
@@ -95,19 +92,6 @@ export default function PromotionCreateModal({ open, onClose, onCreated  }) {
                     placeholder="Back to School"
                   />
                   {errors.promotionName && <div className="invalid-feedback">{errors.promotionName}</div>}
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Loại <span className="text-danger">*</span></label>
-                  <select
-                    className={`form-select ${errors.promotionType ? "is-invalid" : ""}`}
-                    value={form.promotionType}
-                    onChange={(e) => setField("promotionType", e.target.value)}
-                  >
-                    <option value="PACKAGE">PACKAGE</option>
-                    <option value="VOUCHER">VOUCHER</option>
-                  </select>
-                  {errors.promotionType && <div className="invalid-feedback">{errors.promotionType}</div>}
                 </div>
 
                 <div className="mb-3">
