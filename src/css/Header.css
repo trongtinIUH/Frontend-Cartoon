@@ -1,8 +1,21 @@
 .main-header {
-  background-color: transparent; /* Mặc định trong suốt */
-  color: white;
+  background: linear-gradient(180deg, rgba(8,10,12,0.72), rgba(16,19,27,0.75));
+  color: #fff;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  /* keep header on top — other rules may override this later for sticky/hidden behavior */
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1200;
+}
+
 .genre-menu-wrapper,
 .topic-menu-wrapper {
   position: relative;
@@ -18,16 +31,7 @@
   transform: translateX(-50%) translateY(0);
   transition-delay: 0s;
 }
-
-/* Mega menu – căn giữa dưới "Thể loại" và "Chủ đề" */n-items: center;
-  padding: 12px 24px;
-  box-shadow: none; /* Bỏ đổ bóng khi trong suốt */
-  position: fixed; /* Đổi từ sticky thành fixed để luôn ở trên cùng */
-  width: 100%;
-  top: 0;
-  z-index: 1000;
-  transition: all 0.4s ease; 
-}
+/* Mega menu layout and header positioning handled in separate selectors. Cleaned malformed block. */
 .hidden-header {
   transform: translateY(-100%);
 }

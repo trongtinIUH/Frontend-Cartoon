@@ -26,7 +26,7 @@ const MovieSlider = () => {
   if (!featuredMovies?.length) return null;
 
   return (
-    <div id="top_slide" style={{position: 'relative', minHeight: 500, paddingTop: 5}}>
+    <div id="top_slide" style={{position: 'relative', minHeight: 400, paddingTop:10}}>
       <div className="slide-wrapper top-slide-wrap" style={{position: 'relative', minHeight: 500}}>
         <Carousel
           activeIndex={activeIndex}
@@ -49,7 +49,7 @@ const MovieSlider = () => {
             const displayGenres = genresArr.filter(g => !AGE_SET.has(normalize(g)));
 
             return (
-              <Carousel.Item key={movie.movieId} style={{height: 600, position: "relative"}}>
+              <Carousel.Item key={movie.movieId} style={{height: 500, position: "relative"}}>
                 <div
                   className="background-fade"
                   style={{

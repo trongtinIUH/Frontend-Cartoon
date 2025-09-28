@@ -16,7 +16,10 @@
   width: 220px;         /* Cố định chiều rộng để đồng đều */
   min-width: 220px;     /* Đảm bảo không thu hẹp */
   max-width: 220px;     /* Đảm bảo không mở rộng */
-  text-align: left;
+  display: flex;        /* Hiển thị theo cột để title + button nằm dọc */
+  flex-direction: column;
+  align-items: center;  /* Căn giữa nội dung (title, nút) */
+  text-align: center;   /* Căn giữa text bên trong */
   flex-shrink: 0;       /* Không cho phép thu nhỏ */
 }
 
@@ -34,6 +37,8 @@
   font-size: 0.85rem;
   font-weight: 500;
   transition: color 0.3s ease;
+  margin-top: 8px;      /* Đẩy nút xuống phía dưới title và tách ra */
+  justify-content: center; /* Giữ icon + text căn giữa */
 }
 
 .view-all-btn:hover {

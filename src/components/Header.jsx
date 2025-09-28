@@ -159,7 +159,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
             <div className="search-container">
               <input
                 type="text"
-                placeholder="Tìm kiếm phim, diễn viên"
+                placeholder="Tìm kiếm phim..."
                 value={searchText}
                 onChange={async (e) => {
                   const value = e.target.value;
@@ -205,6 +205,18 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
 
             {/* Main Nav */}
             <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
+              
+              <Link to="/danh-muc/type/SINGLE" onClick={() => setIsMobileMenuOpen(false)}>
+                Phim lẻ
+              </Link>
+              <Link to="/danh-muc/type/SERIES" onClick={() => setIsMobileMenuOpen(false)}>
+                Phim bộ
+              </Link>
+              <Link to="/main" onClick={() => setIsMobileMenuOpen(false)}>
+                Xem chung
+              </Link>
+
+
               {/* CHỦ ĐỀ dropdown (PC hover, mobile click) */}
               <div
                 className="topic-menu-wrapper"
@@ -227,16 +239,6 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                   </div>
                 )}
               </div>
-
-              <Link to="/danh-muc/type/SINGLE" onClick={() => setIsMobileMenuOpen(false)}>
-                Phim lẻ
-              </Link>
-              <Link to="/danh-muc/type/SERIES" onClick={() => setIsMobileMenuOpen(false)}>
-                Phim bộ
-              </Link>
-              <Link to="/main" onClick={() => setIsMobileMenuOpen(false)}>
-                Xem chung
-              </Link>
              {/* QUỐC GIA dropdown (PC hover, mobile click) */}
               <div
                 className="country-menu-wrapper"

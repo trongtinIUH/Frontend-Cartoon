@@ -2,7 +2,7 @@ const TOPICS = [
   "Marvel",
   "4K",
   "Sitcom",
-  "Lồng Tiếng Cực Mạnh",
+  "Drama",
   "Xuyên Không",
   "Cổ Trang",
   "Anime",

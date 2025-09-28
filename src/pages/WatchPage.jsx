@@ -88,7 +88,8 @@ export default function WatchPage() {
 
   // Trial mode states
   const [isTrialMode, setIsTrialMode] = useState(false);
-  const [trialTimeLimit] = useState(15); // thời gian xem thử
+  // trialTimeLimit is in seconds. Change to 180 for 3 minutes or 300 for 5 minutes.
+  const [trialTimeLimit] = useState(180); // thời gian xem thử (3 phút)
   const [currentTime, setCurrentTime] = useState(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [trialExpired, setTrialExpired] = useState(false);
@@ -381,6 +382,49 @@ export default function WatchPage() {
     window.scrollTo({ top: 200, behavior: 'smooth' });
   }, [page]);
 
+  // --- Resume modal helpers
+  const formatTimeHuman = (s) => {
+    const sec = Number(s) || 0;
+    const m = Math.floor(sec / 60);
+    const secRem = sec % 60;
+    if (m > 0) return `${m} phút ${secRem} giây`;
+    return `${secRem} giây`;
+  };
+
+  const resumeStorageKey = () => {
+    const epId = (currentEpisode || episodeFromState)?.episodeId;
+    const mId = movieId;
+    if (!mId || !epId) return null;
+    return `watch_progress:${mId}:${epId}`;
+  };
+
+  const handleResumeContinue = () => {
+    const p = playerRef.current;
+    const key = resumeStorageKey();
+    setShowResumeModal(false);
+    if (p) {
+      try { p.currentTime(Number(resumeTime) || 0); } catch (e) { }
+      p.play().catch(() => {});
+    }
+    lastSavedRef.current = Number(resumeTime) || 0;
+  };
+
+  const handleResumeRestart = () => {
+    const p = playerRef.current;
+    const key = resumeStorageKey();
+    try { if (key) sessionStorage.removeItem(key); } catch (e) { }
+    setShowResumeModal(false);
+    if (p) {
+      try { p.currentTime(0); } catch (e) { }
+      p.play().catch(() => {});
+    }
+    lastSavedRef.current = 0;
+  };
+
+  const handleDismissResume = () => {
+    setShowResumeModal(false);
+  };
+
   const goTo = (p) => {
     if (p < 0 || p >= totalPages || loading) return;
     setPage(p);
@@ -525,6 +569,11 @@ export default function WatchPage() {
   const frameRef = useRef(null);
   const [playerH, setPlayerH] = useState(0);
 
+  // --- Resume / save-progress states (so reloading or returning shows resume modal)
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [resumeTime, setResumeTime] = useState(0);
+  const lastSavedRef = useRef(0);
+
   // refs cho nút trên control bar
   const prevBtnRef = useRef(null);
   const nextBtnRef = useRef(null);
@@ -582,8 +631,8 @@ export default function WatchPage() {
       html5: { vhs: { overrideNative: false } },
     });
 
-    //vì có nút option nên thời cmt 
-    //p.hlsQualitySelector?.({ displayCurrentQuality: false });
+  //vì có nút option nên thời cmt 
+  //p.hlsQualitySelector?.({ displayCurrentQuality: false });
 
     p.on('error', (e) => console.error('Video error:', e));
 
@@ -652,13 +701,75 @@ export default function WatchPage() {
     p.pause();
     p.src({ src: originalUrl, type: "application/x-mpegURL" });
     p.load(); // Force load the new source
-    
-    // Thử play sau khi load
+
+    // --- Attach a throttled timeupdate handler to save progress every 5s
+    const onTimeUpdate = () => {
+      try {
+        const t = Math.floor(p.currentTime() || 0);
+        const epId = (currentEpisode || episodeFromState)?.episodeId;
+        const mId = movieId;
+        if (!mId || !epId) return;
+        const last = lastSavedRef.current || 0;
+        if (t - last >= 5) {
+          const key = `watch_progress:${mId}:${epId}`;
+          sessionStorage.setItem(key, JSON.stringify({ time: t, updatedAt: Date.now() }));
+          lastSavedRef.current = t;
+        }
+      } catch (e) { /* ignore storage errors */ }
+    };
+
+    p.off('timeupdate', onTimeUpdate);
+    p.on('timeupdate', onTimeUpdate);
+
+    // Remove saved progress on ended
+    const onEndedCleanup = () => {
+      try {
+        const epId = (currentEpisode || episodeFromState)?.episodeId;
+        const mId = movieId;
+        if (!mId || !epId) return;
+        const key = `watch_progress:${mId}:${epId}`;
+        sessionStorage.removeItem(key);
+      } catch (e) { }
+    };
+    p.off('ended', onEndedCleanup);
+    p.on('ended', onEndedCleanup);
+
+    // If we have saved progress for this movie+episode, pause and ask user if they want to resume
+    try {
+      const epId = (currentEpisode || episodeFromState)?.episodeId;
+      const mId = movieId;
+      if (mId && epId) {
+        const key = `watch_progress:${mId}:${epId}`;
+        const raw = sessionStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const saved = Number(parsed?.time || 0);
+          if (saved > 5) {
+            // Pause and show modal to ask user whether to resume
+            setResumeTime(saved);
+            setShowResumeModal(true);
+            p.pause();
+            // Do NOT auto-play until user chooses
+            return;
+          }
+        }
+      }
+    } catch (e) { }
+
+    // Thử play sau khi load (no saved progress)
     setTimeout(() => {
       p.play().catch((error) => {
         console.error("❌ Video play failed:", error);
       });
     }, 500);
+
+    // Cleanup handlers when effect reruns
+    return () => {
+      try {
+        p.off('timeupdate', onTimeUpdate);
+        p.off('ended', onEndedCleanup);
+      } catch (e) { }
+    };
   }, [currentEpisode?.episodeId, episodeFromState?.episodeId, gate.status]); // Thêm gate.status dependency
 
   // -------- Lắng nghe ended tách riêng, luôn thấy nextEp mới nhất
@@ -1668,6 +1779,21 @@ export default function WatchPage() {
         userId={userId}
         getPackageDisplayName={getPackageDisplayName}
       />
+
+      {/* Resume modal - shows when we found saved progress for this episode */}
+      {showResumeModal && (
+        <div className="resume-modal-backdrop">
+          <div className="resume-modal">
+            <h3 className="resume-title">THÔNG BÁO!</h3>
+            <p className="resume-text">Bạn đã xem đến <span className="resume-badge">{formatTimeHuman(resumeTime)}</span></p>
+            <div className="resume-actions">
+              <button onClick={handleResumeContinue} className="resume-btn resume-continue">Tiếp tục xem</button>
+              <button onClick={handleResumeRestart} className="resume-btn resume-restart">Xem lại từ đầu</button>
+              <button onClick={handleDismissResume} className="resume-btn resume-dismiss">Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <RatingModal
         show={showRatingModal}
