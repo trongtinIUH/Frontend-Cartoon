@@ -1,0 +1,170 @@
+/* ===== Base layout ===== */
+.movie-stats-content{
+  padding:1.5rem; background:#f8f9fa; min-height:100vh; margin-left:0;
+}
+@media (min-width:992px){
+  .movie-stats-content{ margin-left:250px; padding:2rem; width: calc(100% - 250px); padding-right:1.5rem; }
+}
+@media (max-width:768px){
+  .movie-stats-content{ padding:1rem; margin-left:0; }
+}
+
+/* ===== Modern toolbar ===== */
+.ap-toolbar{
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+  gap:12px; background:#f6f9fc; border:1px solid #e6eef7; border-radius:16px;
+  padding:12px; margin-bottom:16px; position:sticky; top:0; z-index:5;
+}
+.ap-spacer{ min-width:8px; }
+.ap-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.ap-quick{ height:40px; width:100px; border-radius:10px; }
+
+/* Segmented buttons */
+.segmented{ display:inline-flex; border:1px solid #dbe4f0; border-radius:10px; overflow:hidden; background:#fff; }
+.segmented.small button{ height:40px;font-size:.875rem; }
+.segmented button{ height:50px; padding:0 14px; border:0; background:transparent; font-weight:600; color:#475569; }
+.segmented button + button{ border-left:1px solid #e8eef6; }
+.segmented button:hover{ background:#f3f6fb; }
+.segmented button.is-active{ background:#1a73e8; color:#fff; }
+
+/* Date range inputs (identical height & custom icon) */
+.ap-date-range{ display:flex; align-items:center; gap:8px; }
+.ap-sep{ color:#94a3b8; font-weight:600; }
+.ap-date{
+   height: 40px;
+  border-radius: 10px;
+  border: 1px solid #dbe4f0;
+  background: #fff
+    url("data:image/svg+xml,%3Csvg width='18' height='18' xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%2390a4b8' stroke-width='1.7'%3E%3Crect x='2.8' y='4.5' width='12.4' height='10.7' rx='2'/%3E%3Cpath d='M5 3.5v2M13 3.5v2M3 7.5h12'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  background-size: 18px;
+  color:#0f172a;        
+}
+.ap-date:focus{ border-color:#9ec0ff; box-shadow:0 0 0 .2rem rgba(26,115,232,.15); outline:0; }
+.ap-date::-webkit-calendar-picker-indicator{
+  opacity: 0;            /* vẫn ẩn icon mặc định */
+  width: 18px;           /* chỉ chiếm khu vực bên phải */
+  height: 18px;
+  cursor: pointer;
+  /* KHÔNG set 100% nữa */
+}
+.ap-date::-webkit-clear-button{ display:none; }
+.ap-date::-webkit-datetime-edit,
+.ap-date::-webkit-datetime-edit-text,
+.ap-date::-webkit-datetime-edit-month-field,
+.ap-date::-webkit-datetime-edit-day-field,
+.ap-date::-webkit-datetime-edit-year-field{
+  color:#0f172a;
+}
+.ap-toolbar .form-select{ height:40px; padding-right:36px; }
+
+/* Mobile toolbar */
+@media (max-width:768px){
+  .ap-toolbar{ grid-template-columns:1fr; gap:8px; }
+  .ap-controls{ justify-content:stretch; }
+  .ap-quick,.ap-date{ flex:1 1 160px; }
+}
+
+/* ===== Cards ===== */
+.movie-stats-card,.revenue-card{
+  border-radius:12px; border:none; box-shadow:0 4px 12px rgba(0,0,0,.1);
+  transition:all .3s ease; overflow:hidden; height:100%; color:#fff;
+}
+.movie-stats-card:hover,.revenue-card:hover{ transform:translateY(-3px); box-shadow:0 8px 25px rgba(0,0,0,.15); }
+.movie-stats-card .card-body,.revenue-card .card-body{ padding:1.5rem; height:100%; display:flex; align-items:center; }
+.movie-stats-card i,.revenue-card i{ opacity:.9; margin-right:1rem; font-size:2.5rem; }
+.movie-stats-card .card-title,.revenue-card .card-title{ font-size:.9rem; font-weight:600; opacity:.9; margin-bottom:.5rem; white-space:nowrap; }
+.movie-stats-card .card-value,.revenue-card .card-value{ font-size:2rem; font-weight:700; line-height:1.2; margin-bottom:0 }
+@media (max-width:768px){
+  .movie-stats-card .card-body,.revenue-card .card-body{ padding:1rem }
+  .movie-stats-card i,.revenue-card i{ font-size:1.8rem; margin-right:.75rem }
+  .movie-stats-card .card-value,.revenue-card .card-value{ font-size:1.5rem }
+  .movie-stats-card .card-title,.revenue-card .card-title{ font-size:.8rem }
+}
+
+/* Chart cards */
+.movie-stats-content .card{ border-radius:12px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:1.5rem; background:#fff }
+.movie-stats-content .card-header{ border-bottom:1px solid #e9ecef; background:#fff !important; border-radius:12px 12px 0 0 !important; padding:1.25rem }
+.movie-stats-content .card-header h5{ color:#2c3e50; font-weight:600; margin-bottom:0; font-size:1.1rem }
+.movie-stats-content .card-body{ padding:1.5rem }
+@media (max-width:768px){
+  .movie-stats-content .card-header{ padding:1rem }
+  .movie-stats-content .card-header h5{ font-size:1rem }
+  .movie-stats-content .card-body{ padding:1rem }
+}
+
+/* Quick stats */
+.quick-stats .stat-item{ padding:.75rem 0; border-bottom:1px solid #f1f3f4; display:flex; justify-content:space-between; align-items:center }
+.quick-stats .stat-item:last-child{ border-bottom:none }
+.quick-stats .stat-item span{ color:#6c757d; font-size:.9rem; font-weight:500 }
+.quick-stats .stat-item strong{ font-size:1rem; font-weight:600 }
+
+/* Tables */
+.movie-stats-content .table{ margin-bottom:0; font-size:.9rem }
+.movie-stats-content .table th{ background-color:#f8f9fa; border-bottom:2px solid #dee2e6; font-weight:600; color:#495057; font-size:.85rem; padding:.75rem; white-space:nowrap }
+.movie-stats-content .table td{ padding:.75rem; vertical-align:middle; border-bottom:1px solid #f1f3f4 }
+.movie-stats-content .table tbody tr:hover{ background-color:#f8f9fa }
+.movie-stats-content .table .fw-semibold{ font-weight:600; color:#2c3e50 }
+.movie-stats-content .table .text-muted{ font-size:.8rem }
+.movie-stats-content .table img{ border-radius:4px; object-fit:cover }
+@media (max-width:768px){
+  .movie-stats-content .table{ font-size:.8rem }
+  .movie-stats-content .table th,.movie-stats-content .table td{ padding:.5rem }
+  .movie-stats-content .table img{ width:30px !important; height:45px !important }
+  .movie-stats-content .table .fw-semibold{ font-size:.8rem }
+  .movie-stats-content .table .text-muted{ font-size:.7rem }
+}
+
+/* Colors for cards */
+.movie-stats-card.bg-primary{ background:linear-gradient(135deg,#007bff 0%,#0056b3 100%) }
+.movie-stats-card.bg-success{ background:linear-gradient(135deg,#28a745 0%,#1e7e34 100%) }
+.movie-stats-card.bg-info{ background:linear-gradient(135deg,#17a2b8 0%,#117a8b 100%) }
+.movie-stats-card.bg-warning{ background:linear-gradient(135deg,#ffc107 0%,#e0a800 100%) }
+
+/* Grid & helpers */
+.row.g-3{ --bs-gutter-x:1rem; --bs-gutter-y:1rem }
+@media (max-width:576px){ .row.g-3{ --bs-gutter-x:.75rem; --bs-gutter-y:.75rem } }
+.movie-stats-content .table-responsive{ border-radius:8px }
+.movie-stats-content .table-responsive::-webkit-scrollbar{ height:6px }
+.movie-stats-content .table-responsive::-webkit-scrollbar-track{ background:#f1f1f1; border-radius:3px }
+.movie-stats-content .table-responsive::-webkit-scrollbar-thumb{ background:#c1c1c1; border-radius:3px }
+.movie-stats-content .table-responsive::-webkit-scrollbar-thumb:hover{ background:#a8a8a8 }
+
+/* Animations */
+@keyframes fadeInUp{ from{ opacity:0; transform:translateY(20px) } to{ opacity:1; transform:translateY(0) } }
+.movie-stats-content .card,.movie-stats-card{ animation:fadeInUp .6s ease-out }
+
+/* Chart canvas sizing */
+.movie-stats-content .card .card-body canvas{ max-height:300px }
+@media (max-width:768px){ .movie-stats-content .card .card-body canvas{ max-height:250px } }
+
+/* Equal height */
+.row .col-12.col-sm-6.col-lg-3{ display:flex; margin-bottom:1rem }
+.row .col-12.col-sm-6.col-lg-3 .movie-stats-card{ width:100% }
+
+/* Text colors */
+.text-primary{ color:#007bff !important }
+.text-success{ color:#28a745 !important }
+.text-info{ color:#17a2b8 !important }
+.text-warning{ color:#ffc107 !important }
+.text-danger{ color:#dc3545 !important }
+
+/* Loading */
+.loading-placeholder{
+  background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);
+  background-size:200% 100%; animation:loading 1.5s infinite;
+  border-radius:4px; height:20px; margin:.25rem 0;
+}
+@keyframes loading{ 0%{ background-position:200% 0 } 100%{ background-position:-200% 0 } }
+
+/* Small-screen table overflow helper */
+@media (max-width:576px){
+  .movie-stats-content .table-responsive{ font-size:.75rem }
+  .movie-stats-content .table th:not(:first-child),
+  .movie-stats-content .table td:not(:first-child){ min-width:80px }
+  .movie-stats-content .table th:first-child,
+  .movie-stats-content .table td:first-child{ min-width:40px }
+}
+
+/* Export buttons in toolbar */
+.ap-actions .btn{ border-radius:8px; }

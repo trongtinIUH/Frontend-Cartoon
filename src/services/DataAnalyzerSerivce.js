@@ -35,10 +35,23 @@ const RevenueService = {
     return axiosInstance.get(`${API_BASE_URL}/revenue/quick-stats`);
   },
 
-  // 5 giao dich gần nhất
-  getRecentTransactions: () => {
+  // 5 giao dich gần nhất - dùng lại của đạt
+  getRecentTransactionsLegacy: () => {
     return axiosInstance.get(`${API_BASE_URL}/revenue/recent-transactions`);
   },
+
+    // ===== MỚI (RANGE APIs) =====
+  getRevenueByRange: (startDate, endDate, groupBy = 'DAY') =>
+    axiosInstance.get(`${API_BASE_URL}/revenue/range`, { params: { startDate, endDate, groupBy } }),
+
+  getRevenueSummaryByRange: (startDate, endDate) =>
+    axiosInstance.get(`${API_BASE_URL}/revenue/range/summary`, { params: { startDate, endDate } }),
+
+  // Recent transactions có phân trang + (optional) range filter
+    getRecentTransactionsPaged: (page = 1, size = 10, startDate, endDate) =>
+    axiosInstance.get(`${API_BASE_URL}/revenue/recent-transactions/paged`, {
+      params: { page, size, startDate, endDate }
+    }),
 
   // ======= MOVIE ANALYTICS =======
   // Tổng quan thống kê phim
@@ -110,7 +123,15 @@ const RevenueService = {
     return axiosInstance.get(`${API_BASE_URL}/movies/top/rating`, {
       params: { limit, minRatings }
     });
-  }
+  },
+
+  // ===== MOVIES RANGE =====
+  getNewMoviesByRange: (startDate, endDate, groupBy = 'DAY') =>
+    axiosInstance.get(`${API_BASE_URL}/movies/new/range`, { params: { startDate, endDate, groupBy } }),
+
+  getMovieSummaryByRange: (startDate, endDate) =>
+    axiosInstance.get(`${API_BASE_URL}/movies/range/summary`, { params: { startDate, endDate } }),
+
 };
 
 export default RevenueService;

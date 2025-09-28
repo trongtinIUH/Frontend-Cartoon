@@ -97,7 +97,7 @@ const RevenueManagementPage = () => {
     };
 
     useEffect(() => {
-        RevenueService.getRecentTransactions()
+        RevenueService.getRecentTransactionsLegacy()
             .then((res) => setRecentTransactions(res.data))
             .catch((err) => console.error(err));
     }, []);

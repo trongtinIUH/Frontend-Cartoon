@@ -145,41 +145,14 @@ const Sidebar = () => {
 
               {/* Thống kê (submenu) */}
               <li className="nav-item">
-                <button
-                  type="button"
-                  className="nav-link sidebar-link d-flex align-items-center justify-content-between w-100"
-                  aria-expanded={openStats}
-                  aria-controls="submenu-stats"
-                  onClick={() => setOpenStats(v => !v)}
+                <NavLink
+                  to="/admin-analytics"
+                  className={({ isActive }) =>
+                    `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+                  }
                 >
-                  <span><i className="fas fa-chart-line me-2" /> Thống kê</span>
-                  <i className={`fas fa-chevron-right ms-2 transition ${openStats ? "rotate-90" : ""}`} />
-                </button>
-                <ul
-                  id="submenu-stats"
-                  className={`nav flex-column ms-4 mt-1 collapse ${openStats ? "show" : ""}`}
-                >
-                  <li className="nav-item">
-                    <NavLink
-                      to="/admin-revenue"
-                      className={({ isActive }) =>
-                        `nav-link sidebar-sublink d-flex align-items-center ${isActive ? "active" : ""}`
-                      }
-                    >
-                      <i className="fas fa-dollar-sign me-2" /> Doanh thu
-                    </NavLink>
-                  </li>
-                  <li className="nav-item">
-                    <NavLink
-                      to="/admin-movie-stats"
-                      className={({ isActive }) =>
-                        `nav-link sidebar-sublink d-flex align-items-center ${isActive ? "active" : ""}`
-                      }
-                    >
-                      <i className="fas fa-film me-2" /> Phim
-                    </NavLink>
-                  </li>
-                </ul>
+                  <i className="fas fa-chart-line me-2" /> <span>Thống kê</span>
+                </NavLink>
               </li>
 
               {/* Cài đặt (submenu + lối ra giao diện chính + logout) */}

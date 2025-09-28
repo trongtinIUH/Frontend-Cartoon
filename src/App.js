@@ -37,6 +37,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import RevenueManagementPage from './pages/admin/RevenueManagementPage';
 import MovieStatsPage from './pages/admin/MovieStatsPage';
 import MemberManagementPage from './pages/admin/MemberManagementPage';
+import AnalyticsPage from './pages/admin/AnalyticsPage';
 
 function App() {
   const navigate = useNavigate();
@@ -95,6 +96,7 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/admin-movie" element={<MovieManagementPage />} />
                     <Route path="/admin-promotion" element={<PromotionManagementPage />} />
                     <Route path="/admin-author" element={<AuthorManagementPage />} />
+                    <Route path="/admin-analytics" element={<AnalyticsPage />} />
                     <Route path="/admin-revenue" element={<RevenueManagementPage />} />
                     <Route path="/admin-movie-stats" element={<MovieStatsPage />} />
                     <Route path="/admin-member" element={<MemberManagementPage />} />
