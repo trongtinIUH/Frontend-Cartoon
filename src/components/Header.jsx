@@ -96,6 +96,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
   //ẩn header khi cuộn xuống
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const controlHeader = () => {
     const currentScrollY = window.scrollY;
@@ -113,6 +114,16 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
     window.addEventListener("scroll", controlHeader);
     return () => window.removeEventListener("scroll", controlHeader);
   }, [lastScrollY]);
+
+  // Track whether page has been scrolled away from top to toggle background
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
 
   // state menbership của user:
@@ -135,7 +146,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
 
   return (
     <>
-      <header className={`main-header ${showHeader ? "" : "hidden-header"}`}>
+  <header className={`main-header ${showHeader ? "" : "hidden-header"} ${isScrolled ? "scrolled" : ""}`}>
         <div className="header-container">
           {/* --- LEFT: Logo + Menu + Search + Nav --- */}
           <div className="header-left">

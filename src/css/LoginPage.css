@@ -378,3 +378,37 @@
   .auth-card{ border-radius:18px !important; }
   .auth-heading{ font-size:30px; }
 }
+
+
+/* Ép màu chữ cho form-control (ưu tiên cao) */
+.auth-card .form-control,
+.auth-card .form-control:focus,
+.auth-card input[type="text"],
+.auth-card input[type="password"] {
+  color: #ffffff !important;
+  caret-color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important; /* WebKit text color */
+  background: rgba(255,255,255,.08) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+}
+
+/* Placeholder */
+.auth-card .form-control::placeholder {
+  color: #cfd7ea !important;
+  opacity: .85;
+}
+
+/* FIX cho autofill của Chrome (thường bị nền vàng + chữ đen) */
+.auth-card input:-webkit-autofill,
+.auth-card input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 0 0px 1000px rgba(255,255,255,.08) inset !important;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255,255,255,.08) inset !important;
+  transition: background-color 9999s ease-out 0s; /* chặn nền vàng */
+}
+
+/* Tăng viền khi focus (tuỳ chọn) */
+.auth-card .form-control:focus {
+  box-shadow: 0 0 0 3px rgba(43,192,228,.25) !important;
+  border-color: #6bd6ff !important;
+}

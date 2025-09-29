@@ -1,212 +1,251 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import AuthService from "../services/AuthService";
-import { formatPhoneNumber } from "../utils/formatPhoneNumber"; // Import hàm formatPhoneNumber
-import '../css/RegisterPage.css';
+import { formatPhoneNumber } from "../utils/formatPhoneNumber";
 import showToast from "../utils/AppUtils";
+import Logo from "../components/Logo";
+import "../css/RegisterPage.css";
 
-const RegistePage = () => {
-    const [phoneNumber, setPhoneNumber] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [verificationCode, setVerificationCode] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
-    const [successMessage, setSuccessMessage] = useState("");
-    const [isOtpSent, setIsOtpSent] = useState(false);
-    const [name, setName] = useState("");
-    const [dob, setDob] = useState("");
-    const navigate = useNavigate();
+const RegisterPage = () => {
+  const navigate = useNavigate();
+  const videoRef = useRef(null);
 
-    const validatePassword = (pass) => {
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        return passwordRegex.test(pass);
-    };
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
 
-    // Kiểm tra người dùng có đủ 12 tuổi
-    const validateAge = (dobString) => {
-        const dobDate = new Date(dobString);
-        const today = new Date();
-        let age = today.getFullYear() - dobDate.getFullYear();
-        if (
-            today.getMonth() < dobDate.getMonth() ||
-            (today.getMonth() === dobDate.getMonth() && today.getDate() < dobDate.getDate())
-        ) {
-            age--;
-        }
-        return age;
-    };
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSoundOn, setIsSoundOn] = useState(false);
 
-    const handleSendOtp = async () => {
-        setErrorMessage("");
-        setSuccessMessage("");
+  const validatePassword = (pass) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(pass);
 
-        if (!phoneNumber || !password || !confirmPassword || !name || !dob) {
-            setErrorMessage("Số điện thoại, mật khẩu, tên và ngày sinh là bắt buộc.");
-            return;
-        }
+  const getAge = (dobString) => {
+    const d = new Date(dobString);
+    const t = new Date();
+    let age = t.getFullYear() - d.getFullYear();
+    if (t.getMonth() < d.getMonth() || (t.getMonth() === d.getMonth() && t.getDate() < d.getDate())) age--;
+    return age;
+  };
 
-        if (validateAge(dob) < 14) {
-            setErrorMessage("Bạn phải ít nhất 12 tuổi để đăng ký.");
-            return;
-        }
+  const handleSendOtp = async () => {
+    setErrorMessage("");
+    setIsLoading(true);
 
-        // Định dạng số điện thoại trước khi kiểm tra
-        const formattedPhone = formatPhoneNumber(phoneNumber);
-        if (!formattedPhone) {
-            setErrorMessage("Số điện thoại không đúng định dạng.");
-            return;
-        }
-        // Cập nhật lại state với số điện thoại đã được định dạng
-        setPhoneNumber(formattedPhone);
+    try {
+      if (!name || !dob || !phoneNumber || !password || !confirmPassword) {
+        throw new Error("Vui lòng nhập đầy đủ Họ tên, Ngày sinh, SĐT và Mật khẩu.");
+      }
+      if (getAge(dob) < 14) {
+        throw new Error("Bạn phải đủ **14 tuổi** để đăng ký.");
+      }
+      const formattedPhone = formatPhoneNumber(phoneNumber);
+      if (!formattedPhone) throw new Error("Số điện thoại không đúng định dạng.");
 
-        if (!validatePassword(password)) {
-            setErrorMessage("Mật khẩu phải có ý nhất 8 ký tự, chữ hoa, chữ thường, số và kí tự đặc biệt.");
-            return;
-        }
+      if (!validatePassword(password)) {
+        throw new Error("Mật khẩu ≥ 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.");
+      }
+      if (password !== confirmPassword) throw new Error("Xác nhận mật khẩu không khớp.");
 
-        if (password !== confirmPassword) {
-            setErrorMessage("Mật khẩu xác nhận không khớp.");
-            return;
-        }
+      // Lưu lại phone đã format để dùng bước OTP
+      setPhoneNumber(formattedPhone);
 
-        try {
-            await AuthService.post("/send-otp", { phoneNumber: formattedPhone, password });
-            setSuccessMessage("OTP đã được gửi thành công. Vui lòng kiểm tra điện thoại của bạn.");
-            setIsOtpSent(true);
-        } catch (error) {
-            setErrorMessage(error.response?.data || "Lỗi khi gửi OTP.");
-        }
-    };
+      await AuthService.post("/send-otp", { phoneNumber: formattedPhone, password });
+      setIsOtpSent(true);
+      showToast("OTP đã gửi, vui lòng kiểm tra tin nhắn!", "success");
+    } catch (e) {
+      setErrorMessage(e.response?.data || e.message || "Lỗi khi gửi OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const handleVerifyOtp = async () => {
-        setErrorMessage("");
-        setSuccessMessage("");
+  const handleVerifyOtp = async () => {
+    setErrorMessage("");
+    setIsLoading(true);
+    try {
+      if (!verificationCode) throw new Error("Vui lòng nhập OTP.");
 
-        if (!verificationCode) {
-            setErrorMessage("OTP là bắt buộc.");
-            return;
-        }
+      const user = {
+        userId: Date.now().toString(),
+        userName: name,
+        dob,
+        phoneNumber,
+      };
+      await AuthService.post("/verify-phone-and-create-user", {
+        phoneNumber,
+        verificationCode,
+        user,
+      });
 
-        const user = {
-            userId: new Date().getTime().toString(),
-            dob: dob,
-            userName: name,
-            phoneNumber: phoneNumber,
-        };
+      showToast("Tạo tài khoản thành công. Bạn có thể đăng nhập ngay!", "success");
+      navigate("/");
+    } catch (e) {
+      setErrorMessage(e.response?.data || "Mã OTP không đúng hoặc đã hết hạn.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        try {
-            const requestData = {
-                phoneNumber: phoneNumber,
-                verificationCode: verificationCode,
-                user: user,
-            };
+  return (
+    <div className="login-bg-video">
+      {/* BG video giống LoginPage */}
+      <video
+        ref={videoRef}
+        autoPlay
+        loop
+        muted={!isSoundOn}
+        preload="auto"
+        playsInline
+        className="bg-video"
+      >
+        <source src={`${process.env.PUBLIC_URL}/videologin.mp4`} type="video/mp4" />
+      </video>
 
-            await AuthService.post("/verify-phone-and-create-user", requestData);
-            setSuccessMessage("Tạo người dùng thành công. Bạn có thể đăng nhập ngay.");
-            showToast("Tạo người dùng thành công. Bạn có thể đăng nhập ngay.", "success");
-            setTimeout(() => {
-                navigate("/");
-            }, 2000);
-        } catch (error) {
-            if (error.response?.data) {
-                setErrorMessage(error.response?.data);
-            } else {
-                setErrorMessage("Mã OTP không đúng hoặc hết hạn.");
+      {/* Nút âm lượng */}
+      <div className="sound-toggle">
+        <button
+          onClick={() => {
+            const next = !isSoundOn;
+            setIsSoundOn(next);
+            if (videoRef.current) {
+              videoRef.current.muted = !next;
+              if (next) videoRef.current.play();
             }
-        }
-    };
+          }}
+        >
+          {isSoundOn ? "🔊" : "🔈"}
+        </button>
+      </div>
 
-    return (
-        <div className="d-flex justify-content-center align-items-center flex-column vh-100" 
-         style={{    backgroundImage: `url(${require('../image/yourname.jpg')})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'}}>
-           
-            <div className="card p-4" style={{ width: "500px", borderRadius: "20px" }}>
-                  <h1 className="text-primary fw-bold">CartoonToo</h1>
-                <p className="text-center text-white mb-4">
-                    Tạo tài khoản để xem và lưu trữ những bộ phim hoạt hình yêu thích của bạn!
-                </p>
-                <h2 
-                style={{color:'white', textShadow: '0 2px 8px #000, 0 1px 1px '}}>
-                    {isOtpSent ? "Xác minh OTP" : ""}
-                </h2>
-                
-                {errorMessage && <div className="error-message">{errorMessage}</div>}
-                {successMessage && <div className="success-message">{successMessage}</div>}
-                {!isOtpSent ? (
-                    <div>
-                        <div className="input-group-info">
-                            <input
-                                id="name"
-                                type="text"
-                                placeholder="📝 Họ và tên"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="name"
-                            />
-                            <input
-                                id="dob"
-                                type="date"
-                                value={dob}
-                                onChange={(e) => setDob(e.target.value)}
-                                className="dob"
-                            />
-                        </div>
-                        <div className="input-group">
-                            <input
-                                id="phone"
-                                type="text"
-                                placeholder="📱 Số điện thoại"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                            />
-                        </div>
-                        <div className="input-group">
-                            <input
-                                id="password"
-                                type="password"
-                                placeholder="🔒 Mật khẩu"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                        <div className="input-group">
-                            <input
-                                id="confirm-password"
-                                type="password"
-                                placeholder="🔑 Xác nhận mật khẩu"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                            />
-                        </div>
-                        <button className="btn btn-primary w-100 mb-3" onClick={handleSendOtp}>
-                            Đăng ký
-                        </button>
-                    </div>
-                ) : (
-                    <div>
-                        <label htmlFor="verificationCode">🔢 Nhập OTP</label>
-                        <input
-                            id="verificationCode"
-                            type="text"
-                            placeholder="Nhập OTP"
-                            value={verificationCode}
-                            onChange={(e) => setVerificationCode(e.target.value)}
-                        />
-                        <button onClick={handleVerifyOtp}>Xác minh OTP</button>
-                    </div>
-                )}
-                <hr />
-                <div className="text-center">
-                    <span>Đã có tài khoản? </span>
-                    <a href="/" className="text-primary text-decoration-none fw-bold">
-                        Đăng nhập
-                    </a>
+      {/* Topbar: logo + xem ngay */}
+      <div className="auth-topbar">
+        <Link to="/main" className="brand">
+          <Logo type="wordmark" size={40} />
+        </Link>
+        <button className="btn-watch" style={{ width: "10%" }} onClick={() => navigate("/main")}>
+          ▶ Xem ngay
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="login-content">
+        <div className="card auth-card p-4">
+          <div className="text-center mb-3">
+            <h1 className="auth-heading">Tạo tài khoản</h1>
+            <p className="auth-subtitle">
+              Đăng ký để lưu phim yêu thích và đồng bộ trên mọi thiết bị.
+            </p>
+          </div>
+
+          {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+
+          {!isOtpSent ? (
+            <>
+              <div className="row g-2">
+                <div className="col-12 col-sm-7">
+                  <input
+                    className="form-control"
+                    type="text"
+                    placeholder="📝 Họ và tên"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </div>
-            </div>
+                <div className="col-12 col-sm-5">
+                  <input
+                    className="form-control"
+                    type="date"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-2">
+                <input
+                  className="form-control"
+                  type="text"
+                  placeholder="📱 Số điện thoại"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                />
+              </div>
+
+              <div className="mt-2">
+                <input
+                  className="form-control"
+                  type="password"
+                  placeholder="🔒 Mật khẩu"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              <div className="mt-2">
+                <input
+                  className="form-control"
+                  type="password"
+                  placeholder="🔑 Xác nhận mật khẩu"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+
+              <button
+                className="btn-login-dark w-100 mt-3"
+                onClick={handleSendOtp}
+                disabled={isLoading}
+              >
+                {isLoading ? "Đang gửi OTP..." : "Gửi OTP & Đăng ký"}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="mt-2">
+                <input
+                  className="form-control"
+                  type="text"
+                  placeholder="🔢 Nhập mã OTP"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                />
+              </div>
+              <button
+                className="btn-login-dark w-100 mt-3"
+                onClick={handleVerifyOtp}
+                disabled={isLoading}
+              >
+                {isLoading ? "Đang xác minh..." : "Xác minh & Hoàn tất"}
+              </button>
+            </>
+          )}
+
+          <hr className="auth-sep mt-4" />
+          <div className="text-center">
+            <span className="muted">Đã có tài khoản? </span>
+            <Link to="/" className="text-link fw-bold">
+              Đăng nhập
+            </Link>
+          </div>
+
+          <div className="auth-footer mt-3">© Bản quyền thuộc về Cartoon Too.</div>
         </div>
-    );
+
+        {isLoading && (
+          <div className="loading-overlay">
+            <div className="spinner"></div>
+            <p className="loading-text">Đang xử lý...</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
-export default RegistePage;
+export default RegisterPage;

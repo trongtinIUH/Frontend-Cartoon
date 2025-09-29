@@ -1,19 +1,40 @@
 .main-header {
-  background: linear-gradient(180deg, rgba(8,10,12,0.72), rgba(16,19,27,0.75));
+  /* Default: transparent when at the very top */
+  background: transparent;
   color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
+  box-sizing: border-box;
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  /* No divider or heavy shadow while transparent to avoid visual "shift" */
+  border-bottom: none;
+  box-shadow: none;
   /* keep header on top — other rules may override this later for sticky/hidden behavior */
   position: fixed;
   width: 100%;
   top: 0;
   z-index: 1200;
+  transition: background 220ms ease, box-shadow 220ms ease;
+}
+
+/* When user has scrolled down, apply the original gradient background */
+.main-header.scrolled {
+  background: linear-gradient(180deg, rgba(8,10,12,0.72), rgba(16,19,27,0.75));
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Ensure header children are vertically centered and header keeps consistent height */
+.main-header {
+  height: 64px;
+}
+.main-header .header-container {
+  height: 64px;
+  align-items: center;
+  display: flex;
 }
 
 .genre-menu-wrapper,

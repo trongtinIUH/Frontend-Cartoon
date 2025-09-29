@@ -92,3 +92,30 @@ button:hover {
     color: #d9534f;  /* Đặt màu đỏ cho thông báo lỗi */
     margin-top: 5px;
 }
+
+
+/* Giữ đồng bộ màu chữ input (trắng) như LoginPage fix */
+.auth-card .form-control,
+.auth-card .form-control:focus {
+  color: #ffffff !important;
+  caret-color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Placeholder mềm hơn một chút */
+.auth-card .form-control::placeholder {
+  color: #d5def3 !important;
+  opacity: .9;
+}
+
+/* Nhấn mạnh heading cho trang đăng ký */
+.auth-heading {
+  font-size: 34px;
+}
+
+/* Khoảng cách nhỏ cho mobile */
+@media (max-width: 576px) {
+  .auth-heading { font-size: 28px; }
+}
+
+
