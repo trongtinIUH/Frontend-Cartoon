@@ -3,11 +3,13 @@ import Sidebar from "../../components/Sidebar";
 import PricingService from "../../services/PricingService";
 import CreatePriceListModal from "../../models/CreatePriceListModal";
 import PriceListDetailModal from "../../models/PriceListDetailModal";
+import UpdatePriceListEndModal from "../../models/UpdatePriceListEndModal";
 
 const PriceListManagementPage = () => {
     const [priceLists, setPriceLists] = useState([]);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
     const [selectedPriceList, setSelectedPriceList] = useState(null);
 
     useEffect(() => {
@@ -25,10 +27,17 @@ const PriceListManagementPage = () => {
     const handleOpenCreateModal = () => {
         setIsCreateModalOpen(true);
     };
+
     const handleOpenDetailModal = (priceList) => {
         setSelectedPriceList(priceList);
         setIsDetailModalOpen(true);
     };
+
+    const handleOpenExtendModal = (priceList) => {
+        setSelectedPriceList(priceList);
+        setIsExtendModalOpen(true);
+    };
+
     return (
         <div className="d-flex bg-white min-vh-100">
             <Sidebar />
@@ -88,10 +97,19 @@ const PriceListManagementPage = () => {
                                             </span>
                                         </td>
                                         <td>
-                                            <button className="btn btn-sm btn-warning me-2" onClick={() => handleOpenDetailModal(priceList)}
+                                            <span className="btn btn-sm btn-warning me-2" onClick={() => handleOpenDetailModal(priceList)}
                                                 style={{ borderRadius: '10px', padding: '5px 10px', fontSize: '14px' }}>
                                                 <i className="fa fa-eye"></i> Xem chi tiết
-                                            </button>
+                                            </span>
+                                            <span
+                                                className="btn btn-sm btn-warning"
+                                                onClick={() => handleOpenExtendModal(priceList)}
+                                                style={{ borderRadius: 10, padding: "5px 10px", fontSize: '14px' }}
+                                                disabled={priceList.status !== "ACTIVE"}
+                                                title={priceList.status !== "ACTIVE" ? "Chỉ gia hạn với bảng giá ACTIVE" : ""}
+                                            >
+                                                <i className="fa-solid fa-calendar-plus"></i> Gia hạn thời gian
+                                            </span>
                                         </td>
                                     </tr>
                                 ))}
@@ -107,6 +125,12 @@ const PriceListManagementPage = () => {
                 <PriceListDetailModal
                     isOpen={isDetailModalOpen}
                     onClose={() => setIsDetailModalOpen(false)}
+                    priceList={selectedPriceList}
+                />
+                <UpdatePriceListEndModal
+                    isOpen={isExtendModalOpen}
+                    onClose={() => setIsExtendModalOpen(false)}
+                    onSaved={fetchPriceLists}
                     priceList={selectedPriceList}
                 />
             </div>

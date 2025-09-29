@@ -1,17 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SubscriptionPackageService from "../services/SubscriptionPackageService";
 
-const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated }) => {
-    const [formData, setFormData] = useState({
-        packageId: "",
-        packageName: "",
-       // packageImage: "",
-        applicablePackageType: "",
-        durationInDays: "",
-        features: ""
-    });
+const emptyForm = {
+    packageId: "",
+    packageName: "",
+    //   packageImage: "",
+    applicablePackageType: "",
+    durationInDays: "",
+    features: "",
+};
+const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated, initialData }) => {
+    const isEdit = !!initialData;
+    const [formData, setFormData] = useState(emptyForm);
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        if (isEdit) {
+            // map initialData -> form
+            setFormData({
+                packageId: initialData.packageId || "",
+                packageName: initialData.packageName || "",
+                // packageImage: "", 
+                applicablePackageType: initialData.applicablePackageType || "",
+                durationInDays: String(initialData.durationInDays || ""),
+                features: Array.isArray(initialData.features) ? initialData.features.join(", ") : "",
+            });
+            // setPreview(initialData.packageImage || ""); // URL cũ (nếu có)
+        } else {
+            setFormData(emptyForm);
+            // setPreview("");
+        }
+        setErrors({});
+    }, [isOpen, isEdit, initialData]);
+
     const setField = (field, value) => {
         setFormData({
             ...formData,
@@ -38,14 +61,18 @@ const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated }) => {
         try {
             setSubmitting(true);
             const payload = {
-               packageId: formData.packageId,
-               packageName: formData.packageName,
-               // packageImage: formData.packageImage, 
+                packageId: formData.packageId,
+                packageName: formData.packageName,
+                // packageImage: formData.packageImage,
                 applicablePackageType: formData.applicablePackageType,
                 durationInDays: parseInt(formData.durationInDays, 10),
                 features: formData.features.split(',').map(f => f.trim())
             };
-            await SubscriptionPackageService.createPackage(payload);
+            if (isEdit) {
+                await SubscriptionPackageService.updatePackage(initialData.packageId, payload);
+            } else {
+                await SubscriptionPackageService.createPackage(payload);
+            }
             onCreated();
             onClose();
         } catch (error) {
@@ -64,23 +91,25 @@ const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated }) => {
                     <div className="modal-content">
                         <form onSubmit={handleSubmit}>
                             <div className="modal-header">
-                                <h5 className="modal-title">Tạo gói đăng ký mới</h5>
+                                <h5 className="modal-title">{isEdit ? "Cập nhật gói đăng ký" : "Tạo gói đăng ký mới"}</h5>
                                 <button type="button" className="btn-close" onClick={onClose} />
                             </div>
 
                             <div className="modal-body">
                                 {errors._global && <div className="alert alert-danger">{errors._global}</div>}
-                                <div className="mb-3">
-                                    <label className="form-label">ID<span className="text-danger">*</span></label>
-                                    <input
-                                        type="text"
-                                        className={`text-black form-control ${errors.packageId ? "is-invalid" : ""}`}
-                                        value={formData.packageId}
-                                        onChange={(e) => setField("packageId", e.target.value)}
-                                        placeholder="Ví dụ: 12345"
-                                    />
-                                    {errors.packageId && <div className="invalid-feedback">{errors.packageId}</div>}
-                                </div>
+                                {!isEdit &&
+                                    <div className="mb-3">
+                                        <label className="form-label">ID<span className="text-danger">*</span></label>
+                                        <input
+                                            type="text"
+                                            className={`text-black form-control ${errors.packageId ? "is-invalid" : ""}`}
+                                            value={formData.packageId}
+                                            onChange={(e) => setField("packageId", e.target.value)}
+                                            placeholder="Ví dụ: 12345"
+                                        />
+                                        {errors.packageId && <div className="invalid-feedback">{errors.packageId}</div>}
+                                    </div>
+                                }
                                 <div className="mb-3">
                                     <label className="form-label">Tên gói đăng ký <span className="text-danger">*</span></label>
                                     <input
@@ -146,10 +175,10 @@ const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated }) => {
                                     {submitting ? (
                                         <>
                                             <span className="spinner-border spinner-border-sm me-2" role="status" />
-                                            Đang tạo...
+                                            {isEdit ? "Đang cập nhật..." : "Đang tạo..."}
                                         </>
                                     ) : (
-                                        "Tạo gói đăng ký"
+                                        isEdit ? "Cập nhật gói" : "Tạo gói đăng ký"
                                     )}
                                 </button>
                             </div>

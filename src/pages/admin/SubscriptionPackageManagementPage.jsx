@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import SubscriptionPackageService from "../../services/SubscriptionPackageService";
 import CreateSubscriptionPackageModal from "../../models/CreateSubscriptionPackageModal";
@@ -6,28 +6,36 @@ import CreateSubscriptionPackageModal from "../../models/CreateSubscriptionPacka
 const SubscriptionPackageManagementPage = () => {
     const [subscriptionPackages, setSubscriptionPackages] = useState([]);
     const [isCreateModalOpen, setCreateModalOpen] = useState(false);
-    
-    const loadSubscriptionPackages = async () => {
+    const [editingPkg, setEditingPkg] = useState(null);
+
+    const loadSubscriptionPackages = useCallback(async () => {
         try {
             const data = await SubscriptionPackageService.getAll();
-            setSubscriptionPackages(data);
+            setSubscriptionPackages(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Lỗi load gói đăng ký:", err);
         }
-    }
+    }, []);
+
     useEffect(() => {
         loadSubscriptionPackages();
     }, [loadSubscriptionPackages]);
 
     const handleCreateModalOpen = () => {
+        setEditingPkg(null);
         setCreateModalOpen(true);
     };
 
-    const handleDelete = async (id) => {
+    const handleEditModalOpen = (pkg) => {
+        setEditingPkg(pkg);
+        setCreateModalOpen(true);
+    };
+
+    const handleDelete = async (packageId) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa gói đăng ký này?")) {
             try {
-                await SubscriptionPackageService.deletePackage(id);
-                setSubscriptionPackages(subscriptionPackages.filter(pkg => pkg.id !== id));
+                await SubscriptionPackageService.deletePackage(packageId);
+                setSubscriptionPackages((prev) => prev.filter((p) => p.packageId !== packageId));
             } catch (err) {
                 console.error("Lỗi xóa gói đăng ký:", err);
             }
@@ -38,7 +46,7 @@ const SubscriptionPackageManagementPage = () => {
         <div className="d-flex bg-white min-vh-100">
             <Sidebar />
             <div className="flex-grow-1 ms-250 p-4" style={{ marginLeft: '250px' }}>
-                <h2 className="mb-4 fw-bold">QUẢN LÝ KHUYẾN MÃI</h2>
+                <h2 className="mb-4 fw-bold">QUẢN LÝ GÓI</h2>
                 <div className="card">
                     {/* Card header with search and add button */}
                     <div className="card-header">
@@ -89,7 +97,7 @@ const SubscriptionPackageManagementPage = () => {
                                         <td>{pkg.durationInDays} ngày</td>
                                         <td>{pkg.features.join(", ")}</td>
                                         <td style={{ minWidth: '150px' }}>
-                                            <span className="btn btn-sm btn-warning me-2">Sửa</span>
+                                            <span className="btn btn-sm btn-warning me-2" onClick={() => handleEditModalOpen(pkg)}>Sửa</span>
                                             <span className="btn btn-sm btn-danger" onClick={() => handleDelete(pkg.packageId)}>Xóa</span>
                                         </td>
                                     </tr>
@@ -102,6 +110,7 @@ const SubscriptionPackageManagementPage = () => {
                     isOpen={isCreateModalOpen}
                     onClose={() => setCreateModalOpen(false)}
                     onCreated={loadSubscriptionPackages}
+                    initialData={editingPkg}
                 />
             </div>
         </div>

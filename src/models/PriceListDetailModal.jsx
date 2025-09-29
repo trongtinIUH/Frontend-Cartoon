@@ -133,25 +133,19 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
 
         try {
             setSavingEnd(true);
-            // GỌI API ĐÚNG CHỮ KÝ MỚI
             await PricingService.updateEffectiveEndDate(
                 priceListId,
                 item.packageId,
                 editingDate
             );
 
-            // Cập nhật UI: có thể reload hoặc update tại chỗ
-            // Reload an toàn:
             const data = await PricingService.getPriceListItems(priceListId);
             setItems(Array.isArray(data) ? data : []);
-
-            // hoặc update tại chỗ:
-            // setItems(prev => prev.map(it => it.id === item.id ? { ...it, effectiveEnd: editingDate } : it));
 
             cancelEditEnd();
         } catch (e) {
             console.error(e);
-            setRowError("Cập nhật thất bại. Thử lại.");
+            setErrors((prev) => ({ ...prev, _global: 'Cập nhật thất bại. Gói phải nằm trong khoảng thời gian của bảng giá.' }));
         } finally {
             setSavingEnd(false);
         }
