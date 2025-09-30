@@ -4,7 +4,7 @@ import "../css/CountriesBlock.css";
 
 export default function CountriesBlock() {
   return (
-    <section className="countries-block container-xl">
+    <section className="countries-block container-xl compact">
      
 
       {/* Lưu ý: truyền noBg để CountryMoviesSection không tự có nền riêng */}

@@ -1638,22 +1638,7 @@ const markAdSeen = useCallback(() => {
             <span className="label">Đánh giá</span>
           </button>
 
-          {/* Next ep (nếu có) */}
-          {nextEp && (
-            <button
-              className="at-next"
-              onClick={() => {
-                const cm = currentMov;
-                const watchUrl = createWatchUrl(cm, nextEp);
-                navigate(watchUrl, {
-                  state: { episode: nextEp, movie: cm, episodes: epsOfSeason, authors, seasons },
-                });
-              }}
-              title={`Xem tập ${nextEp.episodeNumber}`}
-            >
-              <FontAwesomeIcon icon={faCirclePlay} /> Tập {nextEp.episodeNumber}
-            </button>
-          )}
+         
         </div>
       </section>
       )}

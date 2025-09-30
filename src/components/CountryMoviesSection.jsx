@@ -45,7 +45,7 @@ const CountryMoviesSection = ({ title, country, countries, link, gradient, noBg 
   const navKey = title.replace(/\s+/g, "-");
 
   return (
-    <div className={`country-movies-section mb-4 ${noBg ? "no-bg" : ""}`}>
+    <div className={`country-movies-section ${noBg ? "no-bg" : ""}`}>
       <div
         className={`wapper d-flex align-items-center ${noBg ? "no-bg" : ""}`}
         style={!noBg ? { borderRadius: "10px" } : undefined}
@@ -80,16 +80,16 @@ const CountryMoviesSection = ({ title, country, countries, link, gradient, noBg 
             spaceBetween={20}
             slidesPerView={2}
             breakpoints={{
-              // small phones
-              576: { slidesPerView: 3 },
-              // tablets / small laptops
-              768: { slidesPerView: 4 },
-              // desktop (most common for PC)
-              992: { slidesPerView: 4 },
-              // large desktop show 5
-              1200: { slidesPerView: 5 },
-              // very large screens show 6
-              1600: { slidesPerView: 6 },
+               0:   { slidesPerView: 2.4, spaceBetween: 10 },  // 320–374
+              375: { slidesPerView: 2.6, spaceBetween: 20 },  // iPhone 12/13 mini
+              414: { slidesPerView: 2.8, spaceBetween: 30 },  // iPhone 11/Plus
+              480: { slidesPerView: 3,   spaceBetween: 30 },  // từ 480px cho đủ 3 cột
+              576: { slidesPerView: 3,   spaceBetween: 30 },
+              640: { slidesPerView: 3.2, spaceBetween: 20 },
+              768: { slidesPerView: 4,   spaceBetween: 14 },  // tablet
+              992: { slidesPerView: 4,   spaceBetween: 12 },
+              1200:{ slidesPerView: 5,   spaceBetween: 14 },
+              1600:{ slidesPerView: 6,   spaceBetween: 16 },
             }}
             navigation={{
               nextEl: `.swiper-button-next-${navKey}`,
@@ -99,7 +99,7 @@ const CountryMoviesSection = ({ title, country, countries, link, gradient, noBg 
           >
             {movies.map((movie) => (
               <SwiperSlide key={movie.movieId}>
-                <div className="movie-card">
+                <div className="movie-card" >
                   <Link to={`/movie/${movie.movieId}`} className="movie-link">
                     <div className="movie-poster-container">
                       <img
@@ -126,9 +126,9 @@ const CountryMoviesSection = ({ title, country, countries, link, gradient, noBg 
                     </div>
 
                     <div className="movie-info">
-                      <h6 className="movie-title text-white">{movie.title}</h6>
-                      <p className="movie-subtitle text-white">
-                        {movie.originalTitle || movie.description?.substring(0, 30) + "..."}
+                      <h6 className="movie-title text-white" style={{ fontSize: "0.8rem" }} >{movie.title}</h6>
+                      <p className="movie-subtitle text-white" style={{ fontSize: "0.7rem", opacity: 0.8, marginBottom: 0 }} >
+                        {movie.originalTitle || movie.description?.substring(0, 20) + "..."}
                       </p>
                     </div>
                   </Link>

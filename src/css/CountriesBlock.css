@@ -30,3 +30,31 @@
   color: #9aa3b2;
   font-size: .9rem;
 }
+
+/* Làm gọn CountriesBlock để 2 mục (Hàn & Việt) cùng lọt 1 khung hình */
+@media (max-height: 820px) {
+  .countries-block {
+    padding: 10px 8px 4px;      /* ↓ bớt trên/dưới + lề ngang */
+    margin: 14px auto;          /* ↓ bớt margin ngoài */
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.02);
+  }
+
+  /* giảm khoảng cách giữa các section con */
+  .countries-block .country-movies-section {
+    margin-bottom: 12px;        /* trước là 30px -> 12px */
+    padding: 0 8px;             /* bóp lề trong từng section */
+  }
+
+  /* header chung nếu có */
+  .countries-block__head { padding: 0 12px 4px 12px; }
+  .countries-block__head h2 { font-size: 1.25rem; margin-bottom: 0; }
+  .countries-block__head p  { font-size: .85rem; margin-bottom: 6px; }
+}
+.countries-block.compact {
+  padding: 10px 8px 4px;
+  margin: 14px auto;
+}
+.countries-block.compact .country-movies-section { margin-bottom: 12px; padding: 0 8px; }
+
+
