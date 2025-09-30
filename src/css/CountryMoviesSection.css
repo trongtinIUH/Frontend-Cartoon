@@ -5,6 +5,8 @@
     display: flex;        /* Đảm bảo sử dụng flexbox */
     align-items: center;  /* Căn giữa theo chiều dọc */
     padding: 15px 0;      /* Thêm padding đồng đều */
+  box-sizing: border-box; /* ensure padding doesn't add unexpected width */
+  overflow: hidden; /* avoid children causing horizontal overflow when zoomed */
 }
 .country-movies-section {
   padding: 0 20px;
@@ -13,14 +15,14 @@
 
 /* Header bên trái */
 .country-header-left {
-  width: 220px;         /* Cố định chiều rộng để đồng đều */
-  min-width: 220px;     /* Đảm bảo không thu hẹp */
-  max-width: 220px;     /* Đảm bảo không mở rộng */
+  width: 180px;         /* giảm chiều rộng header để dành không gian cho slider */
+  min-width: 140px;     /* linh hoạt hơn trên các màn hình nhỏ */
+  max-width: 220px;     /* giới hạn tối đa */
   display: flex;        /* Hiển thị theo cột để title + button nằm dọc */
   flex-direction: column;
   align-items: center;  /* Căn giữa nội dung (title, nút) */
   text-align: center;   /* Căn giữa text bên trong */
-  flex-shrink: 0;       /* Không cho phép thu nhỏ */
+  flex-shrink: 0;       /* Không cho phép thu nhỏ quá nhiều */
 }
 
 .country-title { 
@@ -49,6 +51,7 @@
 .movies-slider-container {
   position: relative;
   flex: 1;
+  min-width: 0; /* allow this flex child to shrink when container gets smaller (prevents overflow) */
 }
 
 .movies-swiper {
@@ -62,13 +65,11 @@
   overflow: visible !important;
   border-radius: 0 !important;
   transition: transform 0.3s ease;
-  min-width: 160px;  /* Chiều rộng tối thiểu */
-  max-width: 200px;  /* Chiều rộng tối đa */
+  /* Let Swiper control the card width; keep a reasonable min so thumbnails don't get too small */
+  min-width: 140px;
   width: 100%;       /* Responsive width */
   background: #283048;  /* fallback for old browsers */
-background: -webkit-linear-gradient(to right, #859398, #283048);  /* Chrome 10-25, Safari 5.1-6 */
-background: linear-gradient(to right, #505c61, #283048); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-
+  box-sizing: border-box;
 }
 
 .country-movies-section  .movie-card:hover {
@@ -214,19 +215,20 @@ background: linear-gradient(to right, #505c61, #283048); /* W3C, IE 10+/ Edge, F
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 35px;
-  height: 35px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
   cursor: pointer;
-  z-index: 10;
-  transition: all 0.3s ease;
-  opacity: 0;
-  font-size: 14px;
+  z-index: 30;
+  transition: all 0.2s ease;
+  opacity: 1; /* show by default on desktop */
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
 }
 
 .movies-slider-container:hover .swiper-button-prev-custom,
@@ -235,11 +237,11 @@ background: linear-gradient(to right, #505c61, #283048); /* W3C, IE 10+/ Edge, F
 }
 
 .swiper-button-prev-custom {
-  left: -18px;
+  left: 8px;
 }
 
 .swiper-button-next-custom {
-  right: -18px;
+  right: 8px;
 }
 
 .swiper-button-prev-custom:hover,
@@ -270,7 +272,6 @@ background: linear-gradient(to right, #505c61, #283048); /* W3C, IE 10+/ Edge, F
     width: 100%;
   }
 }
-
 @media (max-width: 768px) {
   .country-movies-section {
     padding: 0 15px;
@@ -345,3 +346,44 @@ background: linear-gradient(to right, #505c61, #283048); /* W3C, IE 10+/ Edge, F
     line-height: 1.2;
   }
 }
+
+
+/* chế độ no-bg: dùng khi lồng trong 1 khối nền lớn */
+.country-movies-section.no-bg {
+  padding: 0 12px;
+  margin-bottom: 18px;
+}
+
+.wapper.no-bg {
+  background: transparent !important;
+  padding: 8px 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* tách tiêu đề và slider */
+.wapper { gap: 24px; }
+
+/* chừa lề trong cho slider để chứa 2 nút điều hướng */
+.movies-slider-container { padding-left: 40px; padding-right: 40px; }
+
+/* đặt nút điều hướng nằm trong slider, không âm ra ngoài */
+.swiper-button-prev-custom { left: 8px; }
+.swiper-button-next-custom { right: 8px; }
+
+@media (max-width: 1200px) {
+  /* reduce slider side padding on medium / zoomed viewports to avoid horizontal scroll */
+  .movies-slider-container { padding-left: 20px; padding-right: 20px; }
+}
+
+/* để Swiper tự tính width, tránh lệch px ở 100% zoom */
+@media (min-width: 992px) {
+  .country-movies-section .movie-card {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+  }
+}
+
+/* nếu bạn còn rule padding cho slide thì tắt đi */
+.movies-swiper .swiper-slide { padding: 0 !important; box-sizing: border-box; }

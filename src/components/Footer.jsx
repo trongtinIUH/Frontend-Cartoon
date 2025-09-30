@@ -13,10 +13,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/Footer.css";
 
 const Footer = () => {
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
+ 
   return (
     <footer className="footer-modern">
       <div className="container py-5">
@@ -133,11 +130,7 @@ const Footer = () => {
                 </a>
               </p>
             </div>
-            <div className="col-md-6 text-md-end">
-              <button onClick={scrollToTop} className="scroll-top-btn">
-                <FaArrowUp />
-              </button>
-            </div>
+           
           </div>
         </div>
       </div>

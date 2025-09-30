@@ -40,7 +40,7 @@ const TopicSection = ({ setFilteredMovies }) => {
     }
   }; 
   return (
-    <div className="topics-section container mb-5">
+    <div className="topics-section container mb-4">
       <h2 className="section-title"><span role="img"></span> Bạn đang quan tâm gì?</h2>
       <div className="row gx-3 gy-3">
         {visibleTopics.map((topic, index) => (

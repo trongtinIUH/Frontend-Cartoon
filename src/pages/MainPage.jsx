@@ -4,7 +4,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import MovieService from "../services/MovieService";
 import MovieSlider from "../components/MovieSlider";
 import TopicSection from "../components/TopicSection";
-import CountryMoviesSection from "../components/CountryMoviesSection";
+import CountriesBlock from "../components/CountriesBlock";
 import Top10MoviesSection from "../components/Top10MoviesSection";
 import HotFavoriteCharts from "../components/HotFavoriteCharts";
 
@@ -44,26 +44,8 @@ const MainPage = () => {
       <MovieSlider />
       <TopicSection />
 
-      <CountryMoviesSection
-        title="Phim Hàn Quốc mới"
-        country="South Korea"
-        gradient="linear-gradient(235deg, #fff 30%, rgb(103, 65, 150) 130%)"
-       link={`/danh-muc/quoc-gia/${encodeURIComponent("South Korea")}`}
-      />
-
-      <CountryMoviesSection
-        title="Phim Việt Nam mới"
-        country="Vietnam"
-        gradient="linear-gradient(235deg, #fff 30%, rgb(247, 161, 11) 130%)"
-        link={`/danh-muc/quoc-gia/${encodeURIComponent("Vietnam")}`}
-      />
-
-      <CountryMoviesSection
-        title="Phim US-UK mới"
-        countries={["United States", "United Kingdom"]}
-        gradient="linear-gradient(235deg, #fff 30%, rgb(255, 0, 153) 130%)"
-        link={`/danh-muc/quoc-gia/us-uk`}
-      />
+       {/* ---- KHỐI NỀN LỚN GỘP 3 QUỐC GIA ---- */}
+      <CountriesBlock />
       
       <Top10MoviesSection />
 

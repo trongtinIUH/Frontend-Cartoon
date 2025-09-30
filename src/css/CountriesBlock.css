@@ -1,0 +1,32 @@
+.countries-block {
+  border-radius: 16px;
+  padding: 18px 10px 8px;
+  margin: 24px auto;
+  background: linear-gradient(
+    to right,
+    rgba(44,83,100,0.65),
+    rgba(32,58,67,0.6),
+    rgba(15,32,39,0.55)
+  );
+  /* nếu muốn fallback màu tĩnh nhẹ */
+  background-color: rgba(15,32,39,0.5);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.countries-block__head {
+  padding: 0 18px 6px 18px;
+}
+
+.countries-block__head h2 {
+  color: #fff;
+  font-size: 1.4rem;
+  margin: 0 0 2px 0;
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+.countries-block__head p {
+  margin: 0 0 8px 0;
+  color: #9aa3b2;
+  font-size: .9rem;
+}

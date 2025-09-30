@@ -1,45 +1,40 @@
+// CountryMoviesSection.jsx
 import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import MovieService from "../services/MovieService";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/navigation";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/CountryMoviesSection.css";
 
-const CountryMoviesSection = ({ title, country, countries, link, gradient }) => {
+const CountryMoviesSection = ({ title, country, countries, link, gradient, noBg = false }) => {
   const [movies, setMovies] = useState([]);
 
   useEffect(() => {
     const fetchMovies = async () => {
       try {
         let allMovies = [];
-        
-        // Nếu có countries array, lấy phim từ nhiều quốc gia
+
         if (countries && Array.isArray(countries)) {
-          const promises = countries.map(countryName => 
+          const promises = countries.map((countryName) =>
             MovieService.getMoviesByCountry(countryName)
           );
           const results = await Promise.all(promises);
-          
-          // Gộp tất cả kết quả lại
-          allMovies = results.flat().filter(movie => movie);
-          
-          // Loại bỏ trùng lặp dựa trên movieId
-          const uniqueMovies = allMovies.filter((movie, index, self) => 
-            index === self.findIndex(m => m.movieId === movie.movieId)
+          allMovies = results.flat().filter(Boolean);
+
+          // dedup by movieId
+          const uniqueMovies = allMovies.filter(
+            (movie, idx, self) => idx === self.findIndex((m) => m.movieId === movie.movieId)
           );
-          
           setMovies(uniqueMovies);
-        } 
-        // Nếu chỉ có 1 country, sử dụng logic cũ
-        else if (country) {
+        } else if (country) {
           const res = await MovieService.getMoviesByCountry(country);
           setMovies(Array.isArray(res) ? res : []);
         }
-      } catch (error) {
-        console.error("Error fetching movies:", error);
+      } catch (e) {
+        console.error("Error fetching movies:", e);
         setMovies([]);
       }
     };
@@ -47,44 +42,58 @@ const CountryMoviesSection = ({ title, country, countries, link, gradient }) => 
     fetchMovies();
   }, [country, countries]);
 
+  const navKey = title.replace(/\s+/g, "-");
+
   return (
-    <div className="country-movies-section mb-4">
-      <div className="wapper d-flex  align-items-center" style={{borderRadius: "10px"}}>
-        {/* Title Section - bên trái */}
+    <div className={`country-movies-section mb-4 ${noBg ? "no-bg" : ""}`}>
+      <div
+        className={`wapper d-flex align-items-center ${noBg ? "no-bg" : ""}`}
+        style={!noBg ? { borderRadius: "10px" } : undefined}
+      >
+        {/* Left header */}
         <div className="country-header-left me-4 text-center">
-          <h3 className="country-title text-white fw-bold mb-2"
-          style={{
-            background: gradient,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-            >
+          <h3
+            className="country-title text-white fw-bold mb-2"
+            style={
+              noBg
+                ? {}
+                : {
+                    background: gradient,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }
+            }
+          >
             {title}
           </h3>
-          <Link
-            to={link}
-            className="view-all-btn text-decoration-none d-flex align-items-center"
-          >
+
+          <Link to={link} className="view-all-btn text-decoration-none d-flex align-items-center">
             <span className="me-2">Xem toàn bộ</span>
             <i className="fas fa-chevron-right"></i>
           </Link>
         </div>
 
-        {/* Movies Slider - bên phải, chiếm phần còn lại */}
+        {/* Right slider */}
         <div className="movies-slider-container flex-grow-1">
           <Swiper
             modules={[Navigation]}
-            spaceBetween={16}
+            spaceBetween={20}
             slidesPerView={2}
             breakpoints={{
+              // small phones
               576: { slidesPerView: 3 },
+              // tablets / small laptops
               768: { slidesPerView: 4 },
-              992: { slidesPerView: 5 },
-              1200: { slidesPerView: 6 }
+              // desktop (most common for PC)
+              992: { slidesPerView: 4 },
+              // large desktop show 5
+              1200: { slidesPerView: 5 },
+              // very large screens show 6
+              1600: { slidesPerView: 6 },
             }}
             navigation={{
-              nextEl: `.swiper-button-next-${title.replace(/\s+/g, '-')}`,
-              prevEl: `.swiper-button-prev-${title.replace(/\s+/g, '-')}`,
+              nextEl: `.swiper-button-next-${navKey}`,
+              prevEl: `.swiper-button-prev-${navKey}`,
             }}
             className="movies-swiper"
           >
@@ -104,26 +113,20 @@ const CountryMoviesSection = ({ title, country, countries, link, gradient }) => 
                           <i className="fas fa-play"></i>
                         </div>
                       </div>
-                      
-                      {/* Episode Badge - chỉ hiển thị cho SERIES */}
+
                       {movie.movieType === "SERIES" && (
                         <div className="episode-badge">
-                          <span className="episode-number">
-                            Tập {movie.currentEpisode || 1}
-                          </span>
+                          <span className="episode-number">Tập {movie.currentEpisode || 1}</span>
                         </div>
                       )}
 
-                      {/* Quality Badge */}
                       <div className="quality-badge">
                         <span className="quality">HD</span>
                       </div>
                     </div>
-                    
+
                     <div className="movie-info">
-                      <h6 className="movie-title text-white">
-                        {movie.title}
-                      </h6>
+                      <h6 className="movie-title text-white">{movie.title}</h6>
                       <p className="movie-subtitle text-white">
                         {movie.originalTitle || movie.description?.substring(0, 30) + "..."}
                       </p>
@@ -134,11 +137,11 @@ const CountryMoviesSection = ({ title, country, countries, link, gradient }) => 
             ))}
           </Swiper>
 
-          {/* Custom Navigation Buttons */}
-          <div className={`swiper-button-prev-${title.replace(/\s+/g, '-')} swiper-button-prev-custom`}>
+          {/* custom nav */}
+          <div className={`swiper-button-prev-${navKey} swiper-button-prev-custom`}>
             <i className="fas fa-chevron-left"></i>
           </div>
-          <div className={`swiper-button-next-${title.replace(/\s+/g, '-')} swiper-button-next-custom`}>
+          <div className={`swiper-button-next-${navKey} swiper-button-next-custom`}>
             <i className="fas fa-chevron-right"></i>
           </div>
         </div>
