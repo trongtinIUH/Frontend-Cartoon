@@ -26,7 +26,7 @@ const MovieSlider = () => {
   if (!featuredMovies?.length) return null;
 
   return (
-    <div id="top_slide" style={{position: 'relative', minHeight: 400, paddingTop:50, paddingBottom:10}}>
+    <div id="top_slide" style={{position: 'relative', minHeight: 400, paddingBottom:10}}>
       <div className="slide-wrapper top-slide-wrap" style={{position: 'relative', minHeight: 500}}>
         <Carousel
           activeIndex={activeIndex}
