@@ -11,6 +11,8 @@ const SubscriptionPackageManagementPage = () => {
     const loadSubscriptionPackages = useCallback(async () => {
         try {
             const data = await SubscriptionPackageService.getAll();
+            // sep xep theo ngay tao giam dan
+            data.sort((a, b) => new Date(a.durationInDays) - new Date(b.durationInDays));
             setSubscriptionPackages(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Lỗi load gói đăng ký:", err);
