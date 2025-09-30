@@ -124,6 +124,10 @@ export default function WatchPage() {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [currentSettingsView, setCurrentSettingsView] = useState('main'); // 'main', 'speed', 'quality'
 
+  // Toggle this to allow autoplay on page load. Default: false (do not autoplay)
+  const allowAutoplay = false;
+
+
   // -------- computed
   const totalRatings = ratings.length;
   const avgRating = totalRatings
@@ -345,6 +349,140 @@ export default function WatchPage() {
       toast.error("Thao tác thất bại");
     }
   };
+
+
+  
+
+  // Cấu hình ad (có thể lấy từ BE, file JSON, hoặc AB test)
+const PREROLL_CONFIG = {
+  src: "https://web-app-cartoontoo.s3.ap-southeast-1.amazonaws.com/inputs/M%C3%8C+SIUKAY+TUNG+PHI%C3%8AN+B%E1%BA%A2N+GI%E1%BB%9AI+H%E1%BA%A0N+M%C3%99A+HALLOWEEN+V%E1%BB%9AI+G%C3%93I+%E1%BB%9AT+MA+M%E1%BB%9AI+-+CAY+T%E1%BB%98T+%C4%90%E1%BB%88NH%2C+B%C3%99NG+B%E1%BA%A2N+L%C4%A8NH.mp4", // MP4/HLS đều được
+  skipAfterSeconds: 3,
+  frequencyMinutes: 0, // không spam: tối thiểu cách nhau X phút
+};
+
+// eligibility: user chưa login hoặc gói FREE
+const isFreeOrGuest = !MyUser?.my_user || MyUser?.my_user?.packageType === "FREE";
+
+
+  // preroll ad states
+const [showPreroll, setShowPreroll] = useState(false);
+const [canSkip, setCanSkip] = useState(false);
+const [skipLeft, setSkipLeft] = useState(PREROLL_CONFIG.skipAfterSeconds);
+const adVideoRef = useRef(null);
+const skipTimerRef = useRef(null);
+
+// Gọi lại mỗi khi đổi episode
+useEffect(() => {
+  // chỉ chạy khi gate cho xem (allowed/trial)
+  if (!['allowed','trial'].includes(gate.status)) return;
+
+  // chỉ hiện khi guest hoặc FREE
+  if (!isFreeOrGuest) return;
+
+  // có nguồn ad không?
+  if (!PREROLL_CONFIG.src) return;
+
+  // tần suất
+  const key = "preroll_last_seen_at";
+  let okByFrequency = true;
+  try {
+    const last = Number(sessionStorage.getItem(key) || 0);
+    const minutes = (Date.now() - last) / 60000;
+    okByFrequency = minutes >= (PREROLL_CONFIG.frequencyMinutes || 0);
+  } catch {}
+
+  if (!okByFrequency) return;
+
+  // bật ad
+  setShowPreroll(true);
+  setCanSkip(false);
+  setSkipLeft(PREROLL_CONFIG.skipAfterSeconds);
+
+  // chặn player chính
+  try { playerRef.current?.pause(); } catch {}
+
+  // đếm ngược mở Skip
+  clearInterval(skipTimerRef.current);
+  skipTimerRef.current = setInterval(() => {
+    setSkipLeft((s) => {
+      if (s <= 1) {
+        clearInterval(skipTimerRef.current);
+        setCanSkip(true);
+        return 0;
+      }
+      return s - 1;
+    });
+  }, 1000);
+
+  // cleanup khi đổi tập/unmount
+  return () => {
+    clearInterval(skipTimerRef.current);
+  };
+}, [currentEpisode?.episodeId, gate.status, isFreeOrGuest]);
+// Pause/mute main player while preroll is showing
+useEffect(() => {
+  const p = playerRef.current;
+  if (!p) return;
+
+  if (showPreroll) {
+    try {
+      p.pause();
+      p.muted(true);              // chắc chắn không “song song” tiếng
+      p.addClass('is-preroll');   // để CSS ẩn control, chặn click
+    } catch {}
+    // đảm bảo video ad bắt đầu từ đầu và play
+    const adv = adVideoRef.current;
+    if (adv) {
+      try { adv.currentTime = 0; } catch {}
+      adv.play().catch(()=>{});
+    }
+  } else {
+    // trả lại bình thường
+    try {
+      p.muted(false);
+      p.removeClass('is-preroll');
+    } catch {}
+  }
+}, [showPreroll]);
+
+
+const startMainPlayback = () => {
+  setShowPreroll(false);
+  clearInterval(skipTimerRef.current);
+  const p = playerRef.current;
+  if (p) setTimeout(() => p.play().catch(() => {}), 50);
+};
+
+const handleAdEnded = () => {
+  // kết thúc quảng cáo -> phát nội dung chính
+  startMainPlayback();
+};
+
+const handleAdError = (e) => {
+  console.error("Preroll error", e);
+  // lỗi quảng cáo thì bỏ qua luôn để không kẹt màn đen
+  startMainPlayback();
+};
+
+const handleSkipAd = () => {
+  if (!canSkip) return;
+  try {
+    const v = adVideoRef.current;
+    if (v) {
+      v.pause();
+      v.removeAttribute('src'); // ngắt tải
+      v.load();
+    }
+  } catch {}
+  startMainPlayback();
+};
+// đánh dấu đã xem quảng cáo (để tính frequency)
+const markAdSeen = useCallback(() => {
+  try {
+    sessionStorage.setItem("preroll_last_seen_at", String(Date.now()));
+  } catch {}
+}, []);
+
 
 
 
@@ -624,7 +762,7 @@ export default function WatchPage() {
     
     const p = videojs(videoRef.current, {
       controls: true,
-      autoplay: true,
+      autoplay: false, // prevent automatic playback on init
       preload: "auto",
       fluid: true,
       responsive: true,
@@ -757,11 +895,14 @@ export default function WatchPage() {
     } catch (e) { }
 
     // Thử play sau khi load (no saved progress)
-    setTimeout(() => {
-      p.play().catch((error) => {
-        console.error("❌ Video play failed:", error);
-      });
-    }, 500);
+    // Only auto-play when allowAutoplay is enabled (some browsers block autoplay with sound)
+    if (allowAutoplay) {
+      setTimeout(() => {
+        p.play().catch((error) => {
+          console.error("❌ Video play failed:", error);
+        });
+      }, 500);
+    }
 
     // Cleanup handlers when effect reruns
     return () => {
@@ -1178,6 +1319,42 @@ export default function WatchPage() {
           ref={frameRef}
           className={`player-frame`}
         >
+          {/* ==== PREROLL AD OVERLAY ==== */}
+    {showPreroll && (
+      <div className="preroll-overlay">
+        <video
+      ref={adVideoRef}
+      className="preroll-video"
+      playsInline
+      autoPlay
+      muted
+      controls={false}
+      onPlay={markAdSeen}
+      onCanPlay={markAdSeen}
+      onEnded={handleAdEnded}
+      onError={handleAdError}
+    >
+      <source src={PREROLL_CONFIG.src} type="video/mp4" />
+    </video>
+
+        <div className="preroll-topbar">
+          <span className="preroll-label">Quảng cáo</span>
+          <button
+            className={`preroll-skip ${canSkip ? 'enabled' : ''}`}
+            onClick={handleSkipAd}
+            disabled={!canSkip}
+            aria-disabled={!canSkip}
+          >
+            {canSkip ? 'Bỏ qua ' : `Bỏ qua sau ${skipLeft}s`}
+          </button>
+        </div>
+
+        <div className="preroll-bottom">
+          <span>Xem miễn phí cùng quảng cáo • <b>Đăng ký NO ADS</b> để xem không quảng cáo</span>
+        </div>
+      </div>
+    )}
+
           <div data-vjs-player style={{ position: 'relative' }}>
             <video
               id="watch-player"

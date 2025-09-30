@@ -543,20 +543,26 @@ const handleWatch = (episode) => {
   return (
     <div className="movie-detail-page text-white">
       {/* HERO ở đầu trang */}
-      <section className={`detail-hero ${heroMode}`}>
-        {/* lớp nền lấp đầy (cover) */}
-        <div className="hero-bg" style={{ backgroundImage: `url("${heroImg}")` }} />
+     <section className="detail-hero">
+  {/* NỀN mờ lấp kín khung */}
+  <div
+    className="hero-bg"
+    style={{ backgroundImage: `url("${heroImg}")` }}
+  />
 
-        {/* chỉ hiện khi KHÔNG có banner (ảnh poster dọc) để khỏi méo */}
-        {!banner && (
-          <div className="hero-center">
-            <img src={heroImg} alt={movie.title} />
-          </div>
-        )}
+  {/* ẢNH THẬT hiển thị đủ hình, không cắt */}
+  <img
+    className="hero-img"
+    src={heroImg}
+    alt={movie.title}
+    loading="eager"
+  />
 
-        <div className="hero-vignette" />
-        <div className="hero-grain" />
-      </section>
+  {/* Vignette + grain như bạn đang có */}
+  <div className="hero-vignette" />
+  <div className="hero-grain" />
+</section>
+
 
       {/* BODY trồi lên hero */}
       <div className="detail-content content-over-hero">

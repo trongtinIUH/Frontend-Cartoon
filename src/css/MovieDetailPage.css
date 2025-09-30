@@ -611,16 +611,16 @@
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  filter: blur(1px) brightness(.92) saturate(1.2) contrast(1.05);
+  filter: blur(0.2px) brightness(.92) saturate(1.2) contrast(1.05);
   transform: scale(1.04);
   animation: hero-kenburns 35s ease-in-out infinite alternate;
   transition: filter 0.3s ease;
 }
 
-/* Hiệu ứng hover để làm rõ hoàn toàn */
+/* Hiệu ứng hover để làm rõ hoàn toàn 
 .detail-hero:hover .hero-bg {
   filter: blur(1px) brightness(.95) saturate(1.25) contrast(1.1);
-}
+}*/
 
 /* Banner rõ nét ở giữa khi không có landscape */
 .hero-center{ 
@@ -1268,3 +1268,51 @@
   }
 }
 
+
+
+
+
+.detail-hero{
+  position: relative;
+  height: clamp(420px, 56vh, 760px); /* chiều cao hero */
+  overflow: hidden;
+  isolation: isolate;
+  background: #0a0c12; /* nền lót */
+}
+
+/* LỚP NỀN: lấp kín khung, mờ/nhẹ blur để đệm mép thừa */
+.detail-hero .hero-bg{
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;            /* lấp kín khung (có thể cắt) */
+  filter: blur(10px) brightness(.9) saturate(1.15);
+  transform: scale(1.04);            /* tránh lộ viền khi blur */
+  will-change: transform;
+  z-index: 1;
+}
+
+/* ẢNH THẬT: KHÔNG CẮT, luôn hiển thị đủ hình */
+.detail-hero .hero-img{
+  position: absolute;
+  inset: 0;
+  margin: auto;                      /* căn giữa cả 2 chiều */
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;               /* chìa khóa: đủ hình, không crop */
+  z-index: 2;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,.35));
+  border-radius: 12px;               /* giống RoPhim mềm mép */
+}
+
+/* Vignette + grain giữ nguyên nhưng nhớ z-index cao hơn nền */
+.detail-hero .hero-vignette{ z-index: 3; }
+.detail-hero .hero-grain   { z-index: 4; }
+
+/* Nếu muốn ảnh thật chiếm ~95% chiều cao hero để tránh chạm mép */
+@media (min-width: 768px){
+  .detail-hero .hero-img{ max-height: 92%; }
+}

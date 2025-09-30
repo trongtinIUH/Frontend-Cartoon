@@ -1248,12 +1248,16 @@ background-color: inherit;
 }
 /* ========== VIDEO SETTINGS MENU (RoPhim Style) ========== */
 .video-settings-container {
+  /* Anchor the settings menu to the player (inside .player-frame which is position:relative)
+     Use a small right offset so it won't collide with preroll skip button; place above controls. */
   position: absolute;
-  bottom: -20px !important; /* Tăng từ 70px lên 90px */
-  right: 200px;
-  z-index: 9999;
+  right: 16px; /* safe distance from right edge */
+  bottom: 60px; /* place above control bar / bottom area */
+  z-index: 1400; /* above preroll overlay and skip button */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   pointer-events: auto !important;
+  will-change: transform, opacity; /* smooth layout */
+  transform-origin: right bottom;
 }
 
 .settings-menu {
@@ -1461,8 +1465,8 @@ background-color: inherit;
 /* Responsive Design */
 @media (max-width: 768px) {
   .video-settings-container {
-    right: 8px;
-    bottom: 10px !important; /* Tăng từ 80px lên 100px */
+    right: 12px;
+    bottom: 72px !important; /* ensure it sits above mobile controls */
     left: auto;
     transform: none;
   }
@@ -1597,4 +1601,137 @@ background-color: inherit;
   .resume-title{ font-size:15px; }
   .resume-text{ font-size:13px; }
   .resume-btn{ padding:8px 10px; font-size:12px; }
+}
+
+
+
+/* ======= PREROLL AD ======= */
+/* ======= PREROLL AD (gọn, nằm trong player) ======= */
+.preroll-overlay{
+  position:absolute;
+  inset:0;
+  background:#000;
+  z-index:1200;             /* cao hơn player */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.preroll-video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:#000;
+}
+
+/* Top-left chip */
+.preroll-chip{
+  position:absolute;
+  top:12px;
+  left:12px;
+  font-size:12px;
+  color:#fff;
+  background:rgba(0,0,0,.55);
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.15);
+  pointer-events:none;
+}
+
+/* Top-right skip */
+.preroll-skip{
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px 10px 44px; /* room for icon */
+  font-weight: 800;
+  font-size: 14px;
+  cursor: default;
+  color: #cfd8e3;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all .18s ease, transform .12s ease;
+  min-width: 100px;
+  height: 44px;
+  width: 150px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  z-index: 1300;
+  overflow: hidden;
+}
+
+/* small play icon on the left inside the pill */
+.preroll-skip::before{
+  content: '';
+  position: absolute;
+  left: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+  display: block;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23020b14' d='M8 5v14l11-7z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.preroll-skip[disabled], .preroll-skip:not(.enabled){
+  cursor: not-allowed;
+  color: #c2c9d6;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: none;
+  transform: none;
+}
+
+.preroll-skip.enabled{
+  cursor: pointer;
+  color: #05212a;
+  background: linear-gradient(90deg,#b2d6e7,#bfe2f5);
+  border-color: transparent;
+  box-shadow: 0 10px 30px rgba(6,150,255,0.22), inset 0 -2px 8px rgba(255,255,255,0.08);
+}
+.preroll-skip.enabled:hover{
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* tighter layout on small screens */
+@media (max-width: 768px){
+  .preroll-skip{ top: 12px; right: 12px; padding-left: 40px; min-width: 100px; height: 40px; }
+  .preroll-skip::before{ left: 8px; width: 24px; height: 24px; }
+}
+
+/* Bottom-center note */
+.preroll-note{
+  position:absolute;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  color:#eee;
+  font-size:12px;
+  background:rgba(0,0,0,.45);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  padding:6px 12px;
+}
+
+/* Đảm bảo overlay không “chạy ra ngoài” player */
+.player-frame { position: relative; }
+
+/* Khi đang preroll: ẩn control bar & chặn tương tác player chính */
+.video-js.is-preroll .vjs-control-bar,
+.video-js.is-preroll .vjs-big-play-button {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.video-js.is-preroll {
+  pointer-events: none; /* toàn bộ player chính không nhận click */
 }
