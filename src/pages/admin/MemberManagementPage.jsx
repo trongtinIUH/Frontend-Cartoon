@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import UserService from "../../services/UserService";
 import avatar_default from "../../image/default_avatar.jpg";
+import MemberDetailModal from "../../models/MemberDetailModal";
 
 const MemberManagementPage = () => {
     const [members, setMembers] = useState([]);
@@ -9,6 +10,7 @@ const MemberManagementPage = () => {
     const [size] = useState(10);
     const [total, setTotal] = useState(0);
     const [keyword, setKeyword] = useState("");
+    const [selectedMember, setSelectedMember] = useState(null);
 
     // Load dữ liệu
     const loadUsers = async () => {
@@ -35,6 +37,10 @@ const MemberManagementPage = () => {
         loadUsers();
     };
 
+    const handleOpenDetail = (userId) => {
+       setSelectedMember(userId);
+    };
+
     return (
         <div className="d-flex bg-white min-vh-100">
             <Sidebar />
@@ -53,7 +59,7 @@ const MemberManagementPage = () => {
                                         <input
                                             type="search"
                                             className="form-control rounded-start"
-                                            placeholder="Tìm kiếm khuyến mãi"
+                                            placeholder="Tìm kiếm thành viên"
                                             name="keyword"
                                             value={keyword}
                                             onChange={(e) => setKeyword(e.target.value)}
@@ -96,6 +102,14 @@ const MemberManagementPage = () => {
                                             <td>{member.email}</td>
                                             <td>{member.phoneNumber}</td>
                                             <td>{member.role}</td>
+                                            <td><button
+                                                className="btn btn-sm btn-warning"
+                                                style={{ borderRadius: 10, padding: '5px 10px', fontSize: 14 }}
+                                                onClick={() => handleOpenDetail(member.userId)}
+                                            >
+                                                <i className="fa fa-eye" /> Xem lịch sử mua gói
+                                            </button>
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
@@ -151,6 +165,11 @@ const MemberManagementPage = () => {
                         )}
                     </div>
                 </div>
+                <MemberDetailModal
+                    open={selectedMember !== null}
+                    onClose={() => setSelectedMember(null)}
+                    memberId={selectedMember}
+                />
             </div>
         </div>
     );

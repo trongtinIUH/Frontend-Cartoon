@@ -23,6 +23,17 @@ const PricingService = {
             throw error;
         }
     },
+    // update end date of price list
+    updatePriceListEndDate: async (priceListId, newEndDate, carryForwardMissing = false) => {
+        try {
+            const body = { newEndDate, carryForwardMissing };
+            const res = await axiosInstance.patch(`${API_BASE_URL}/price-lists/${priceListId}/extend`, body);
+            return res.data;
+        } catch (error) {
+            console.error('Error updating price list end date:', error);
+            throw error;
+        }
+    },
     // create items for price list
     addPriceItem: async (priceItemData) => {
         try {
