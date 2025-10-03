@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import PromotionService from "../services/PromotionService";
 
 const initialForm = {
+  promotionId: "",
   promotionName: "",
   description: "",
   startDate: "",
-  endDate: ""
+  endDate: "",
+  status: ""
 };
 
-export default function PromotionCreateModal({ open, onClose, onCreated  }) {
+export default function PromotionCreateModal({ open, onClose, onCreated, existingIds = [] }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -30,8 +32,13 @@ export default function PromotionCreateModal({ open, onClose, onCreated  }) {
 
   const validate = () => {
     const e = {};
+    if  (!form.promotionId.trim()) {
+      e.promotionId = "ID không được để trống";
+    } else if (existingIds.includes(form.promotionId.trim())) {
+      e.promotionId = "ID đã tồn tại, vui lòng chọn ID khác";
+    }
     if (!form.promotionName.trim()) e.promotionName = "Tên không được để trống";
-    if (!form.description.trim()) e.description = "Mô tả không được để trống";
+    if (!form.status.trim()) e.status = "Trạng thái không được để trống";
     if (!form.startDate) e.startDate = "Ngày bắt đầu không được để trống";
     if (!form.endDate) e.endDate = "Ngày kết thúc không được để trống";
     if (form.startDate && form.endDate) {
@@ -83,6 +90,18 @@ export default function PromotionCreateModal({ open, onClose, onCreated  }) {
                 {errors._global && <div className="alert alert-danger">{errors._global}</div>}
 
                 <div className="mb-3">
+                  <label className="form-label">ID<span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className={`text-black form-control ${errors.promotionId ? "is-invalid" : ""}`}
+                    value={form.promotionId}
+                    onChange={(e) => setField("promotionId", e.target.value)}
+                    placeholder="PROMO2024"
+                  />
+                  {errors.promotionId && <div className="invalid-feedback">{errors.promotionId}</div>}
+                </div>
+
+                <div className="mb-3">
                   <label className="form-label">Tên khuyến mãi <span className="text-danger">*</span></label>
                   <input
                     type="text"
@@ -104,6 +123,20 @@ export default function PromotionCreateModal({ open, onClose, onCreated  }) {
                     placeholder="Khuyến mãi gói học 3 tháng giảm giá"
                   />
                     {errors.description && <div className="invalid-feedback">{errors.description}</div>}
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Trạng thái <span className="text-danger">*</span></label>
+                  <select
+                    className={`text-black form-control ${errors.status ? "is-invalid" : ""}`}
+                    value={form.status}
+                    onChange={(e) => setField("status", e.target.value)}
+                  >
+                    <option value="">Chọn trạng thái</option>
+                    <option value="ACTIVE">Hoạt động</option>
+                    <option value="INACTIVE">Ngừng hoạt động</option>
+                  </select>
+                  {errors.status && <div className="invalid-feedback">{errors.status}</div>}
                 </div>
 
                 <div className="row g-3">

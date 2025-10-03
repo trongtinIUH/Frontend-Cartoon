@@ -52,6 +52,7 @@ const PromotionManagementPage = () => {
             <table className="table table-striped table-bordered table-hover">
               <thead className="table-light">
                 <tr>
+                  <th>ID</th>
                   <th>Tên khuyến mãi</th>
                   <th>Mô tả</th>
                   <th>Ngày bắt đầu</th>
@@ -63,6 +64,7 @@ const PromotionManagementPage = () => {
               <tbody>
                 {promotions.map(p => (
                   <tr key={p.promotionId}>
+                    <td>{p.promotionId}</td>
                     <td>{p.promotionName}</td>
                     <td>{p.description}</td>
                     <td>{p.startDate}</td>
@@ -97,6 +99,7 @@ const PromotionManagementPage = () => {
           open={createPromotionOpen}
           onClose={() => setCreatePromotionOpen(false)}
           onCreated={fetchPromotions}
+          existingIds={promotions.map(p => p.promotionId)}
         />
 
         <PromotionDetailModal
