@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { FaPlus, FaSearch, FaSync, FaTrash, FaEdit, FaListUl, FaFilm, FaExclamationTriangle } from "react-icons/fa";
 import MovieService from "../../services/MovieService";
 import ReportService from "../../services/ReportService";
+import SeasonService from "../../services/SeasonService";
 import IssueReportsModal from "../../models/IssueReportsModal";
 import { IssueReportButton } from "../../components/IssueStatusIcon";
 // import { testReportFlow } from "../../utils/testReportFlow";
@@ -13,6 +14,7 @@ import "../../css/admin/admin-movie.css";
 const ModelAddMovie = React.lazy(() => import("../../models/ModelAddMovie"));
 const ModelUpdateMovie = React.lazy(() => import("../../models/ModelUpdateMovie"));
 const ModelAddNewEpisode = React.lazy(() => import("../../models/ModelAddNewEpisode"));
+const ModelManageSeason = React.lazy(() => import("../../models/ModelManageSeason"));
 
 
 const defaultFilters = { status: "", movieType: "", year: "", genre: "", issueStatus: "" };
@@ -29,6 +31,7 @@ export default function MovieManagementPage() {
   const [loading, setLoading] = useState(false);
   const [issueCounts, setIssueCounts] = useState({}); // Track số lượng báo lỗi theo movieId
   const [issueStatistics, setIssueStatistics] = useState({}); // Track trạng thái báo lỗi theo movieId
+  const [seasonCounts, setSeasonCounts] = useState({}); // Track số season thực tế theo movieId
 
   // UI states
   const [keyword, setKeyword] = useState("");
@@ -39,6 +42,7 @@ export default function MovieManagementPage() {
   const [openAdd, setOpenAdd] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [openEpisodeFor, setOpenEpisodeFor] = useState(null);
+  const [openSeasonFor, setOpenSeasonFor] = useState(null);
   const [issueReportsFor, setIssueReportsFor] = useState(null);
 
 
@@ -69,6 +73,9 @@ const load = useCallback(async () => {
       
       // Load issue counts và statistics cho từng phim
       loadIssueData(movieList);
+      
+      // Load season counts cho từng phim SERIES
+      loadSeasonCounts(movieList);
     } catch {
       toast.error("Không tải được danh sách phim");
     } finally { setLoading(false); }
@@ -125,6 +132,33 @@ const load = useCallback(async () => {
   // Legacy method - keeping for backward compatibility
   const loadIssueCounts = async (movieList) => {
     await loadIssueData(movieList);
+  };
+  
+  const loadSeasonCounts = async (movieList) => {
+    const counts = {};
+    
+    try {
+      // Chỉ load season count cho phim SERIES
+      const seriesMovies = movieList.filter(movie => movie.movieType === 'SERIES');
+      
+      // Load season counts song song
+      const promises = seriesMovies.map(async (movie) => {
+        try {
+          const movieId = movie.movieId || movie.id;
+          const seasons = await SeasonService.getSeasonsByMovie(movieId);
+          counts[movieId] = Array.isArray(seasons) ? seasons.length : 0;
+        } catch (error) {
+          console.error(`Error loading seasons for movie ${movie.movieId}:`, error);
+          counts[movie.movieId || movie.id] = 0;
+        }
+      });
+      
+      await Promise.all(promises);
+      setSeasonCounts(counts);
+      
+    } catch (error) {
+      console.error('Error loading season counts:', error);
+    }
   };
   
   useEffect(() => { load(); }, []);
@@ -446,8 +480,9 @@ const resetAll = useCallback((reload = false) => {
                   <th>Thể loại</th>
                   <th>Năm</th>
                   <th>Loại</th>
+                  <th>Phần</th>
                   <th>Trạng thái</th>
-                  <th style={{width: 280}}>Thao tác</th>
+                  <th style={{width: 330}}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -476,12 +511,22 @@ const resetAll = useCallback((reload = false) => {
                           {m.movieType || "SINGLE"}
                         </span>
                       </td>
+                      <td>
+                        <span className="badge bg-dark">
+                          {m.movieType === 'SERIES' ? (seasonCounts[id] || 0) : 0} phần
+                        </span>
+                      </td>
                       <td>{statusBadge(m.status)}</td>
                       <td>
                         <div className="btn-group">
                           <button className="btn btn-sm btn-outline-primary"
                                   onClick={()=>setEditTarget(m)}>
                             <FaEdit className="me-1"/> Sửa
+                          </button>
+                          <button className="btn btn-sm btn-outline-secondary"
+                                  onClick={()=>setOpenSeasonFor(m)}
+                                  title="Quản lý phần phim">
+                            <FaFilm className="me-1"/> Phần
                           </button>
                           <button className="btn btn-sm btn-outline-dark"
                                   onClick={()=>setOpenEpisodeFor(m)}>
@@ -504,7 +549,7 @@ const resetAll = useCallback((reload = false) => {
                 })}
                 {filtered.length===0 && (
                   <tr>
-                    <td colSpan={8} className="text-center py-4 text-muted">Không có dữ liệu phù hợp.</td>
+                    <td colSpan={9} className="text-center py-4 text-muted">Không có dữ liệu phù hợp.</td>
                   </tr>
                 )}
               </tbody>
@@ -525,6 +570,27 @@ const resetAll = useCallback((reload = false) => {
               movieId={editTarget.movieId || editTarget.id}
               onClose={()=>setEditTarget(null)}
               onSuccess={()=>{ setEditTarget(null); load(); }}
+            />
+          )}
+          {openSeasonFor && (
+            <ModelManageSeason
+              isOpen={true}
+              movieId={openSeasonFor.movieId || openSeasonFor.id}
+              movieTitle={openSeasonFor.title}
+              movieType={openSeasonFor.movieType}
+              onClose={()=>{
+                setOpenSeasonFor(null);
+                // Refresh season count cho phim này
+                const movieId = openSeasonFor.movieId || openSeasonFor.id;
+                SeasonService.getSeasonsByMovie(movieId)
+                  .then(seasons => {
+                    setSeasonCounts(prev => ({
+                      ...prev,
+                      [movieId]: Array.isArray(seasons) ? seasons.length : 0
+                    }));
+                  })
+                  .catch(err => console.error('Error refreshing season count:', err));
+              }}
             />
           )}
           {openEpisodeFor && (
