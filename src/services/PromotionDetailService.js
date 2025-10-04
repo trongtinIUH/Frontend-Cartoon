@@ -7,7 +7,7 @@ const PromotionDetailService = {
   // lay tat ca package thuoc khuyen mai
   getPromotionPackages: async (id) => {
     try {
-      const response = await axiosInstance.get(`${API_BASE_URL}/packages?promotionId=${id}`);
+      const response = await axiosInstance.get(`${API_BASE_URL}/packages?promotionLineId=${id}`);
       return response.data;
     } catch (error) {
       console.error(error);
@@ -102,9 +102,9 @@ const PromotionDetailService = {
   },
 
   // lay thong tin tat ca voucher theo promotion
-  getPromotionVouchers: async (promotionId) => {
+  getPromotionVouchers: async (promotionLineId) => {
     try {
-      const response = await axiosInstance.get(`${API_BASE_URL}/vouchers?promotionId=${promotionId}`);
+      const response = await axiosInstance.get(`${API_BASE_URL}/vouchers?promotionLineId=${promotionLineId}`);
       return response.data;
     } catch (error) {
       console.error(error);

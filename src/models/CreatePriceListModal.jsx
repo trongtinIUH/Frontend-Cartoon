@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
 import PricingService from "../services/PricingService";
+import { addDays, diffDays, maxIso } from "../utils/date";
+
+// So sánh ngày theo local midnight (tránh lệch timezone)
+const toMidnight = (iso) => {
+  if (!iso || typeof iso !== "string") return null;
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  const dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+};
 
 const emptyForm = {
   id: "",
@@ -9,45 +21,23 @@ const emptyForm = {
   status: "ACTIVE",
 };
 
-// ===== Utils ngày (tránh lệch TZ/DST và so sánh an toàn) =====
-const toMidnight = (iso) => {
-  if (!iso) return null;
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, (m || 1) - 1, d || 1);
-};
-const diffDays = (startIso, endIso) => {
-  const s = toMidnight(startIso);
-  const e = toMidnight(endIso);
-  if (!s || !e) return NaN;
-  return Math.round((e - s) / (1000 * 60 * 60 * 24));
-};
-const addDays = (iso, n) => {
-  const d = toMidnight(iso);
-  if (!d) return "";
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-};
-const maxIso = (a, b) => (new Date(a) > new Date(b) ? a : b);
-// =============================================================
-
 const CreatePriceListModal = ({
   isOpen,
   onClose,
   onCreated,
   initialData,
   existingIds = [],
-  allPriceLists = [],              // FE overlap check
-  getPkgIdsByListId = () => [],   // FE overlap check
+  allPriceLists = [],
+  getPkgIdsByListId = () => [],
 }) => {
   const isEdit = !!initialData;
-  const isCreate = !isEdit;
-
   const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
-  const tomorrow = addDays(today, 1);
+  // Hôm nay & ngày mai (YYYY-MM-DD)
+  const today = new Date().toLocaleDateString("en-CA");
+  const tomorrow = addDays(today, 2); // luôn > hôm nay
 
   useEffect(() => {
     if (!isOpen) return;
@@ -65,84 +55,38 @@ const CreatePriceListModal = ({
     setErrors({});
   }, [isOpen, isEdit, initialData]);
 
-  // ----- Flags theo bản ghi hiện tại -----
-  const initialStart = isEdit ? (initialData?.startDate || "") : "";
-  const hasStarted = isEdit && initialStart && (new Date(today) >= new Date(initialStart));
+  // Chỉ cho đổi startDate khi đang EDIT và startDate hiện tại đang ở tương lai
+  const isFutureStart =
+    !!formData.startDate && toMidnight(formData.startDate) > toMidnight(today);
+  const canEditStart = isEdit && isFutureStart;
 
-  // ----- Business flags -----
-  const isInactive = formData.status === "INACTIVE";
-  const isFutureStart = formData.startDate && (new Date(formData.startDate) > new Date(today));
+  // ✅ Luôn chặn hôm nay ở UI (kể cả tạo & sửa)
+  const startMin = tomorrow;
 
-  // Chỉ cho đổi startDate khi INACTIVE & chưa bắt đầu
-  const canEditStart = isEdit && isInactive && !hasStarted;
-  // Min cho startDate = ngày mai (khi tạo mới hoặc khi edit mà được phép đổi)
-  const startMin = isCreate ? tomorrow : (canEditStart ? tomorrow : undefined);
-
-  // Min cho endDate = max(today, startDate + 1 ngày)
+  // endDate min = max(start+1, ngày mai)
   const endMin =
     formData.startDate && formData.startDate.length === 10
-      ? maxIso(addDays(formData.startDate, 1), today)
-      : today;
+      ? maxIso(addDays(formData.startDate, 1), tomorrow)
+      : tomorrow;
 
-  const showStartAfterTodayHint = (isCreate || canEditStart);
-  const showLockedReasonHint = isEdit && !canEditStart;
+  // Cho phép chọn ACTIVE/INACTIVE (không khoá)
+  const statusOptions = [
+    { value: "ACTIVE", label: "Hoạt động" },
+    { value: "INACTIVE", label: "Không hoạt động" },
+  ];
 
-  const statusOptions = isEdit
-    ? (
-        isFutureStart
-          ? [{ value: "INACTIVE", label: "Chưa kích hoạt" }]
-          : [
-              { value: "ACTIVE", label: "Kích hoạt" },
-              { value: "INACTIVE", label: "Chưa kích hoạt" },
-            ]
-      )
-    : [{ value: "INACTIVE", label: "Chưa kích hoạt" }];
+  const handleStatusChange = (e) =>
+    setFormData((prev) => ({ ...prev, status: e.target.value }));
 
-  // Nếu khi edit mà start > hôm nay nhưng status không phải INACTIVE, ép về INACTIVE
-  useEffect(() => {
-    if (isEdit && isFutureStart && formData.status !== "INACTIVE") {
-      setFormData((prev) => ({ ...prev, status: "INACTIVE" }));
-    }
-  }, [isEdit, isFutureStart, formData.status]);
+  const setField = (k, v) => setFormData((prev) => ({ ...prev, [k]: v }));
 
-  const handleStatusChange = (e) => {
-    const next = e.target.value;
-    // startDate > hôm nay thì không cho ACTIVE
-    if (new Date(formData.startDate) > new Date(today) && next === "ACTIVE") return;
-    setFormData((prev) => ({ ...prev, status: next }));
-  };
+  // Overlap check FE (giữ nguyên)
+  const intersects = (aStart, aEnd, bStart, bEnd) =>
+    !(toMidnight(aEnd) < toMidnight(bStart) || toMidnight(bEnd) < toMidnight(aStart));
 
-  const setField = (field, value) => {
-    const next = { ...formData, [field]: value };
-
-    // TẠO MỚI: luôn để INACTIVE vì start > hôm nay
-    if (isCreate && field === "startDate") {
-      next.status = "INACTIVE";
-    }
-    // EDIT: nếu đổi startDate sang tương lai mà đang ACTIVE → hạ về INACTIVE
-    if (isEdit && field === "startDate") {
-      if (new Date(value) > new Date(today) && next.status === "ACTIVE") {
-        next.status = "INACTIVE";
-      }
-    }
-
-    setFormData(next);
-  };
-
-  // ============== FE OVERLAP CHECK ==============
-  const intersects = (aStart, aEnd, bStart, bEnd) => {
-    return !(new Date(aEnd) < new Date(bStart) || new Date(bEnd) < new Date(aStart));
-  };
-
-  /**
-   * Kiểm tra overlap ở FE:
-   * - Lấy các package của list đang sửa
-   * - So khoảng ngày với TẤT CẢ list khác.
-   * - Nếu khung ngày trùng và có ÍT NHẤT 1 package trùng → báo lỗi.
-   */
   const checkOverlapClient = (currentListId, newStart, newEnd) => {
     const currentPkgs = new Set(getPkgIdsByListId(currentListId) || []);
-    if (!currentPkgs.size) return null; // không có item thì bỏ qua
+    if (!currentPkgs.size) return null;
 
     for (const other of allPriceLists || []) {
       if (!other || other.priceListId === currentListId) continue;
@@ -157,46 +101,36 @@ const CreatePriceListModal = ({
     }
     return null;
   };
-  // =========================================================
 
   if (!isOpen) return null;
 
   const validate = () => {
     const e = {};
 
-    // ID (chỉ khi tạo)
+    // ID khi tạo mới
     if (!isEdit) {
-      if (!formData.id) {
-        e.id = "ID bảng giá là bắt buộc";
-      } else {
-        const idTrim = formData.id.trim();
-        const exists = existingIds.some((x) => (x || "").toLowerCase() === idTrim.toLowerCase());
-        if (exists) e.id = "ID bảng giá đã tồn tại";
-      }
+      if (!formData.id?.trim()) e.id = "ID bảng giá là bắt buộc";
+      else if (
+        existingIds.some(
+          (x) => (x || "").toLowerCase() === formData.id.trim().toLowerCase()
+        )
+      )
+        e.id = "ID bảng giá đã tồn tại";
     }
 
-    if (!formData.name) e.name = "Tên bảng giá là bắt buộc";
+    if (!formData.name?.trim()) e.name = "Tên bảng giá là bắt buộc";
     if (!formData.startDate) e.startDate = "Ngày bắt đầu là bắt buộc";
     if (!formData.endDate) e.endDate = "Ngày kết thúc là bắt buộc";
 
-    // Rule: startDate phải sau hôm nay
-    if (isCreate && formData.startDate && !(new Date(formData.startDate) > new Date(today))) {
-      e.startDate = "Ngày bắt đầu phải sau ngày hôm nay";
-    } else if (isEdit && canEditStart && formData.startDate && !(new Date(formData.startDate) > new Date(today))) {
-      e.startDate = "Ngày bắt đầu phải sau ngày hôm nay";
-    }
-
-    // endDate phải sau startDate ít nhất 1 ngày
+    // ⛔ Không bao giờ cho chọn hôm nay: startDate phải ≥ ngày mai
+    if (
+      formData.startDate &&
+      !(toMidnight(formData.startDate) >= toMidnight(tomorrow))
+    )
+    // ⛔ endDate ≥ startDate + 1 ngày
     if (formData.startDate && formData.endDate) {
       const dd = diffDays(formData.startDate, formData.endDate);
-      if (!(dd >= 1)) {
-        e.endDate = "Ngày kết thúc phải sau ngày bắt đầu ít nhất 1 ngày";
-      }
-    }
-
-    // endDate phải ≥ hôm nay (đồng bộ BE)
-    if (formData.endDate && new Date(formData.endDate) < new Date(today)) {
-      e.endDate = "Ngày kết thúc phải là hôm nay hoặc muộn hơn";
+      if (dd < 1) e.endDate = "Ngày kết thúc phải sau ngày bắt đầu ít nhất 1 ngày";
     }
 
     setErrors(e);
@@ -210,11 +144,17 @@ const CreatePriceListModal = ({
     try {
       setSubmitting(true);
 
-      // FE overlap check trước khi gọi API (chỉ khi EDIT)
+      // Edit & không được đổi start -> giữ start cũ (tránh nhảy sai)
+      const startForPayload =
+        isEdit && !canEditStart
+          ? initialData?.startDate || formData.startDate
+          : formData.startDate;
+
+      // FE overlap check khi EDIT
       if (isEdit) {
         const overlapMsg = checkOverlapClient(
           initialData.priceListId,
-          formData.startDate,
+          startForPayload,
           formData.endDate
         );
         if (overlapMsg) {
@@ -227,8 +167,8 @@ const CreatePriceListModal = ({
       const payload = {
         id: formData.id?.trim?.() ?? formData.id,
         name: formData.name.trim(),
-        status: formData.status,
-        startDate: formData.startDate,
+        status: formData.status, // không tự ép
+        startDate: startForPayload,
         endDate: formData.endDate,
       };
 
@@ -237,10 +177,10 @@ const CreatePriceListModal = ({
       } else {
         await PricingService.createPriceList(payload);
       }
+
       onCreated?.();
       onClose?.();
     } catch (error) {
-      // Bắt message rõ từ BE (ví dụ overlap/validation)
       const msg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
@@ -261,12 +201,16 @@ const CreatePriceListModal = ({
           <div className="modal-content">
             <form onSubmit={handleSubmit}>
               <div className="modal-header">
-                <h5 className="modal-title">{isEdit ? "Cập nhật bảng giá" : "Tạo bảng giá mới"}</h5>
+                <h5 className="modal-title">
+                  {isEdit ? "Cập nhật bảng giá" : "Tạo bảng giá mới"}
+                </h5>
                 <button type="button" className="btn-close" onClick={onClose} />
               </div>
 
               <div className="modal-body">
-                {errors._global && <div className="alert alert-danger">{errors._global}</div>}
+                {errors._global && (
+                  <div className="alert alert-danger">{errors._global}</div>
+                )}
 
                 {!isEdit && (
                   <div className="mb-3">
@@ -275,12 +219,16 @@ const CreatePriceListModal = ({
                     </label>
                     <input
                       type="text"
-                      className={`text-black form-control ${errors.id ? "is-invalid" : ""}`}
+                      className={`text-black form-control ${
+                        errors.id ? "is-invalid" : ""
+                      }`}
                       value={formData.id}
                       onChange={(e) => setField("id", e.target.value)}
                       placeholder="Ví dụ: price-list-sep-2025"
                     />
-                    {errors.id && <div className="invalid-feedback">{errors.id}</div>}
+                    {errors.id && (
+                      <div className="invalid-feedback">{errors.id}</div>
+                    )}
                   </div>
                 )}
 
@@ -290,12 +238,16 @@ const CreatePriceListModal = ({
                   </label>
                   <input
                     type="text"
-                    className={`text-black form-control ${errors.name ? "is-invalid" : ""}`}
+                    className={`text-black form-control ${
+                      errors.name ? "is-invalid" : ""
+                    }`}
                     value={formData.name}
                     onChange={(e) => setField("name", e.target.value)}
                     placeholder="Ví dụ: Bảng giá tháng 9"
                   />
-                  {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                  {errors.name && (
+                    <div className="invalid-feedback">{errors.name}</div>
+                  )}
                 </div>
 
                 <div className="mb-3">
@@ -303,10 +255,11 @@ const CreatePriceListModal = ({
                     Trạng thái <span className="text-danger">*</span>
                   </label>
                   <select
-                    className={`text-black form-select ${errors.status ? "is-invalid" : ""}`}
+                    className={`text-black form-select ${
+                      errors.status ? "is-invalid" : ""
+                    }`}
                     value={formData.status}
                     onChange={handleStatusChange}
-                    disabled={isEdit && isFutureStart} // startDate > hôm nay: chỉ đọc
                   >
                     {statusOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -314,11 +267,8 @@ const CreatePriceListModal = ({
                       </option>
                     ))}
                   </select>
-                  {errors.status && <div className="invalid-feedback">{errors.status}</div>}
-                  {isEdit && isFutureStart && (
-                    <small className="text-muted d-block mt-1">
-                      Ngày bắt đầu ở tương lai → không thể <b>Kích hoạt</b>. Trạng thái chỉ hiển thị.
-                    </small>
+                  {errors.status && (
+                    <div className="invalid-feedback">{errors.status}</div>
                   )}
                 </div>
 
@@ -329,22 +279,16 @@ const CreatePriceListModal = ({
                     </label>
                     <input
                       type="date"
-                      className={`text-black form-control ${errors.startDate ? "is-invalid" : ""}`}
+                      className={`text-black form-control ${
+                        errors.startDate ? "is-invalid" : ""
+                      }`}
                       value={formData.startDate}
                       min={startMin}
                       onChange={(e) => setField("startDate", e.target.value)}
-                      disabled={isEdit && !canEditStart} // khoá khi ACTIVE hoặc đã bắt đầu
+                      disabled={isEdit && !canEditStart} 
                     />
-                    {errors.startDate && <div className="invalid-feedback">{errors.startDate}</div>}
-                    {showStartAfterTodayHint && (
-                      <small className="text-muted">
-                        Ngày bắt đầu phải sau hôm nay (≥ {tomorrow}).
-                      </small>
-                    )}
-                    {showLockedReasonHint && (
-                      <small className="text-muted">
-                        Không thể đổi ngày bắt đầu vì bảng giá đã bắt đầu hoặc đang kích hoạt.
-                      </small>
+                    {errors.startDate && (
+                      <div className="invalid-feedback">{errors.startDate}</div>
                     )}
                   </div>
 
@@ -354,12 +298,16 @@ const CreatePriceListModal = ({
                     </label>
                     <input
                       type="date"
-                      className={`text-black form-control ${errors.endDate ? "is-invalid" : ""}`}
+                      className={`text-black form-control ${
+                        errors.endDate ? "is-invalid" : ""
+                      }`}
                       value={formData.endDate}
                       min={endMin}
                       onChange={(e) => setField("endDate", e.target.value)}
                     />
-                    {errors.endDate && <div className="invalid-feedback">{errors.endDate}</div>}
+                    {errors.endDate && (
+                      <div className="invalid-feedback">{errors.endDate}</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -368,11 +316,16 @@ const CreatePriceListModal = ({
                 <button type="submit" className="btn btn-primary" disabled={submitting}>
                   {submitting ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" />
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                      />
                       {isEdit ? "Đang cập nhật..." : "Đang tạo..."}
                     </>
+                  ) : isEdit ? (
+                    "Cập nhật bảng giá"
                   ) : (
-                    isEdit ? "Cập nhật bảng giá" : "Tạo bảng giá"
+                    "Tạo bảng giá"
                   )}
                 </button>
               </div>

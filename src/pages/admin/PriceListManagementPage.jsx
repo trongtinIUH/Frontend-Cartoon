@@ -36,7 +36,6 @@ const PriceListManagementPage = () => {
     }
   };
 
-  // NEW: Lấy packageId theo từng priceList từ BE
   const fetchAllPkgIds = async (lists) => {
     const map = {};
     try {
@@ -159,7 +158,7 @@ const PriceListManagementPage = () => {
                           ? "Hoạt động"
                           : priceList.status === "EXPIRED"
                           ? "Hết hạn"
-                          : "Ngưng hoạt động"}
+                          : "Không hoạt động"}
                       </span>
                     </td>
                     <td>
