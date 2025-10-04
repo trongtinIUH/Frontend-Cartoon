@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import ReactDOM from "react-dom/client";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -23,6 +24,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../css/WatchPage.css";
 import { initAntiCapture } from "../utils/antiCapture";
 import { parseWatchUrl, createWatchUrl } from "../utils/urlUtils";
+import SubtitleService from "../services/SubtitleService";
 
 /* import phần bình luận */
 import { toast } from "react-toastify";
@@ -122,7 +124,15 @@ export default function WatchPage() {
   const [selectedQuality, setSelectedQuality] = useState('Auto (720p)');
   const [subtitlesEnabled, setSubtitlesEnabled] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-  const [currentSettingsView, setCurrentSettingsView] = useState('main'); // 'main', 'speed', 'quality'
+  const [currentSettingsView, setCurrentSettingsView] = useState('main'); // 'main', 'speed', 'quality', 'subtitle'
+  
+  // -------- Player Element for Portal
+  const [playerEl, setPlayerEl] = useState(null);
+  
+  // -------- Subtitle States
+  const [availableSubtitles, setAvailableSubtitles] = useState([]);
+  const [selectedSubtitle, setSelectedSubtitle] = useState(null);
+  const [loadingSubtitles, setLoadingSubtitles] = useState(false);
 
   // Toggle this to allow autoplay on page load. Default: false (do not autoplay)
   const allowAutoplay = false;
@@ -203,6 +213,96 @@ export default function WatchPage() {
       }
     })();
   }, [currentMovie?.movieId, userId]);
+
+  // -------- Load subtitles for current episode
+  useEffect(() => {
+    const loadSubtitles = async () => {
+      const currentEp = currentEpisode || episodeFromState;
+      if (!currentEp?.seasonId || !currentEp?.episodeNumber) {
+        setAvailableSubtitles([]);
+        return;
+      }
+
+      try {
+        setLoadingSubtitles(true);
+        const subtitles = await SubtitleService.getSubtitles(currentEp.seasonId, currentEp.episodeNumber);
+        setAvailableSubtitles(Array.isArray(subtitles) ? subtitles : []);
+        
+        // Auto-select default subtitle or first available
+        const defaultSub = subtitles.find(sub => sub.isDefault);
+        const firstSub = subtitles[0];
+        setSelectedSubtitle(defaultSub || firstSub || null);
+        
+        if (defaultSub) {
+          setSubtitlesEnabled(true);
+        }
+      } catch (error) {
+        console.error('Error loading subtitles:', error);
+        setAvailableSubtitles([]);
+      } finally {
+        setLoadingSubtitles(false);
+      }
+    };
+
+    loadSubtitles();
+  }, [currentEpisode?.episodeId, episodeFromState?.episodeId]);
+
+  // Function to apply subtitles to video player
+  const applySubtitlesToPlayer = (player) => {
+    if (!availableSubtitles?.length) return;
+
+    // Remove existing subtitle tracks
+    const existingTracks = player.textTracks();
+    for (let i = existingTracks.length - 1; i >= 0; i--) {
+      const track = existingTracks[i];
+      if (track.kind === 'subtitles') {
+        player.removeRemoteTextTrack(track);
+      }
+    }
+
+    // Add new subtitle tracks via proxy (SRT→VTT conversion + CORS fix + Content cleaning)
+    availableSubtitles.forEach((subtitle, index) => {
+      // Use backend proxy to handle CORS, SRT→VTT conversion, and content cleaning
+      const proxyUrl = `http://localhost:8080/proxy/subtitle?url=${encodeURIComponent(subtitle.url)}&clean=true`;
+      
+      console.log('🎬 Adding subtitle via proxy (with cleaning):', {
+        original: subtitle.url,
+        proxy: proxyUrl,
+        lang: subtitle.lang,
+        label: subtitle.label
+      });
+      
+      player.addRemoteTextTrack({
+        kind: 'subtitles',
+        src: proxyUrl,
+        srclang: subtitle.lang,
+        label: subtitle.label,
+        default: subtitle.isDefault || index === 0
+      }, false);
+    });
+
+    // Auto-select default subtitle if available
+    if (selectedSubtitle) {
+      setTimeout(() => {
+        const tracks = player.textTracks();
+        for (let i = 0; i < tracks.length; i++) {
+          const track = tracks[i];
+          if (track.language === selectedSubtitle.lang) {
+            track.mode = 'showing';
+          } else {
+            track.mode = 'disabled';
+          }
+        }
+      }, 500);
+    }
+  };
+
+  // Apply subtitles when available subtitles change
+  useEffect(() => {
+    if (playerRef.current && availableSubtitles?.length > 0) {
+      applySubtitlesToPlayer(playerRef.current);
+    }
+  }, [availableSubtitles, selectedSubtitle]);
 
   // -------- fetch bằng URL khi không có state
   useEffect(() => {
@@ -760,6 +860,11 @@ const markAdSeen = useCallback(() => {
     // Chỉ init khi gate allowed/trial và video element tồn tại
     if (!['allowed', 'trial'].includes(gate.status) || !videoRef.current || playerRef.current) return;
     
+    // ✅ Set crossorigin BEFORE initializing video.js
+    if (videoRef.current) {
+      videoRef.current.setAttribute('crossorigin', 'anonymous');
+    }
+    
     const p = videojs(videoRef.current, {
       controls: true,
       autoplay: false, // prevent automatic playback on init
@@ -793,6 +898,9 @@ const markAdSeen = useCallback(() => {
     antiCapCleanupRef.current = initAntiCapture(p);
 
     playerRef.current = p;
+    
+    // ✅ Capture player element for Portal
+    setPlayerEl(p.el());
 
     return () => {
       antiCapCleanupRef.current?.();
@@ -801,6 +909,7 @@ const markAdSeen = useCallback(() => {
         p.dispose();
       } catch { }
       playerRef.current = null;
+      setPlayerEl(null);
     };
   }, [gate.status, isTrialMode, trialTimeLimit, trialExpired]); // Trigger khi gate status thay đổi
 
@@ -839,6 +948,11 @@ const markAdSeen = useCallback(() => {
     p.pause();
     p.src({ src: originalUrl, type: "application/x-mpegURL" });
     p.load(); // Force load the new source
+
+    // --- Apply subtitles to video player
+    setTimeout(() => {
+      applySubtitlesToPlayer(p);
+    }, 1000); // Wait for video to be ready
 
     // --- Attach a throttled timeupdate handler to save progress every 5s
     const onTimeUpdate = () => {
@@ -1031,6 +1145,271 @@ const markAdSeen = useCallback(() => {
 
   const currentEp = currentEpisode || episodeFromState;
   const currentMov = currentMovie || movieFromState;
+
+  // ✅ Settings Menu Component - render bằng Portal vào player
+  const SettingsMenu = () => (
+    <div className="video-settings-container">
+      <div className="settings-menu">
+        {currentSettingsView === 'main' && (
+          <>
+            <div className="settings-header">
+              <h4>Cài đặt</h4>
+              <button 
+                className="settings-close"
+                onClick={() => {
+                  setShowSettingsMenu(false);
+                  setCurrentSettingsView('main');
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="settings-section">
+              <div className="settings-item" onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCurrentSettingsView('quality');
+              }}>
+                <span className="settings-label">Chất lượng</span>
+                <div className="settings-value">
+                  <span>{selectedQuality}</span>
+                  <span className="settings-arrow">›</span>
+                </div>
+              </div>
+              
+              <div className="settings-item" onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCurrentSettingsView('subtitle');
+              }}>
+                <span className="settings-label">Phụ đề</span>
+                <div className="settings-value">
+                  <span>{selectedSubtitle ? selectedSubtitle.label : 'Tắt'}</span>
+                  <span className="settings-arrow">›</span>
+                </div>
+              </div>
+              
+              <div className="settings-item" onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCurrentSettingsView('speed');
+              }}>
+                <span className="settings-label">Tốc độ</span>
+                <div className="settings-value">
+                  <span>{playbackRate}x</span>
+                  <span className="settings-arrow">›</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+        
+        {currentSettingsView === 'speed' && (
+          <>
+            <div className="settings-header">
+              <button 
+                className="back-btn"
+                onClick={() => setCurrentSettingsView('main')}
+              >
+                ‹
+              </button>
+              <h4>Tốc độ phát</h4>
+              <button 
+                className="settings-close"
+                onClick={() => {
+                  setShowSettingsMenu(false);
+                  setCurrentSettingsView('main');
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="speed-options">
+              {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(speed => (
+                <div 
+                  key={speed}
+                  className={`speed-option ${playbackRate === speed ? 'active' : ''}`}
+                  onClick={() => {
+                    setPlaybackRate(speed);
+                    const player = playerRef.current;
+                    if (player) {
+                      player.playbackRate(speed);
+                    }
+                    setCurrentSettingsView('main');
+                  }}
+                >
+                  {speed}x {speed === 1 && '(Bình thường)'}
+                  {playbackRate === speed && <span className="check">✓</span>}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        
+        {currentSettingsView === 'quality' && (
+          <>
+            <div className="settings-header">
+              <button 
+                className="back-btn"
+                onClick={() => setCurrentSettingsView('main')}
+              >
+                ‹
+              </button>
+              <h4>Chất lượng video</h4>
+              <button 
+                className="settings-close"
+                onClick={() => {
+                  setShowSettingsMenu(false);
+                  setCurrentSettingsView('main');
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="quality-options">
+              {['Auto (720p)', 'FHD 1080p', 'HD 720p', '480p', '360p'].map(quality => (
+                <div 
+                  key={quality}
+                  className={`quality-option ${selectedQuality === quality ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedQuality(quality);
+                    // Apply quality change to player
+                    const player = playerRef.current;
+                    if (player && player.qualityLevels) {
+                      const qualityLevels = player.qualityLevels();
+                      
+                      if (quality === 'Auto (720p)') {
+                        // Enable auto quality selection
+                        for (let i = 0; i < qualityLevels.length; i++) {
+                          qualityLevels[i].enabled = true;
+                        }
+                      } else {
+                        // Disable auto quality selection first
+                        for (let i = 0; i < qualityLevels.length; i++) {
+                          qualityLevels[i].enabled = false;
+                        }
+                        
+                        // Enable only the selected quality
+                        let targetHeight;
+                        if (quality === 'FHD 1080p') targetHeight = 1080;
+                        else if (quality === 'HD 720p') targetHeight = 720;
+                        else if (quality === '480p') targetHeight = 480;
+                        else if (quality === '360p') targetHeight = 360;
+                        
+                        for (let i = 0; i < qualityLevels.length; i++) {
+                          const level = qualityLevels[i];
+                          if (level.height === targetHeight) {
+                            level.enabled = true;
+                            break;
+                          }
+                        }
+                      }
+                    }
+                    setCurrentSettingsView('main');
+                  }}
+                >
+                  {quality}
+                  {selectedQuality === quality && <span className="check">✓</span>}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {currentSettingsView === 'subtitle' && (
+          <>
+            <div className="settings-header">
+              <button 
+                className="back-btn"
+                onClick={() => setCurrentSettingsView('main')}
+              >
+                ‹
+              </button>
+              <h4>Phụ đề</h4>
+              <button 
+                className="settings-close"
+                onClick={() => {
+                  setShowSettingsMenu(false);
+                  setCurrentSettingsView('main');
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="subtitle-options">
+              {/* Option to turn off subtitles */}
+              <div 
+                className={`subtitle-option ${!selectedSubtitle ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedSubtitle(null);
+                  setSubtitlesEnabled(false);
+                  
+                  // Disable all subtitle tracks
+                  const player = playerRef.current;
+                  if (player) {
+                    const tracks = player.textTracks();
+                    for (let i = 0; i < tracks.length; i++) {
+                      tracks[i].mode = 'disabled';
+                    }
+                  }
+                  setCurrentSettingsView('main');
+                }}
+              >
+                Tắt phụ đề
+                {!selectedSubtitle && <span className="check">✓</span>}
+              </div>
+
+              {/* Available subtitle tracks */}
+              {availableSubtitles.map((subtitle) => (
+                <div 
+                  key={`${subtitle.lang}-${subtitle.label}`}
+                  className={`subtitle-option ${selectedSubtitle?.lang === subtitle.lang ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedSubtitle(subtitle);
+                    setSubtitlesEnabled(true);
+                    
+                    // Enable the selected subtitle track
+                    const player = playerRef.current;
+                    if (player) {
+                      const tracks = player.textTracks();
+                      for (let i = 0; i < tracks.length; i++) {
+                        const track = tracks[i];
+                        if (track.language === subtitle.lang) {
+                          track.mode = 'showing';
+                        } else {
+                          track.mode = 'disabled';
+                        }
+                      }
+                    }
+                    setCurrentSettingsView('main');
+                  }}
+                >
+                  {subtitle.label}
+                  {selectedSubtitle?.lang === subtitle.lang && <span className="check">✓</span>}
+                </div>
+              ))}
+
+              {/* Loading state */}
+              {loadingSubtitles && (
+                <div className="subtitle-option loading">
+                  <i className="fas fa-spinner fa-spin"></i>
+                  Đang tải phụ đề...
+                </div>
+              )}
+
+              {/* No subtitles available */}
+              {!loadingSubtitles && availableSubtitles.length === 0 && (
+                <div className="subtitle-option disabled">
+                  Không có phụ đề
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 
   useEffect(() => {
   const p = playerRef.current;
@@ -1385,175 +1764,10 @@ const markAdSeen = useCallback(() => {
             )}
           </div>
 
-          {/* ✅ Settings menu - positioned above control bar */}
-          {showSettingsMenu && (
-            <div className="video-settings-container">
-              <div className="settings-menu">
-                {currentSettingsView === 'main' && (
-                  <>
-                    <div className="settings-header">
-                      <h4>Cài đặt</h4>
-                      <button 
-                        className="settings-close"
-                        onClick={() => {
-                          setShowSettingsMenu(false);
-                          setCurrentSettingsView('main');
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                    
-                    <div className="settings-section">
-                      <div className="settings-item" onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setCurrentSettingsView('quality');
-                      }}>
-                        <span className="settings-label">Chất lượng</span>
-                        <div className="settings-value">
-                          <span>{selectedQuality}</span>
-                          <span className="settings-arrow">›</span>
-                        </div>
-                      </div>
-                      
-                      <div className="settings-item" onClick={() => setSubtitlesEnabled(!subtitlesEnabled)}>
-                        <span className="settings-label">Phụ đề</span>
-                        <div className="settings-value">
-                          <span>{subtitlesEnabled ? 'Bật' : 'Tắt'}</span>
-                          <span className="settings-arrow">›</span>
-                        </div>
-                      </div>
-                      
-                      <div className="settings-item" onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setCurrentSettingsView('speed');
-                      }}>
-                        <span className="settings-label">Tốc độ</span>
-                        <div className="settings-value">
-                          <span>{playbackRate}x</span>
-                          <span className="settings-arrow">›</span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-                
-                {currentSettingsView === 'speed' && (
-                  <>
-                    <div className="settings-header">
-                      <button 
-                        className="back-btn"
-                        onClick={() => setCurrentSettingsView('main')}
-                      >
-                        ‹
-                      </button>
-                      <h4>Tốc độ phát</h4>
-                      <button 
-                        className="settings-close"
-                        onClick={() => {
-                          setShowSettingsMenu(false);
-                          setCurrentSettingsView('main');
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                    <div className="speed-options">
-                      {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(speed => (
-                        <div 
-                          key={speed}
-                          className={`speed-option ${playbackRate === speed ? 'active' : ''}`}
-                          onClick={() => {
-                            setPlaybackRate(speed);
-                            const player = playerRef.current;
-                            if (player) {
-                              player.playbackRate(speed);
-                            }
-                            setCurrentSettingsView('main');
-                          }}
-                        >
-                          {speed}x {speed === 1 && '(Bình thường)'}
-                          {playbackRate === speed && <span className="check">✓</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-                
-                {currentSettingsView === 'quality' && (
-                  <>
-                    <div className="settings-header">
-                      <button 
-                        className="back-btn"
-                        onClick={() => setCurrentSettingsView('main')}
-                      >
-                        ‹
-                      </button>
-                      <h4>Chất lượng video</h4>
-                      <button 
-                        className="settings-close"
-                        onClick={() => {
-                          setShowSettingsMenu(false);
-                          setCurrentSettingsView('main');
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                    <div className="quality-options">
-                      {['Auto (720p)', 'FHD 1080p', 'HD 720p', '480p', '360p'].map(quality => (
-                        <div 
-                          key={quality}
-                          className={`quality-option ${selectedQuality === quality ? 'active' : ''}`}
-                          onClick={() => {
-                            setSelectedQuality(quality);
-                            // Apply quality change to player
-                            const player = playerRef.current;
-                            if (player && player.qualityLevels) {
-                              const qualityLevels = player.qualityLevels();
-                              
-                              if (quality === 'Auto (720p)') {
-                                // Enable auto quality selection
-                                for (let i = 0; i < qualityLevels.length; i++) {
-                                  qualityLevels[i].enabled = true;
-                                }
-                              } else {
-                                // Disable auto quality selection first
-                                for (let i = 0; i < qualityLevels.length; i++) {
-                                  qualityLevels[i].enabled = false;
-                                }
-                                
-                                // Enable only the selected quality
-                                let targetHeight;
-                                if (quality === 'FHD 1080p') targetHeight = 1080;
-                                else if (quality === 'HD 720p') targetHeight = 720;
-                                else if (quality === '480p') targetHeight = 480;
-                                else if (quality === '360p') targetHeight = 360;
-                                
-                                for (let i = 0; i < qualityLevels.length; i++) {
-                                  const level = qualityLevels[i];
-                                  if (level.height === targetHeight) {
-                                    level.enabled = true;
-                                    break;
-                                  }
-                                }
-                              }
-                            }
-                            setCurrentSettingsView('main');
-                          }}
-                        >
-                          {quality}
-                          {selectedQuality === quality && <span className="check">✓</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+          {/* ✅ Settings menu - render via Portal into player element */}
+          {showSettingsMenu && playerEl && 
+            createPortal(<SettingsMenu />, playerEl)
+          }
           
           {/* ✅ Trial expired overlay */}
           {isTrialMode && trialExpired && (

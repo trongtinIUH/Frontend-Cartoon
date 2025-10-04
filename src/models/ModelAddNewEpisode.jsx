@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import EpisodeService from "../services/EpisodeService";
 import SeasonService from "../services/SeasonService";
 import MovieService from "../services/MovieService";
+import SubtitleManager from "../components/SubtitleManager";
 import "../css/ModelAddNewEpisode.css";
 import { toast } from "react-toastify";
 
@@ -33,7 +34,8 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
     video: null
   });
 
- 
+  // Subtitle management
+  const [selectedEpisodeForSubtitles, setSelectedEpisodeForSubtitles] = useState(null);
 
   // tạo season mới
   const [showNewSeason, setShowNewSeason] = useState(false);
@@ -353,6 +355,21 @@ export default function ModelAddNewEpisode({ movieId, onClose, onSuccess }) {
               <button className="btn btn-secondary-custom" type="button" onClick={onClose}>Đóng</button>
             </div>
           </form>
+          
+          {/* Subtitle Management - chỉ hiện khi đã chọn episode để edit hoặc vừa tạo xong */}
+          {mode === "edit" && seasonId && form.episodeNumber && (
+            <div className="mt-4">
+              <hr />
+              <SubtitleManager 
+                seasonId={seasonId}
+                episodeNumber={parseInt(form.episodeNumber)}
+                onSubtitlesChange={(subtitles) => {
+                  console.log('Subtitles updated:', subtitles);
+                }}
+                className="subtitle-section"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import MovieService from "../services/MovieService";
 import EpisodeService from "../services/EpisodeService";
 import SeasonService from "../services/SeasonService";
+import SubtitleManager from "../components/SubtitleManager";
 import { getCountries } from "../api/countryApi";
 import Select from "react-select";
 import { toast } from "react-toastify";
@@ -91,6 +92,10 @@ const authorOptions = authors.map(a => ({
   const [loadingStep, setLoadingStep] = useState(""); // Để hiển thị bước đang thực hiện
   const [uploadVideo, setUploadVideo] = useState(false);
   const [trailerInputType, setTrailerInputType] = useState("file"); // "file" hoặc "url"
+  
+  // Subtitle management - track phim vừa tạo
+  const [createdMovieInfo, setCreatedMovieInfo] = useState(null);
+  const [showSubtitleSection, setShowSubtitleSection] = useState(false);
 
   // ==== Validators (khớp BE) ====
 const RE_TITLE = /^[\p{L}\p{N}\s]{1,200}$/u;          // chữ có dấu, số, khoảng trắng
@@ -134,7 +139,7 @@ function validate(values, trailerInputType) {
   return e;
 }
   
-// Helper function để reset form
+  // Helper function để reset form
   const resetForm = () => {
     setForm({
       title: "",
@@ -159,9 +164,11 @@ function validate(values, trailerInputType) {
     setNewAuthor([{ name: "", authorRole: "DIRECTOR" }]);
     setIsNewAuthor(false);
     setTrailerInputType("file");    // ✅ Reset trailer input type
-  };
-
-  const VIDEO_TYPES = ["video/mp4", "video/avi", "video/mkv", "video/webm", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
+    
+    // Reset subtitle states
+    setCreatedMovieInfo(null);
+    setShowSubtitleSection(false);
+  };  const VIDEO_TYPES = ["video/mp4", "video/avi", "video/mkv", "video/webm", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
   const THUMBNAIL_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp"];
 
   const isValidVideoFile = (file) => file && VIDEO_TYPES.includes(file.type);
@@ -329,14 +336,28 @@ function validate(values, trailerInputType) {
 
       // Bước 3: Publish movie
       setLoadingStep("Đang publish phim...");
-      await MovieService.publish(createdMovie.movieId, form.status, {
+      const publishResponse = await MovieService.publish(createdMovie.movieId, form.status, {
         trailerVideo: (form.status === "UPCOMING" && trailerInputType === "file") ? form.trailerVideo : null,
         episode1Video: form.status === "COMPLETED" ? form.contentVideo : null,
       });
 
       toast.success("Tạo phim & publish thành công!");
-      resetForm(); // Reset form sau khi thành công
-      onSuccess?.();
+      
+      // Nếu COMPLETED và có video tập 1, hiển thị subtitle management
+      if (form.status === "COMPLETED" && createdMovie && publishResponse?.seasonId && publishResponse?.episodeId) {
+        setCreatedMovieInfo({
+          movieId: createdMovie.movieId,
+          title: createdMovie.title,
+          seasonId: publishResponse.seasonId,
+          episodeId: publishResponse.episodeId,
+          episodeNumber: 1
+        });
+        setShowSubtitleSection(true);
+        toast.info("🎬 Bạn có thể thêm phụ đề cho tập 1 bên dưới!");
+      } else {
+        resetForm(); // Reset form sau khi thành công
+        onSuccess?.();
+      }
       
     } catch (err) {
       console.error("❌ Error in handleSubmit:", err);
@@ -700,11 +721,62 @@ function validate(values, trailerInputType) {
             <button className="btn btn-primary flex-fill" type="submit" disabled={loading}>
               {loading ? (loadingStep || "Đang xử lý...") : "Thêm phim"}
             </button>
-            <button type="button" className="btn btn-outline-secondary flex-fill" onClick={onClose} disabled={loading}>
-              Đóng
-            </button>
+            
+            {/* Conditional close button */}
+            {!showSubtitleSection && (
+              <button type="button" className="btn btn-outline-secondary flex-fill" onClick={onClose} disabled={loading}>
+                Đóng
+              </button>
+            )}
           </div>
         </form>
+
+        {/* Subtitle Management Section - chỉ hiện sau khi tạo COMPLETED movie thành công */}
+        {showSubtitleSection && createdMovieInfo && (
+          <div className="mt-4 pt-4 border-top">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="mb-0">
+                <i className="fas fa-closed-captioning me-2"></i>
+                Quản lý phụ đề - {createdMovieInfo.title}
+              </h5>
+              <div className="d-flex gap-2">
+                <button 
+                  type="button" 
+                  className="btn btn-success btn-sm"
+                  onClick={() => {
+                    resetForm();
+                    onSuccess?.(createdMovieInfo);
+                  }}
+                >
+                  <i className="fas fa-check me-1"></i>
+                  Hoàn thành
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-outline-secondary btn-sm" 
+                  onClick={() => {
+                    resetForm();
+                    onSuccess?.(createdMovieInfo);
+                  }}
+                >
+                  Bỏ qua phụ đề
+                </button>
+              </div>
+            </div>
+            
+            <SubtitleManager 
+              seasonId={createdMovieInfo.seasonId}
+              episodeNumber={createdMovieInfo.episodeNumber}
+              onSubtitlesChange={(subtitles) => {
+                console.log('Subtitles for new movie:', subtitles);
+                if (subtitles.length > 0) {
+                  toast.success(`Đã thêm ${subtitles.length} phụ đề cho tập 1!`);
+                }
+              }}
+              className="new-movie-subtitles"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

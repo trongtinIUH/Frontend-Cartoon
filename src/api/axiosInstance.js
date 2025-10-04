@@ -2,7 +2,9 @@
 import axios from "axios";
 import AuthService from "../services/AuthService";
 
-const axiosInstance = axios.create();
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:8080'
+});
 
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem("idToken");

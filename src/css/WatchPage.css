@@ -1248,8 +1248,7 @@ background-color: inherit;
 }
 /* ========== VIDEO SETTINGS MENU (RoPhim Style) ========== */
 .video-settings-container {
-  /* Anchor the settings menu to the player (inside .player-frame which is position:relative)
-     Use a small right offset so it won't collide with preroll skip button; place above controls. */
+  /* ✅ FIXED: Now rendered inside .video-js via Portal, works in fullscreen */
   position: absolute;
   right: 16px; /* safe distance from right edge */
   bottom: 60px; /* place above control bar / bottom area */
@@ -1258,6 +1257,14 @@ background-color: inherit;
   pointer-events: auto !important;
   will-change: transform, opacity; /* smooth layout */
   transform-origin: right bottom;
+}
+
+/* ✅ Specific styling when inside .video-js */
+.video-js .video-settings-container {
+  position: absolute;
+  right: 16px;
+  bottom: 60px;
+  z-index: 1400;
 }
 
 .settings-menu {
@@ -1385,16 +1392,18 @@ background-color: inherit;
   margin-left: 4px;
 }
 
-/* Quality & Speed Options */
+/* Quality & Speed & Subtitle Options */
 .speed-options,
-.quality-options {
+.quality-options,
+.subtitle-options {
   padding: 0;
   max-height: 320px;
   overflow-y: auto;
 }
 
 .speed-option,
-.quality-option {
+.quality-option,
+.subtitle-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1408,23 +1417,27 @@ background-color: inherit;
 }
 
 .speed-option:hover,
-.quality-option:hover {
+.quality-option:hover,
+.subtitle-option:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
 .speed-option:last-child,
-.quality-option:last-child {
+.quality-option:last-child,
+.subtitle-option:last-child {
   border-bottom: none;
 }
 
 .speed-option.active,
-.quality-option.active {
+.quality-option.active,
+.subtitle-option.active {
   background: rgba(0, 123, 255, 0.15);
   color: #ffffff;
 }
 
 .speed-option .check,
-.quality-option .check {
+.quality-option .check,
+.subtitle-option .check {
   color: #007bff;
   font-weight: bold;
   font-size: 16px;
@@ -1442,6 +1455,35 @@ background-color: inherit;
 /* Auto quality special styling */
 .quality-option:first-child {
   font-weight: 600;
+}
+
+/* Special styling for subtitle options */
+.subtitle-option {
+  font-weight: 500;
+}
+
+.subtitle-option.loading {
+  opacity: 0.7;
+  cursor: default;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.subtitle-option.loading:hover {
+  background: transparent;
+}
+
+.subtitle-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.subtitle-option.disabled:hover {
+  background: transparent;
+}
+
+.subtitle-option .fa-spinner {
+  margin-right: 8px;
 }
 
 /* Custom VideoJS Button Styles - Settings only */
@@ -1502,17 +1544,20 @@ background-color: inherit;
 
 /* Scrollbar styling */
 .speed-options::-webkit-scrollbar,
-.quality-options::-webkit-scrollbar {
+.quality-options::-webkit-scrollbar,
+.subtitle-options::-webkit-scrollbar {
   width: 4px;
 }
 
 .speed-options::-webkit-scrollbar-track,
-.quality-options::-webkit-scrollbar-track {
+.quality-options::-webkit-scrollbar-track,
+.subtitle-options::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.1);
 }
 
 .speed-options::-webkit-scrollbar-thumb,
-.quality-options::-webkit-scrollbar-thumb {
+.quality-options::-webkit-scrollbar-thumb,
+.subtitle-options::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
   border-radius: 2px;
 }
