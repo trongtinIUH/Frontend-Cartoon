@@ -177,7 +177,7 @@ const LoginPage = () => {
           </form>
 
           <div className="text-center mb-2">
-            <a href="/forgot-password" className="text-link">Quên mật khẩu?</a>
+            <Link to="/forgot-password" className="text-link">Quên mật khẩu?</Link>
           </div>
 
           <hr className="auth-sep" />

@@ -81,7 +81,7 @@ const ForgotPasswordPage = () => {
             const response = await ApiService.post('/forgot-password/reset-password', { phoneNumber, newPassword });
             setIsProcessing(false);
             showToast('Đặt lại mật khẩu thành công!', 'success');
-            navigate('/login');  // Điều hướng người dùng đến trang đăng nhập
+            navigate('/');  // Điều hướng người dùng đến trang đăng nhập
         } catch (error) {
             setErrorMessage('Có lỗi khi thay đổi mật khẩu!');
             setIsProcessing(false);
