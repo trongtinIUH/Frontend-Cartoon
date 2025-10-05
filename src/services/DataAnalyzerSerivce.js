@@ -132,6 +132,40 @@ const RevenueService = {
   getMovieSummaryByRange: (startDate, endDate) =>
     axiosInstance.get(`${API_BASE_URL}/movies/range/summary`, { params: { startDate, endDate } }),
 
+  // ======= EXPORT EXCEL (BACKEND) =======
+  // Tải Excel theo year/month (giống file mẫu)
+  downloadDashboardExcelYM: (year, month) =>
+    axiosInstance.get(`${API_BASE_URL}/export/dashboard.xlsx`, {
+      params: { year, month },
+      responseType: 'blob'
+    }),
+
+  // Tải Excel theo khoảng ngày + groupBy (có thể truyền thông tin công ty)
+  downloadDashboardExcelRange: (startDate, endDate, groupBy = 'DAY', brand = {}) =>
+    axiosInstance.get(`${API_BASE_URL}/export/dashboard-range.xlsx`, {
+      params: { 
+        startDate, 
+        endDate, 
+        groupBy, 
+        companyName: brand.companyName,
+        companyAddress: brand.companyAddress
+      },
+      responseType: 'blob'
+    }),
+
+  // Tải Excel báo cáo phim (giả sử backend có API này)
+  downloadMoviesExcelRange: (startDate, endDate, groupBy = 'DAY', brand = {}) =>
+    axiosInstance.get(`${API_BASE_URL}/export/movies-range.xlsx`, {
+      params: { 
+        startDate, 
+        endDate, 
+        groupBy, 
+        companyName: brand.companyName,
+        companyAddress: brand.companyAddress
+      },
+      responseType: 'blob'
+    }),
+
 };
 
 export default RevenueService;

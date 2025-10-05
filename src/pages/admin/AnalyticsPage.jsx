@@ -231,11 +231,45 @@ const downloadBlob = (blob, filename) => {
   URL.revokeObjectURL(url);
 };
 
+// helper tải blob cho backend export
+const saveBlob = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+};
+
 // ---------- Export handlers (FE-only) ----------
 const handleExportFE = async (format) => {
   const isRevenue = mode === "REVENUE";
   if (format === "xlsx") return clientExportXLSX(isRevenue);
   return clientExportPDF(isRevenue);
+};
+
+// ---------- Export Excel thông minh theo tab hiện tại ----------
+const handleExportBE = async () => {
+  try {
+    const isRevenue = mode === "REVENUE";
+    console.log("Export mode:", mode, "isRevenue:", isRevenue); // Debug log
+    
+    if (isRevenue) {
+      // Tab DOANH THU: Xuất báo cáo doanh thu từ backend (đẹp)
+      const brandInfo = {
+        companyName: "CartoonToo — Web xem phim trực tuyến",
+        companyAddress: "Nguyễn Văn Bảo/12 P. Hạnh Thông, Phường, Gò Vấp, Hồ Chí Minh"
+      };
+      
+      const res = await RevenueService.downloadDashboardExcelRange(startDate, endDate, groupBy, brandInfo);
+      saveBlob(res.data, `BaoCao_DoanhThu_${startDate}_${endDate}_${groupBy}.xlsx`);
+    } else {
+      // Tab PHIM: Xuất báo cáo thống kê phim từ FE (kế thừa logic cũ)
+      console.log("Exporting movies data using FE logic...");
+      await clientExportXLSX(false); // false = movies mode
+    }
+  } catch (err) {
+    console.error("Export Excel error:", err);
+    alert("Xuất Excel lỗi. Vui lòng kiểm tra và thử lại.");
+  }
 };
 
 const clientExportXLSX = async (isRevenue) => {
@@ -308,7 +342,7 @@ const clientExportXLSX = async (isRevenue) => {
   const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
   downloadBlob(
     new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
-    `${isRevenue?"revenue":"movies"}_${startDate}_${endDate}_${groupBy}.xlsx`
+    `${isRevenue?"BaoCao_DoanhThu":"BaoCao_ThongKePhim"}_${startDate}_${endDate}_${groupBy}.xlsx`
   );
 };
 
@@ -514,8 +548,13 @@ const clientExportPDF = async (isRevenue) => {
 
             {/* Export actions (right after date range) */}
             <div className="ap-actions d-flex gap-2">
-              <button className="btn btn-outline-success btn-sm" onClick={() => handleExportFE?.("xlsx") }>
-                <i className="fas fa-file-excel me-1" /> Excel
+              <button 
+                className="btn btn-success btn-sm" 
+                onClick={handleExportBE}
+                title={mode === "REVENUE" ? "Xuất báo cáo doanh thu" : "Xuất báo cáo thống kê phim"}
+              >
+                <i className="fas fa-file-excel me-1" /> 
+                Excel ({mode === "REVENUE" ? "Doanh thu" : "Phim"})
               </button>
               <button className="btn btn-outline-danger btn-sm" onClick={() => handleExportFE?.("pdf") }>
                 <i className="fas fa-file-pdf me-1" /> PDF
