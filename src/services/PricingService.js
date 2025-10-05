@@ -23,6 +23,16 @@ const PricingService = {
             throw error;
         }
     },
+    // update price list
+    updatePriceList: async (priceListId, priceListData) => {
+        try {
+            const response = await axiosInstance.put(`${API_BASE_URL}/update-price-list/${priceListId}`, priceListData);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating price list:', error);
+            throw error;
+        }
+    },
     // update end date of price list
     updatePriceListEndDate: async (priceListId, newEndDate, carryForwardMissing = false) => {
         try {
@@ -54,14 +64,7 @@ const PricingService = {
             throw error;
         }
     },
-    // update effectiveEndDate of price list
-    updateEffectiveEndDate: async (priceListId, packageId, newEndDate) => {
-        return axiosInstance.put(
-            `${API_BASE_URL}/update-effective-end-date`,
-            {},
-            { params: { priceListId, packageId, newEndDate } }
-        );
-    }
+
 };
 
 export default PricingService;

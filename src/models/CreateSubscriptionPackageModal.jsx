@@ -9,7 +9,7 @@ const emptyForm = {
     durationInDays: "",
     features: "",
 };
-const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated, initialData }) => {
+const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated, initialData, existingIds }) => {
     const isEdit = !!initialData;
     const [formData, setFormData] = useState(emptyForm);
     const [errors, setErrors] = useState({});
@@ -47,6 +47,12 @@ const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated, initialDat
     const validate = () => {
         const newErrors = {};
         if (!formData.packageId) newErrors.packageId = "ID là bắt buộc";
+
+        // Check unique ID only when creating new package VÀ không phải là ID trống VÀ KHÔNG PHÂN BIỆT HOA THƯỜNG
+        if (!isEdit && formData.packageId.trim() && existingIds.includes(formData.packageId.trim())) {
+            newErrors.packageId = "ID đã tồn tại. Vui lòng chọn ID khác.";
+        }
+
         if (!formData.packageName) newErrors.packageName = "Tên gói là bắt buộc";
         if (!formData.applicablePackageType) newErrors.applicablePackageType = "Loại gói là bắt buộc";
         if (!formData.durationInDays || isNaN(formData.durationInDays)) newErrors.durationInDays = "Thời gian hợp lệ là bắt buộc";
@@ -97,7 +103,7 @@ const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated, initialDat
 
                             <div className="modal-body">
                                 {errors._global && <div className="alert alert-danger">{errors._global}</div>}
-                                {!isEdit &&
+                                {!isEdit && (
                                     <div className="mb-3">
                                         <label className="form-label">ID<span className="text-danger">*</span></label>
                                         <input
@@ -109,7 +115,7 @@ const CreateSubscriptionPackageModal = ({ isOpen, onClose, onCreated, initialDat
                                         />
                                         {errors.packageId && <div className="invalid-feedback">{errors.packageId}</div>}
                                     </div>
-                                }
+                                )}
                                 <div className="mb-3">
                                     <label className="form-label">Tên gói đăng ký <span className="text-danger">*</span></label>
                                     <input

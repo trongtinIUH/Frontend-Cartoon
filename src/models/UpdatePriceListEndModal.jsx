@@ -165,9 +165,9 @@ const UpdatePriceListEndModal = ({ isOpen, onClose, onSaved, priceList }) => {
                                 <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => bump(90)}>+90 ngày</button>
                               </div>
                             </div>
-                            <small className="text-muted d-block mt-1">
+                            {/* <small className="text-muted d-block mt-1">
                               Hệ thống sẽ tự “snap” nếu trùng ngày bắt đầu của bảng giá kế tiếp cho cùng gói.
-                            </small>
+                            </small> */}
                           </td>
                         </tr>
                         <tr>

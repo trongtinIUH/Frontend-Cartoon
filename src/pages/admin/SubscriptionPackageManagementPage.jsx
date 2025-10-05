@@ -84,6 +84,7 @@ const SubscriptionPackageManagementPage = () => {
                         <table className="table table-striped table-bordered table-hover">
                             <thead className="table-light">
                                 <tr>
+                                    <th>ID</th>
                                     <th>Tên gói đăng ký</th>
                                     <th>Loại gói</th>
                                     <th>Thời gian</th>
@@ -94,13 +95,22 @@ const SubscriptionPackageManagementPage = () => {
                             <tbody>
                                 {subscriptionPackages.map((pkg) => (
                                     <tr key={pkg.packageId}>
+                                        <td>{pkg.packageId}</td>
                                         <td>{pkg.packageName}</td>
                                         <td>{pkg.applicablePackageType}</td>
                                         <td>{pkg.durationInDays} ngày</td>
                                         <td>{pkg.features.join(", ")}</td>
-                                        <td style={{ minWidth: '150px' }}>
-                                            <span className="btn btn-sm btn-warning me-2" onClick={() => handleEditModalOpen(pkg)}>Sửa</span>
-                                            <span className="btn btn-sm btn-danger" onClick={() => handleDelete(pkg.packageId)}>Xóa</span>
+                                        <td style={{ minWidth: '200px' }}>
+                                            <span className="btn btn-sm btn-outline-primary"
+                                                style={{
+                                                    borderRadius: 10, padding: "5px 10px", fontSize: "14px"
+                                                }}
+                                                onClick={() => handleEditModalOpen(pkg)}><i className="fa-solid fa-pen-to-square"></i> Chỉnh sửa</span>
+                                            <span className="btn btn-sm btn-outline-danger ms-2"
+                                                style={{
+                                                    borderRadius: 10, padding: "5px 10px", fontSize: "14px"
+                                                }}
+                                                onClick={() => handleDelete(pkg.packageId)}><i className="fa-solid fa-trash"></i> Xóa</span>
                                         </td>
                                     </tr>
                                 ))}
@@ -113,6 +123,7 @@ const SubscriptionPackageManagementPage = () => {
                     onClose={() => setCreateModalOpen(false)}
                     onCreated={loadSubscriptionPackages}
                     initialData={editingPkg}
+                    existingIds={subscriptionPackages.map(p => p.packageId)}
                 />
             </div>
         </div>

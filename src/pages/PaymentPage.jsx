@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import PromotionService from "../services/PromotionService";
 import axios from "axios";
 import PromotionDetailService from "../services/PromotionDetailService";
+import PromotionLineService from "../services/PromotionLineService";
 
 const PaymentPage = () => {
   const location = useLocation();
@@ -118,24 +119,56 @@ const PaymentPage = () => {
     }
   };
 
+  // yyyy-MM-dd so sánh chuỗi là đủ (nếu BE trả date-only)
+  const isWithinPeriod = (todayISO, start, end) => {
+    if (start && todayISO < start) return false;
+    if (end && todayISO > end) return false;
+    return true;
+  };
+
+
   // lay thong tin voucher
   const fetchVoucherInfo = async () => {
     if (!voucherCode.trim()) return null;
     try {
-      const promos = await PromotionService.getAllPromotions();
-      setPromotions(promos);
-      console.log("All promotions:", promos);
+      const code = voucherCode.trim().toUpperCase();
 
-      const info = await PromotionDetailService.getVoucherInfo(voucherCode.trim().toUpperCase());
+      // 1) Lấy voucher info trước
+      const info = await PromotionDetailService.getVoucherInfo(code);
       console.log("Voucher info from API:", info);
 
-      // Tìm promotion theo promotionId từ voucher info
-      const promo = promos.find(p =>
-        p.promotionId === info.promotionId
-      );
-      console.log("Found promotion:", promo);
+      // 2) Lấy promotions & lines theo promotionId
+      const [promos, lines] = await Promise.all([
+        PromotionService.getAllPromotions(),
+        PromotionLineService.getAllPromotionLinesByPromotionId(info.promotionId),
+      ]);
+      setPromotions(promos);
+      console.log("All promotions:", promos);
+      console.log("All promotion lines for promo:", lines);
 
-      const voucherData = { ...info, promoStatus: promo?.status };
+      // 3) Tìm promotion + line tương ứng
+      const promo = promos.find((p) => p.promotionId === info.promotionId);
+      const line = lines.find((l) => l.promotionLineId === info.promotionLineId);
+
+      console.log("Found promotion:", promo);
+      console.log("Found promotion line:", line);
+
+      // 4) Gộp dữ liệu
+      const todayISO = new Date().toISOString().slice(0, 10);
+
+      const voucherData = {
+        ...info,
+        promoStatus: promo?.status,
+        promotionName: promo?.promotionName,
+        promotionLineStatus: line?.status,
+        promotionLineType: line?.promotionLineType,
+        promotionLineStartDate: line?.startDate, // giả sử yyyy-MM-dd
+        promotionLineEndDate: line?.endDate,
+        isLineActiveNow:
+          line?.status === "ACTIVE" &&
+          isWithinPeriod(todayISO, line?.startDate, line?.endDate),
+      };
+
       setVoucherInfo(voucherData);
       console.log("Final voucher data with status:", voucherData);
       return voucherData;
@@ -150,7 +183,6 @@ const PaymentPage = () => {
       return null;
     }
   };
-
   const getEffectivePrice = (pkg) => pkg?.discountedAmount ?? pkg?.amount ?? 0;
 
   const handleApplyVoucher = async () => {
@@ -159,29 +191,54 @@ const PaymentPage = () => {
       return;
     }
     if (!selectedDurationPackage) return;
+
     const info = await fetchVoucherInfo();
     if (!info) return;
-    console.log("Voucher info:", info);
 
+    // 1) Promotion ACTIVE
     if (info?.promoStatus !== "ACTIVE") {
       toast.error("Mã giảm giá không còn hiệu lực.");
       return;
     }
 
+    // 2) Line phải là VOUCHER + ACTIVE + trong thời gian
+    if (info?.promotionLineType !== "VOUCHER") {
+      toast.error("Mã giảm giá không thuộc promotion line loại VOUCHER.");
+      return;
+    }
+    if (info?.promotionLineStatus !== "ACTIVE") {
+      toast.error("Mã giảm giá không còn hiệu lực.");
+      return;
+    }
+    if (
+      (info?.promotionLineStartDate || info?.promotionLineEndDate) &&
+      !isWithinPeriod(new Date().toISOString().slice(0, 10), info?.promotionLineStartDate, info?.promotionLineEndDate)
+    ) {
+      toast.error("Promotion line không còn hiệu lực theo thời gian.");
+      return;
+    }
+
+    // 3) Min order theo giá đang hiển thị
     const effectivePrice = getEffectivePrice(selectedDurationPackage);
-    if (info?.minOrderAmount > effectivePrice) {
-      toast.error(`Mã giảm giá không đủ điều kiện.`);
+    if ((info?.minOrderAmount ?? 0) > effectivePrice) {
+      toast.error("Mã giảm giá không đủ điều kiện giá trị đơn hàng.");
       return;
     }
 
-    if (info?.usedCount >= info?.maxUsage) {
-      toast.error(`Mã giảm giá đã hết lượt sử dụng.`);
+    // 4) Quota (nếu BE có trả)
+    if (
+      typeof info?.usedCount === "number" &&
+      typeof info?.maxUsage === "number" &&
+      info.usedCount >= info.maxUsage
+    ) {
+      toast.error("Mã giảm giá đã hết lượt sử dụng.");
       return;
     }
 
+    // 5) Gọi BE áp dụng (BE vẫn là nơi kiểm tra cuối cùng)
     try {
       const result = await PromotionDetailService.applyVoucherCode({
-        voucherCode: voucherCode.trim(),
+        voucherCode: voucherCode.trim().toUpperCase(),
         userId: MyUser.my_user.userId,
         packageId: selectedDurationPackage.packageId,
         orderAmount: effectivePrice,
@@ -189,6 +246,7 @@ const PaymentPage = () => {
       setVoucherInfo(result);
       toast.success("Áp dụng mã giảm giá thành công.");
     } catch (error) {
+      console.error(error);
       toast.error("Lỗi khi áp dụng mã giảm giá.");
     }
   };

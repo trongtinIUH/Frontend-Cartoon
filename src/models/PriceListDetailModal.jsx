@@ -15,16 +15,8 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
     const [errors, setErrors] = useState({});
     const [form, setForm] = useState({ packageId: '', amount: '' });
 
-    // Inline edit only effectiveEnd
-    const [editingId, setEditingId] = useState(null);
-    const [editingDate, setEditingDate] = useState("");
-    const [savingEnd, setSavingEnd] = useState(false);
-    const [rowError, setRowError] = useState(null);
-
     const priceListId =
         priceList?.id || priceList?.priceListId || priceList?.code || '';
-    const rowKeyOf = (it) =>
-        it.id ?? `${it.packageId}|${toLocalDate(it.effectiveStart)}|${it.amount}`;
 
     useEffect(() => {
         if (!isOpen || !priceListId) return;
@@ -36,6 +28,7 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
                     PricingService.getPriceListItems(priceListId),
                     SubscriptionPackageService.getAllPackages(),
                 ]);
+                pkgsRes.sort((a, b) => a.durationInDays - b.durationInDays);
                 setItems(Array.isArray(itemsRes) ? itemsRes : []);
                 setPackages(Array.isArray(pkgsRes) ? pkgsRes : []);
             } catch (e) {
@@ -50,9 +43,6 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
         // reset form + lỗi khi mở
         setForm({ packageId: '', amount: '' });
         setErrors({});
-        setEditingId(null);
-        setEditingDate("");
-        setRowError(null);
 
         fetchAll();
     }, [isOpen, priceListId]);
@@ -97,57 +87,9 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
             setErrors({});
         } catch (err) {
             console.error('Add item error:', err);
-            setErrors((prev) => ({ ...prev, _global: 'Thêm thất bại. Gói đã tồn tại trong bảng giá.' }));
+            setErrors((prev) => ({ ...prev, _global: 'Thêm thất bại. Gói đã tồn tại trong bảng giá khác.' }));
         } finally {
             setAdding(false);
-        }
-    };
-
-    // ------- Edit only effectiveEnd -------
-    const startEditEnd = (item) => {
-        setRowError(null);
-        setEditingId(rowKeyOf(item));
-        setEditingDate(toLocalDate(item.effectiveEnd));
-    };
-
-    const isRowEditing = (it) => rowKeyOf(it) === editingId;
-
-    const cancelEditEnd = () => {
-        setEditingId(null);
-        setEditingDate("");
-        setRowError(null);
-    };
-
-    const saveEditEnd = async (item) => {
-        setRowError(null);
-
-        // kiểm tra end >= start
-        if (editingDate) {
-            const start = new Date(toLocalDate(item.effectiveStart));
-            const end = new Date(editingDate);
-            if (end < start) {
-                setRowError("Ngày kết thúc phải >= ngày bắt đầu");
-                return;
-            }
-        }
-
-        try {
-            setSavingEnd(true);
-            await PricingService.updateEffectiveEndDate(
-                priceListId,
-                item.packageId,
-                editingDate
-            );
-
-            const data = await PricingService.getPriceListItems(priceListId);
-            setItems(Array.isArray(data) ? data : []);
-
-            cancelEditEnd();
-        } catch (e) {
-            console.error(e);
-            setErrors((prev) => ({ ...prev, _global: 'Cập nhật thất bại. Gói phải nằm trong khoảng thời gian của bảng giá.' }));
-        } finally {
-            setSavingEnd(false);
         }
     };
 
@@ -181,7 +123,7 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
                                         >
                                             <option value="">-- Chọn gói --</option>
                                             {packages.map((p) => (
-                                                <option key={p.id} value={p.id}>
+                                                <option key={p.packageId} value={p.packageId}>
                                                     {p.packageId ?? p.name ?? p.id}
                                                 </option>
                                             ))}
@@ -207,7 +149,7 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
                                     </div>
 
                                     <div className="col-md-2 d-grid">
-                                        <button type="submit" className="btn btn-primary" disabled={adding || loading}>
+                                        <button type="submit" className="btn btn-primary" disabled={adding || loading || priceList?.status === 'EXPIRED'}>
                                             {adding ? (
                                                 <>
                                                     <span className="spinner-border spinner-border-sm me-2" />
@@ -228,9 +170,6 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
                                         <tr>
                                             <th>Tên gói</th>
                                             <th style={{ width: 180 }}>Số tiền</th>
-                                            <th style={{ width: 160 }}>Ngày bắt đầu</th>
-                                            <th style={{ width: 200 }}>Ngày kết thúc</th>
-                                            <th style={{ width: 180 }}></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -248,55 +187,10 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
                                             </tr>
                                         ) : (
                                             items.map((item) => {
-                                                const rowKey = rowKeyOf(item);           // << lấy key ổn định
-                                                const isEditing = isRowEditing(item);
                                                 return (
-                                                    <tr key={rowKey}>
+                                                    <tr key={item.packageId}>
                                                         <td>{item.packageName ?? item.packageId}</td>
                                                         <td>{fmtVND(item.amount)}</td>
-                                                        <td>{toLocalDate(item.effectiveStart)}</td>
-                                                        <td>
-                                                            {isEditing ? (
-                                                                <input
-                                                                    type="date"
-                                                                    className="form-control"
-                                                                    value={editingDate}
-                                                                    min={toLocalDate(item.effectiveStart)}
-                                                                    onChange={(e) => setEditingDate(e.target.value)}
-                                                                />
-                                                            ) : (
-                                                                toLocalDate(item.effectiveEnd) || <span className="text-muted">—</span>
-                                                            )}
-                                                            {isEditing && rowError && (
-                                                                <div className="text-danger small mt-1">{rowError}</div>
-                                                            )}
-                                                        </td>
-                                                        <td className="text-end">
-                                                            {isEditing ? (
-                                                                <>
-                                                                    <span
-                                                                        className="btn btn-primary me-2"
-                                                                        disabled={savingEnd}
-                                                                        onClick={() => saveEditEnd(item)}
-                                                                    >
-                                                                        {savingEnd ? <i className="fa fa-spinner fa-spin" /> : <i className="fa fa-check" />}
-                                                                    </span>
-                                                                    <span
-                                                                        className="btn btn-outline-secondary"
-                                                                        onClick={cancelEditEnd}
-                                                                    >
-                                                                        <i className="fa fa-times" />
-                                                                    </span>
-                                                                </>
-                                                            ) : (
-                                                                <button
-                                                                    className="btn btn-link p-0"
-                                                                    onClick={() => startEditEnd(item)}
-                                                                >
-                                                                    <i className="fa fa-pencil" />
-                                                                </button>
-                                                            )}
-                                                        </td>
                                                     </tr>
                                                 );
                                             })

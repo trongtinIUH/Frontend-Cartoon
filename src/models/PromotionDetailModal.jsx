@@ -5,15 +5,32 @@ import Select from "react-select";
 import PromotionDetailService from "../services/PromotionDetailService";
 import SubscriptionPackageService from "../services/SubscriptionPackageService";
 
-const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
-  const [selectedTab, setSelectedTab] = useState("VOUCHER"); // "VOUCHER" | "PACKAGE"
+const Badge = ({ text, kind }) => (
+  <span className={`badge ${kind === "ok" ? "bg-success" : kind === "warn" ? "bg-warning text-dark" : kind === "info" ? "bg-info" : "bg-secondary"}`}>
+    {text}
+  </span>
+);
+
+const fmtDate = (d) => {
+  if (!d) return "-";
+  try { return new Date(d).toLocaleDateString(); } catch { return d; }
+};
+const fmtVND = (num) => (!num ? "0 đ" : `${Number(num).toLocaleString()} đ`);
+
+const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode, titleSuffix }) => {
+  // Nếu đã có line => khóa theo type của line; nếu không, dùng mode prop hoặc default "VOUCHER"
+  const derivedMode = (line?.promotionLineType || mode || "VOUCHER").toUpperCase();
+  const locked = !!line?.promotionLineType || !!mode;
+  const [selectedTab, setSelectedTab] = useState(derivedMode);
+
+  useEffect(() => { setSelectedTab(derivedMode); }, [derivedMode]);
 
   // data
   const [vouchers, setVouchers] = useState([]);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // package master for showing content
+  // package master
   const [allPkgs, setAllPkgs] = useState([]);
   const pkgMap = useMemo(() => {
     const m = new Map();
@@ -21,11 +38,13 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
     return m;
   }, [allPkgs]);
 
-  // forms/states reused from bản của bạn
+  // states
   const [picking, setPicking] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [discount, setDiscount] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // voucher states
   const [savingVoucher, setSavingVoucher] = useState(false);
   const [editingVoucherCode, setEditingVoucherCode] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -45,21 +64,25 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
     maxUsagePerUser: "",
     minOrderAmount: ""
   });
+
+  // package edit
   const [editingRowId, setEditingRowId] = useState(null);
-  const [tempPercentPackage, setTempPercentPackage] = useState('');
+  const [tempPercentPackage, setTempPercentPackage] = useState("");
 
-  const fmtVND = (num) => (!num ? "0 đ" : `${Number(num).toLocaleString()} đ`);
+  const rowKey = (x) => `${x.promotionId}__${Array.isArray(x.packageId) ? x.packageId.join('|') : x.packageId}`;
 
-  // load theo tab
+  // Load theo MODE (hoặc tab nếu không khóa)
   const loadTabData = async () => {
-    if (!promotion?.promotionId) return;
+    if (!promotion?.promotionId || !line?.promotionLineId) return;
     setLoading(true);
     try {
       if (selectedTab === "VOUCHER") {
-        const data = await PromotionDetailService.getPromotionVouchers(promotion.promotionId);
+        // Lấy vouchers theo LINE
+        const data = await PromotionDetailService.getPromotionVouchers(line.promotionLineId);
         setVouchers(Array.isArray(data) ? data : []);
       } else {
-        const data = await PromotionDetailService.getPromotionPackages(promotion.promotionId);
+        // Lấy packages theo LINE
+        const data = await PromotionDetailService.getPromotionPackages(line.promotionLineId);
         setPackages(Array.isArray(data) ? data : []);
         if (allPkgs.length === 0) {
           const master = await SubscriptionPackageService.getAllPackages();
@@ -77,20 +100,17 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
   };
 
   useEffect(() => {
-    if (open && promotion?.promotionId) {
-      loadTabData();
-    }
-  }, [open, promotion?.promotionId, selectedTab]);
+    if (open && promotion?.promotionId && line?.promotionLineId) loadTabData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, promotion?.promotionId, line?.promotionLineId, selectedTab]);
 
-  // ====== VOUCHER: edit helpers ======
+  // ====== Voucher helpers ======
   const startEditVoucher = (v) => {
     setEditingVoucherCode(v.voucherCode);
     setEditForm({
       discountType: (v.discountType || "PERCENTAGE").toUpperCase(),
       discountValue: Number(v.discountValue ?? 0),
-      maxDiscountAmount: Number(
-        (v.discountType || "").toUpperCase() === "FIXED_AMOUNT" ? v.discountValue ?? 0 : v.maxDiscountAmount ?? 0
-      ),
+      maxDiscountAmount: Number((v.discountType || "").toUpperCase() === "FIXED_AMOUNT" ? v.discountValue ?? 0 : v.maxDiscountAmount ?? 0),
       maxUsage: Number(v.maxUsage ?? 0),
       maxUsagePerUser: Number(v.maxUsagePerUser ?? 0),
       minOrderAmount: Number(v.minOrderAmount ?? 0),
@@ -116,7 +136,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
       maxUsagePerUser: Number(editForm.maxUsagePerUser || 0),
       minOrderAmount: Number(editForm.minOrderAmount || 0),
     };
-    // validate (giữ nguyên như bạn)
+    // validate
     if (!payload.discountValue || payload.discountValue <= 0) return toast.error("Giá trị giảm phải > 0.");
     if (payload.discountType === "PERCENTAGE" && (payload.discountValue < 1 || payload.discountValue > 100))
       return toast.error("Phần trăm giảm phải từ 1 đến 100.");
@@ -133,11 +153,11 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
 
     try {
       setSavingVoucher(true);
+      // API update voucher theo promotionId + voucherCode (giữ nguyên)
       await PromotionDetailService.updatePromotionVoucher(promotion.promotionId, v.voucherCode, payload);
       toast.success("Cập nhật voucher thành công!");
       setEditingVoucherCode(null);
-      await loadTabData(); // reload vouchers
-      onChanged?.();
+      await loadTabData();
     } catch (e) {
       console.error("Update voucher failed:", e);
       toast.error(e?.response?.data || "Cập nhật voucher thất bại!");
@@ -151,7 +171,6 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
       await PromotionDetailService.deletePromotionVoucher(promotion.promotionId, voucherCode);
       toast.success("Xóa voucher thành công!");
       await loadTabData();
-      onChanged?.();
     } catch (e) {
       console.error("Delete voucher failed:", e);
       toast.error("Xóa voucher thất bại!");
@@ -181,7 +200,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
     if (voucherForm.maxDiscountAmount && voucherForm.maxDiscountAmount <= 0) return toast.error("Giảm tối đa phải >= 0.");
     if (voucherForm.discountType === "PERCENTAGE" && (voucherForm.discountValue < 1 || voucherForm.discountValue > 100))
       return toast.error("Phần trăm giảm phải từ 1 đến 100.");
-    if (voucherForm.minOrderAmount <= Number(voucherForm.discountValue) + 10000)
+    if (voucherForm.minOrderAmount < Number(voucherForm.discountValue) + 10000)
       return toast.error("Đơn tối thiểu phải lớn hơn giá trị giảm ít nhất 10,000đ.");
     if (voucherForm.discountType === "PERCENTAGE" && (voucherForm.minOrderAmount < Number(voucherForm.maxDiscountAmount || 0) + 10000))
       return toast.error("Đơn tối thiểu phải ≥ Giảm tối đa + 10,000đ.");
@@ -190,6 +209,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
       setSavingVoucher(true);
       await PromotionDetailService.createPromotionVoucher({
         promotionId: promotion.promotionId,
+        promotionLineId: line?.promotionLineId, // gắn vào line
         voucherCode: code,
         discountType: voucherForm.discountType,
         discountValue: Number(voucherForm.discountValue),
@@ -201,7 +221,6 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
       toast.success("Tạo voucher thành công!");
       setPicking(false);
       await loadTabData();
-      onChanged?.();
     } catch (e) {
       toast.error(e?.response?.data || "Tạo voucher thất bại!");
     } finally {
@@ -209,8 +228,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
     }
   };
 
-  // ====== PACKAGE: edit helpers ======
-  const rowKey = (x) => `${x.promotionId}__${Array.isArray(x.packageId) ? x.packageId.join('|') : x.packageId}`;
+  // ====== Package helpers ======
   const startEditPackage = (row) => {
     setEditingRowId(rowKey(row));
     setTempPercentPackage(row.discountPercent ?? 0);
@@ -230,12 +248,12 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
     try {
       setSaving(true);
       const pkgs = Array.isArray(row.packageId) ? row.packageId : [row.packageId];
+      // API cũ update theo promotionId + packageIds
       await PromotionDetailService.updatePromotionPackage(row.promotionId, pkgs, percentNum);
       toast.success("Cập nhật gói khuyến mãi thành công!");
       setEditingRowId(null);
       setTempPercentPackage('');
       await loadTabData();
-      onChanged?.();
     } catch (e) {
       console.error("Update promotion failed:", e);
       toast.error("Cập nhật gói khuyến mãi thất bại!");
@@ -249,14 +267,13 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
       await PromotionDetailService.deletePromotionPackage(promotion.promotionId, pkgIds);
       toast.success("Xóa gói khuyến mãi thành công!");
       await loadTabData();
-      onChanged?.();
     } catch (e) {
       console.error("Delete promotion failed:", e);
       toast.error("Xóa gói khuyến mãi thất bại!");
     }
   };
 
-  // chọn gói + thêm khuyến mãi
+  // Options cho chọn gói (loại trừ gói đã áp dụng)
   const availableOptions = useMemo(() => {
     const applied = new Set();
     (packages || []).forEach(p => {
@@ -281,6 +298,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
       setSaving(true);
       await PromotionDetailService.createPromotionPackage({
         promotionId: promotion.promotionId,
+        promotionLineId: line?.promotionLineId, // gắn vào line
         packageId: selectedIds,
         discountPercent: Number(discount),
       });
@@ -288,7 +306,6 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
       setDiscount("");
       setPicking(false);
       await loadTabData();
-      onChanged?.();
       toast.success("Thêm gói khuyến mãi thành công!");
     } catch (e) {
       console.error("Save promotion failed:", e);
@@ -300,44 +317,103 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
 
   if (!open) return null;
 
+  // === Header: Promotion & Line info
+  const promoStatusBadge =
+    promotion?.status?.toUpperCase() === "ACTIVE" ? <Badge text="ACTIVE" kind="ok" /> :
+    promotion?.status?.toUpperCase() === "UPCOMING" ? <Badge text="UPCOMING" kind="warn" /> :
+    <Badge text={promotion?.status || "-"} kind="muted" />;
+
+  const lineStatusBadge =
+    line?.status?.toUpperCase() === "ACTIVE" ? <Badge text="ACTIVE" kind="ok" /> :
+    line?.status?.toUpperCase() === "UPCOMING" ? <Badge text="UPCOMING" kind="warn" /> :
+    <Badge text={line?.status || "-"} kind="muted" />;
+
+  const lineTypeBadge =
+    <Badge text={(line?.promotionLineType || "").toUpperCase() || "-"} kind="info" />;
+
+  const canCreateVoucher = selectedTab === "VOUCHER";
+  const canCreatePackage = selectedTab === "PACKAGE";
+
   return (
     <div className="modal fade show" style={{ display: "block" }}>
       <div className="modal-dialog modal-xl">
         <div className="modal-content">
 
           <div className="modal-header">
-            <h5 className="modal-title">Chi tiết khuyến mãi · {promotion?.promotionName}</h5>
+            <h5 className="modal-title">
+              Chi tiết khuyến mãi · {promotion?.promotionName}
+              {titleSuffix ? <small className="text-muted"> — {titleSuffix}</small> : null}
+            </h5>
             <span className="btn-close" onClick={onClose}></span>
           </div>
 
-          {/* Tabs */}
+          {/* Header: Promotion + Line */}
           <div className="px-3 pt-3">
-            <ul className="nav nav-tabs">
-              <li className="nav-item">
-                <button
-                  type="button"
-                  className={`nav-link ${selectedTab === "VOUCHER" ? "action-item" : "text-black"}`}
-                  onClick={() => setSelectedTab("VOUCHER")}
-                >
-                  Voucher
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  type="button"
-                  className={`nav-link ${selectedTab === "PACKAGE" ? "action-item" : "text-black"}`}
-                  onClick={() => setSelectedTab("PACKAGE")}
-                >
-                  Package
-                </button>
-              </li>
-            </ul>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <div className="p-3 border rounded-3">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <strong>Promotion</strong>
+                    {promoStatusBadge}
+                  </div>
+                  <div className="text-muted small mt-2">
+                    <div><b>ID:</b> {promotion?.promotionId}</div>
+                    <div><b>Tên:</b> {promotion?.promotionName}</div>
+                    <div><b>Thời gian:</b> {fmtDate(promotion?.startDate)} → {fmtDate(promotion?.endDate)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <div className="p-3 border rounded-3">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <strong>Promotion Line</strong>
+                    <div className="d-flex gap-2 align-items-center">
+                      {lineTypeBadge}
+                      {lineStatusBadge}
+                    </div>
+                  </div>
+                  <div className="text-muted small mt-2">
+                    <div><b>ID:</b> {line?.promotionLineId}</div>
+                    <div><b>Tên:</b> {line?.name || line?.promotionLineName}</div>
+                    <div><b>Thời gian:</b> {fmtDate(line?.startDate)} → {fmtDate(line?.endDate)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Tabs: chỉ hiển thị khi KHÔNG khoá mode */}
+          {!locked && (
+            <div className="px-3 pt-3">
+              <ul className="nav nav-tabs">
+                <li className="nav-item">
+                  <button
+                    type="button"
+                    className={`nav-link ${selectedTab === "VOUCHER" ? "action-item" : "text-black"}`}
+                    onClick={() => setSelectedTab("VOUCHER")}
+                  >
+                    Voucher
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    type="button"
+                    className={`nav-link ${selectedTab === "PACKAGE" ? "action-item" : "text-black"}`}
+                    onClick={() => setSelectedTab("PACKAGE")}
+                  >
+                    Package
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
+
           {/* Body */}
           <div className="modal-body">
             {selectedTab === "VOUCHER" ? (
               <>
-                {/* Table vouchers (giữ nguyên render & edit như bạn) */}
+                {/* Vouchers table */}
                 <table className="table table-striped table-bordered table-hover">
                   <thead className="table-light">
                     <tr>
@@ -457,10 +533,10 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
                               </>
                             ) : (
                               <>
-                                <button className="btn btn-sm btn-primary me-2" onClick={() => startEditVoucher(item)}>
+                                <button className="btn btn-sm btn-primary me-2" onClick={() => startEditVoucher(item)} disabled={line?.status === "EXPIRED"}>
                                   <i className="fa fa-pencil" />
                                 </button>
-                                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteVoucher(item.voucherCode)}>
+                                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteVoucher(item.voucherCode)} disabled={line?.status === "EXPIRED"}>
                                   <i className="fa fa-trash" />
                                 </button>
                               </>
@@ -476,16 +552,16 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
 
                 <div className="d-flex justify-content-between align-items-center">
                   {!picking ? (
-                    <button className="btn btn-secondary" onClick={startCreateVoucher}>Tạo voucher</button>
+                    <button className="btn btn-secondary" onClick={startCreateVoucher} disabled={!canCreateVoucher || line?.status === "EXPIRED"}>
+                      Tạo voucher mới
+                    </button>
                   ) : (
-                    <span className="text-muted small">Điền thông tin voucher rồi nhấn “Tạo”.</span>
+                    <span className="text-muted small">Nhập thông tin voucher rồi nhấn “Tạo”.</span>
                   )}
                 </div>
 
-                {picking && (
+                {picking && canCreateVoucher && (
                   <div className="row g-3 mt-3">
-                    {/* form tạo voucher: giữ nguyên như bạn đã có */}
-                    {/* ... */}
                     <div className="col-md-4">
                       <label className="form-label">Mã voucher *</label>
                       <input className="form-control text-black"
@@ -499,11 +575,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
                         value={voucherForm.discountType}
                         onChange={e => setVoucherForm(s => {
                           const type = e.target.value;
-                          return {
-                            ...s,
-                            discountType: type,
-                            maxDiscountAmount: type === "FIXED_AMOUNT" ? Number(s.discountValue || 0) : s.maxDiscountAmount
-                          };
+                          return { ...s, discountType: type, maxDiscountAmount: type === "FIXED_AMOUNT" ? Number(s.discountValue || 0) : s.maxDiscountAmount };
                         })}>
                         <option value="PERCENTAGE">PERCENT (%)</option>
                         <option value="FIXED_AMOUNT">AMOUNT (VND)</option>
@@ -515,11 +587,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
                         value={voucherForm.discountValue}
                         onChange={e => setVoucherForm(s => {
                           const val = Number(e.target.value || 0);
-                          return {
-                            ...s,
-                            discountValue: val,
-                            maxDiscountAmount: s.discountType === "FIXED_AMOUNT" ? val : s.maxDiscountAmount
-                          };
+                          return { ...s, discountValue: val, maxDiscountAmount: s.discountType === "FIXED_AMOUNT" ? val : s.maxDiscountAmount };
                         })}
                         placeholder={voucherForm.discountType === "PERCENTAGE" ? "Ví dụ: 10" : "Ví dụ: 50000"} />
                     </div>
@@ -536,15 +604,13 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
                       <label className="form-label">Tổng lượt sử dụng</label>
                       <input type="number" className="form-control text-black"
                         value={voucherForm.maxUsage}
-                        onChange={e => setVoucherForm(s => ({ ...s, maxUsage: e.target.value }))}
-                        placeholder="VD: 1000" />
+                        onChange={e => setVoucherForm(s => ({ ...s, maxUsage: e.target.value }))} placeholder="VD: 1000" />
                     </div>
                     <div className="col-md-4">
                       <label className="form-label">Đơn tối thiểu</label>
                       <input type="number" className="form-control text-black"
                         value={voucherForm.minOrderAmount}
-                        onChange={e => setVoucherForm(s => ({ ...s, minOrderAmount: e.target.value }))}
-                        placeholder="VD: 100000" />
+                        onChange={e => setVoucherForm(s => ({ ...s, minOrderAmount: e.target.value }))} placeholder="VD: 100000" />
                     </div>
                     <div className="d-flex mt-2">
                       <button className="btn btn-primary" onClick={handleSaveVoucher} disabled={savingVoucher}>
@@ -559,7 +625,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
               </>
             ) : (
               <>
-                {/* Table packages + hiển thị nội dung gói */}
+                {/* Packages table */}
                 <table className="table table-striped table-bordered table-hover">
                   <thead className="table-light">
                     <tr>
@@ -573,15 +639,8 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
                       <tr><td colSpan={4} className="text-center text-muted">Đang tải…</td></tr>
                     ) : packages.length ? packages.map(item => {
                       const ids = Array.isArray(item.packageId) ? item.packageId : [item.packageId];
-                      const detailTexts = ids.map(id => {
-                        const p = pkgMap.get(id);
-                        if (!p) return `• ${id}`;
-                        // ví dụ hiển thị tên + thời lượng + giá
-                        return `• ${p.packageName ?? id} — ${p.durationInDays ?? '-'} ngày — ${fmtVND(p.price ?? p.originalPrice ?? 0)}`;
-                      });
                       const key = rowKey(item);
                       const editing = editingRowId === key;
-
                       return (
                         <tr key={key}>
                           <td>{ids.join(", ")}</td>
@@ -616,11 +675,11 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
                               </>
                             ) : (
                               <>
-                                <button className="btn btn-sm btn-primary me-2" onClick={() => startEditPackage(item)}>
-                                  <i className="fa fa-pencil"></i>
+                                <button className="btn btn-sm btn-primary me-2" onClick={() => startEditPackage(item)} disabled={line?.status === "EXPIRED"}>
+                                  <i className="fa fa-pencil" />
                                 </button>
-                                <button className="btn btn-sm btn-danger me-2" onClick={() => handleDeletePromotionPackage(ids)}>
-                                  <i className="fa fa-trash"></i>
+                                <button className="btn btn-sm btn-danger" onClick={() => handleDeletePromotionPackage(ids)} disabled={line?.status === "EXPIRED"}>
+                                  <i className="fa fa-trash" />
                                 </button>
                               </>
                             )}
@@ -632,16 +691,18 @@ const PromotionDetailModal = ({ open, onClose, promotion, onChanged }) => {
                     )}
                   </tbody>
                 </table>
-
+                
                 <div className="d-flex justify-content-between align-items-center">
                   {!picking ? (
-                    <button className="btn btn-secondary" onClick={startPick}>Chọn gói muốn áp dụng khuyến mãi</button>
+                    <button className="btn btn-secondary" onClick={startPick} disabled={!canCreatePackage || line?.status === "EXPIRED" || availableOptions.length === 0}>
+                      Thêm gói khuyến mãi
+                    </button>
                   ) : (
                     <span className="text-muted small">Chọn gói và nhập % giảm rồi nhấn “Thêm”.</span>
                   )}
                 </div>
 
-                {picking && (
+                {picking && canCreatePackage && (
                   <div className="mt-3">
                     <div className="mb-3">
                       <label className="form-label">Gói <span className="text-danger">*</span></label>
