@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from "../context/AuthContext";
 import Carousel from 'react-bootstrap/Carousel';
+import WishlistService from "../services/WishlistService";
 import MovieService from '../services/MovieService';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faHeart } from "@fortawesome/free-solid-svg-icons";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { toast } from "react-toastify";
 
 const AGE_SET = new Set(["T13+","T18+"]);
 
 const MovieSlider = () => {
+  const { MyUser } = useAuth();
+  
   const [featuredMovies, setFeaturedMovies] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
 
+    // -------- global states - theo dõi trạng thái yêu thích của tất cả phim
+    const [wishlistStatus, setWishlistStatus] = useState({});
+    const userId = MyUser?.my_user?.userId ?? null;
   useEffect(() => {
     (async () => {
       try {
@@ -22,6 +30,56 @@ const MovieSlider = () => {
       }
     })();
   }, []);
+
+  // -------- Wishlist - kiểm tra trạng thái yêu thích của tất cả phim
+  useEffect(() => {
+    const checkAllWishlists = async () => {
+      if (!userId || !featuredMovies.length) return;
+      
+      const statusPromises = featuredMovies.map(async (movie) => {
+        const exists = await WishlistService.existsInWishlist(userId, movie.movieId);
+        return { movieId: movie.movieId, isInWishlist: exists };
+      });
+      
+      const statuses = await Promise.all(statusPromises);
+      const statusMap = {};
+      statuses.forEach(status => {
+        statusMap[status.movieId] = status.isInWishlist;
+      });
+      
+      setWishlistStatus(statusMap);
+    };
+    
+    checkAllWishlists();
+  }, [userId, featuredMovies]);
+  
+    const handleToggleWishlist = async (movieId) => {
+      if (!movieId || !userId) return;
+      
+      try {
+        const currentStatus = wishlistStatus[movieId] || false;
+        
+        if (currentStatus) {
+          await WishlistService.removeFromWishlist(userId, movieId);
+          toast.success("Đã xóa khỏi danh sách yêu thích");
+          setWishlistStatus(prev => ({
+            ...prev,
+            [movieId]: false
+          }));
+        } else {
+          await WishlistService.addToWishlist(userId, movieId);
+          toast.success("Đã thêm vào danh sách yêu thích");
+          setWishlistStatus(prev => ({
+            ...prev,
+            [movieId]: true
+          }));
+        }
+      } catch (error) {
+        console.error("Lỗi thao tác wishlist:", error);
+        toast.error("Thao tác thất bại");
+      }
+    };
+  
 
   if (!featuredMovies?.length) return null;
 
@@ -47,6 +105,9 @@ const MovieSlider = () => {
             const normalize = g => (typeof g === "string" ? g : (g?.name || g?.slug || ""));
             const ageTag = genresArr.map(normalize).find(s => AGE_SET.has(String(s)));
             const displayGenres = genresArr.filter(g => !AGE_SET.has(normalize(g)));
+            
+            // --- trạng thái yêu thích cho phim này ---
+            const isMovieFavorited = wishlistStatus[movie.movieId] || false;
 
             return (
               <Carousel.Item key={movie.movieId} style={{height: 500, position: "relative"}}>
@@ -151,10 +212,30 @@ const MovieSlider = () => {
                                      transition: 'transform 0.23s' }}>
                         <FontAwesomeIcon icon={faPlay}/>
                       </Link>
-                      <button className="btn btn-icon"
-                              style={{ background: 'rgba(255,255,255,0.09)', border: 'none', color: '#fff',
-                                       width: 45, height: 45, borderRadius: '50%', fontSize: 22 }}>
-                        <FontAwesomeIcon icon={faHeart}/>
+                      <button 
+                        className={`wishlist-btn ${isMovieFavorited ? "favorited" : ""}`} 
+                        onClick={() => handleToggleWishlist(movie.movieId)}
+                        style={{ 
+                          background: 'rgba(255,255,255,0.09)', 
+                          border: 'none', 
+                          color: '#fff',
+                          width: 45, 
+                          height: 45, 
+                          borderRadius: '50%', 
+                          fontSize: 22,
+                          transition: 'all 0.3s ease',
+                          cursor: 'pointer'
+                        }}
+                        title={isMovieFavorited ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+                      >
+                        <FontAwesomeIcon 
+                          icon={faHeart} 
+                          style={{ 
+                            color: isMovieFavorited ? '#ff4d4d' : '#fff',
+                            transform: isMovieFavorited ? 'scale(1.1)' : 'scale(1)',
+                            transition: 'all 0.3s ease'
+                          }}
+                        />
                       </button>
                     </div>
                   </div>
