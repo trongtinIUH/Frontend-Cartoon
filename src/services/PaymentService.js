@@ -13,10 +13,10 @@ const PaymentService = {
             throw error.response ? error.response.data : error;
         }
     },
-    // Get payment status by order code
-    getPaymentStatus: async (orderCode) => {
+    // Get payment status by payment code
+    getPaymentStatus: async (paymentCode) => {
         try {
-            const response = await axiosInstance.get(`${API_BASE_URL}/${orderCode}`);
+            const response = await axiosInstance.get(`${API_BASE_URL}/${paymentCode}`);
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
@@ -32,9 +32,9 @@ const PaymentService = {
         }
     },
     // Cancel a payment (if applicable)
-    cancelPayment: async (orderCode) => {
+    cancelPayment: async (paymentCode) => {
         try {
-            const response = await axiosInstance.put(`${API_BASE_URL}/cancel/${orderCode}`);
+            const response = await axiosInstance.put(`${API_BASE_URL}/cancel/${paymentCode}`);
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;

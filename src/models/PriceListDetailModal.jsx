@@ -5,8 +5,6 @@ import SubscriptionPackageService from '../services/SubscriptionPackageService';
 const fmtVND = (n) =>
     (n ?? 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
-const toLocalDate = (d) => (d ? String(d).slice(0, 10) : "");
-
 const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
     const [items, setItems] = useState([]);
     const [packages, setPackages] = useState([]);

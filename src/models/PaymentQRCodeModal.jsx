@@ -44,7 +44,7 @@ const PaymentQRCodeModal = ({ show, onClose, qrData }) => {
 
                     // Gọi webhook 1 lần cuối (nếu cần)
                     await PaymentService.handleWebhook({
-                        orderCode: qrData.orderCode,
+                        paymentCode: qrData.orderCode,
                         status: "PAID"
                     });
                     window.location.href = "/main#/main"; // Chuyển hướng về trang chính

@@ -90,17 +90,6 @@ const Sidebar = () => {
 
               <li className="nav-item">
                 <NavLink
-                  to="/admin-order"
-                  className={({ isActive }) =>
-                    `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
-                  }
-                >
-                  <i className="fas fa-shopping-cart me-2" /> <span>Quản lý đơn hàng</span>
-                </NavLink>
-              </li>
-
-              <li className="nav-item">
-                <NavLink
                   to="/admin-movie"
                   className={({ isActive }) =>
                     `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
@@ -162,6 +151,17 @@ const Sidebar = () => {
                   }
                 >
                   <i className="fas fa-percent me-2" /> <span>Quản lý khuyến mãi</span>
+                </NavLink>
+              </li>
+
+              <li className="nav-item">
+                <NavLink
+                  to="/admin-payment"
+                  className={({ isActive }) =>
+                    `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
+                  }
+                >
+                  <i className="fas fa-shopping-cart me-2" /> <span>Quản lý thanh toán</span>
                 </NavLink>
               </li>
 

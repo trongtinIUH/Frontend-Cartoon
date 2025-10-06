@@ -266,7 +266,7 @@ const PromotionManagementPage = () => {
                                           </td>
                                           <td>
                                             <span
-                                              className="btn btn-sm btn-warning me-2"
+                                              className="btn btn-sm btn-outline-warning me-2"
                                               onClick={() => openDetailModal(p, line)}
                                             >
                                               <i className="fa fa-eye"></i> Xem chi tiết
