@@ -1316,3 +1316,262 @@
 @media (min-width: 768px){
   .detail-hero .hero-img{ max-height: 92%; }
 }
+
+/* Share Modal Styles */
+.share-modal {
+  z-index: 1050;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.share-modal .modal-dialog {
+  margin: 1rem auto;
+  max-width: 350px;
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - 2rem);
+}
+
+.share-modal .modal-content {
+  background: linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  border: none;
+  backdrop-filter: blur(20px);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.share-modal .modal-header {
+  border: none;
+  padding: 1.25rem 1.5rem 0.75rem;
+  position: relative;
+}
+
+.share-modal .modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin: 0;
+  background: linear-gradient(135deg, #4bc1fa 0%, #6c5ce7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.share-modal .btn-close-white {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #aaa;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-modal .btn-close-white:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.share-modal .modal-body {
+  padding: 0.75rem 1.5rem 2rem;
+}
+
+.share-modal .share-buttons-container {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.share-modal .share-item {
+  text-align: center;
+  opacity: 0;
+  animation: slideInUp 0.5s ease forwards;
+}
+
+.share-modal .share-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.share-modal .share-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.share-modal .share-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.share-modal .share-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.share-modal .share-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.share-modal .share-button:hover::before {
+  left: 100%;
+}
+
+.share-modal .share-button:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+.share-modal .share-button:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.share-modal .share-button.facebook {
+  background: linear-gradient(135deg, #1877F2 0%, #4267B2 100%);
+  box-shadow: 0 8px 25px rgba(24, 119, 242, 0.4);
+}
+
+.share-modal .share-button.facebook:hover {
+  box-shadow: 0 15px 35px rgba(24, 119, 242, 0.6);
+}
+
+.share-modal .share-button.twitter {
+  background: linear-gradient(135deg, #000000 0%, #333333 100%);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.share-modal .share-button.twitter:hover {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+}
+
+.share-modal .share-button.copy {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.share-modal .share-button.copy:hover {
+  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+}
+
+.share-modal .share-label {
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  margin-top: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 576px) {
+  .share-modal .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
+  
+  .share-modal .modal-content {
+    border-radius: 16px;
+  }
+  
+  .share-modal .modal-header {
+    padding: 1.25rem 1.5rem 0.75rem;
+  }
+  
+  .share-modal .modal-title {
+    font-size: 1.2rem;
+  }
+  
+  .share-modal .btn-close-white {
+    top: 0.75rem;
+    right: 1rem;
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+  
+  .share-modal .modal-body {
+    padding: 0.75rem 1.5rem 2rem;
+  }
+  
+  .share-modal .share-buttons-container {
+    gap: 1.5rem;
+  }
+  
+  .share-modal .share-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+  }
+  
+  .share-modal .share-label {
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .share-modal .share-buttons-container {
+    gap: 1rem;
+  }
+  
+  .share-modal .share-button {
+    width: 55px;
+    height: 55px;
+  }
+}
