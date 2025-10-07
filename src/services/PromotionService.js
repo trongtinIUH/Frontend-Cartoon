@@ -3,15 +3,19 @@ import axiosInstance from "../api/axiosInstance";
 const API_BASE_URL = 'http://localhost:8080/promotions';
 
 const PromotionService = {
-  getAllPromotions: async () => {
+
+  getAllPromotions: async (page, size, keyword = "") => {
     try {
-      const response = await axiosInstance.get(API_BASE_URL);
-      return response.data;
+      const response = await axiosInstance.get(API_BASE_URL, {
+        params: { page: page - 1, size, keyword },
+      });
+      const total = Number(response.headers["x-total-count"] ?? 0);
+      return { items: response.data, total };
     } catch (error) {
-      console.error(error);
-      throw error;
+      throw error.response ? error.response.data : error;
     }
   },
+
   getPromotionById: async (id) => {
     try {
       const response = await axiosInstance.get(`${API_BASE_URL}/${id}`);

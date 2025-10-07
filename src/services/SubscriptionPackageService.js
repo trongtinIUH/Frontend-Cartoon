@@ -5,14 +5,13 @@ const API_BASE_URL = 'http://localhost:8080/subscription-packages';
 const SubscriptionPackageService = {
 
     // get all packages
-    getAll: async () => {
+    getAll: async (page, size, keyword = "") => {
         try {
-            const response = await axiosInstance.get(`${API_BASE_URL}`);
-            if (response.status !== 200) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            response.data.sort((a, b) => a.price - b.price);
-            return response.data;
+            const response = await axiosInstance.get(API_BASE_URL, {
+                params: { page: page - 1, size, keyword },
+            });
+            const total = Number(response.headers["x-total-count"] ?? 0);
+            return { items: response.data, total };
         } catch (error) {
             throw error.response ? error.response.data : error;
         }

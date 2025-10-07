@@ -5,23 +5,37 @@ import CreateSubscriptionPackageModal from "../../models/CreateSubscriptionPacka
 
 const SubscriptionPackageManagementPage = () => {
     const [subscriptionPackages, setSubscriptionPackages] = useState([]);
+    const [page, setPage] = useState(1);
+    const [size] = useState(4);
+    const [total, setTotal] = useState(0);
+    const [keyword, setKeyword] = useState("");
     const [isCreateModalOpen, setCreateModalOpen] = useState(false);
     const [editingPkg, setEditingPkg] = useState(null);
 
-    const loadSubscriptionPackages = useCallback(async () => {
+    // Load dữ liệu
+    const loadSubscriptionPackages = async () => {
         try {
-            const data = await SubscriptionPackageService.getAll();
-            // sep xep theo ngay tao giam dan
-            data.sort((a, b) => new Date(a.durationInDays) - new Date(b.durationInDays));
-            setSubscriptionPackages(Array.isArray(data) ? data : []);
+            const data = await SubscriptionPackageService.getAll(page, size, keyword);
+            setSubscriptionPackages(data.items);
+            setTotal(data.total);
         } catch (err) {
             console.error("Lỗi load gói đăng ký:", err);
         }
-    }, []);
+    };
 
+    // Gọi khi page hoặc keyword thay đổi
     useEffect(() => {
         loadSubscriptionPackages();
-    }, [loadSubscriptionPackages]);
+    }, [page, keyword]);
+
+    // Tổng số trang
+    const totalPages = Math.ceil(total / size);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setPage(1); // reset về trang 1 khi search
+        loadSubscriptionPackages();
+    };
 
     const handleCreateModalOpen = () => {
         setEditingPkg(null);
@@ -57,13 +71,15 @@ const SubscriptionPackageManagementPage = () => {
                             style={{ flexWrap: "wrap" }}
                         >
                             <div style={{ maxWidth: "400px", width: "100%" }}>
-                                <form role="search">
+                                <form role="search" onSubmit={handleSearch}>
                                     <div className="input-group">
                                         <input
                                             type="search"
                                             className="form-control rounded-start"
                                             placeholder="Tìm kiếm gói đăng ký"
                                             name="keyword"
+                                            value={keyword}
+                                            onChange={(e) => setKeyword(e.target.value)}
                                         />
                                         <span type="submit" className="btn btn-outline-secondary rounded-end">
                                             <i className="fa fa-search"></i>
@@ -116,6 +132,47 @@ const SubscriptionPackageManagementPage = () => {
                                 ))}
                             </tbody>
                         </table>
+
+                        {totalPages > 1 && (
+                            <nav>
+                                <ul className="pagination justify-content-center">
+                                    <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
+                                        <button
+                                            className="page-link"
+                                            onClick={() => setPage(page - 1)}
+                                        >
+                                            {"<"}
+                                        </button>
+                                    </li>
+
+                                    {[...Array(totalPages).keys()].map((i) => (
+                                        <li
+                                            key={i}
+                                            className={`page-item ${page === i + 1 ? "active" : ""}`}
+                                        >
+                                            <button
+                                                className="page-link"
+                                                onClick={() => setPage(i + 1)}
+                                            >
+                                                {i + 1}
+                                            </button>
+                                        </li>
+                                    ))}
+
+                                    <li
+                                        className={`page-item ${page === totalPages ? "disabled" : ""
+                                            }`}
+                                    >
+                                        <button
+                                            className="page-link"
+                                            onClick={() => setPage(page + 1)}
+                                        >
+                                            {">"}
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        )}
                     </div>
                 </div>
                 <CreateSubscriptionPackageModal

@@ -1,31 +1,31 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
-import UserService from "../../services/UserService";
-import avatar_default from "../../image/default_avatar.jpg";
-import MemberDetailModal from "../../models/MemberDetailModal";
+import PaymentService from "../../services/PaymentService";
+import { fmtDateTime } from "../../utils/date";
+import PaymentDetailModal from "../../models/PaymentDetailModal";
 
-const MemberManagementPage = () => {
-    const [members, setMembers] = useState([]);
+const PaymentManagementPage = () => {
+    const [payments, setPayments] = useState([]);
     const [page, setPage] = useState(1);
     const [size] = useState(10);
     const [total, setTotal] = useState(0);
     const [keyword, setKeyword] = useState("");
-    const [selectedMember, setSelectedMember] = useState(null);
+    const [selectedPayment, setSelectedPayment] = useState(null);
 
     // Load dữ liệu
-    const loadUsers = async () => {
+    const loadPayments = async () => {
         try {
-            const data = await UserService.getAllUsers(page, size, keyword);
-            setMembers(data.items);
+            const data = await PaymentService.getAllPayments(page, size, keyword);
+            setPayments(data.items);
             setTotal(data.total);
         } catch (err) {
-            console.error("Lỗi load users:", err);
+            console.error("Lỗi load payments:", err);
         }
     };
 
     // Gọi khi page hoặc keyword thay đổi
     useEffect(() => {
-        loadUsers();
+        loadPayments();
     }, [page, keyword]);
 
     // Tổng số trang
@@ -34,18 +34,20 @@ const MemberManagementPage = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         setPage(1); // reset về trang 1 khi search
-        loadUsers();
+        loadPayments();
     };
 
-    const handleOpenDetail = (userId) => {
-       setSelectedMember(userId);
+    const handleOpenDetail = (paymentId) => {
+        setSelectedPayment(paymentId);
     };
+
+    const fmtVND = (n) => (n != null ? n.toLocaleString("vi-VN", { style: "currency", currency: "VND" }) : "—");
 
     return (
         <div className="d-flex bg-white min-vh-100">
             <Sidebar />
             <div className="flex-grow-1 ms-250 p-4" style={{ marginLeft: "250px" }}>
-                <h2 className="mb-4 fw-bold">QUẢN LÝ THÀNH VIÊN</h2>
+                <h2 className="mb-4 fw-bold">QUẢN LÝ THANH TOÁN</h2>
                 <div className="card">
                     {/* Header có ô search */}
                     <div className="card-header">
@@ -59,7 +61,7 @@ const MemberManagementPage = () => {
                                         <input
                                             type="search"
                                             className="form-control rounded-start"
-                                            placeholder="Tìm kiếm thành viên"
+                                            placeholder="Tìm kiếm thanh toán"
                                             name="keyword"
                                             value={keyword}
                                             onChange={(e) => setKeyword(e.target.value)}
@@ -78,43 +80,59 @@ const MemberManagementPage = () => {
                         <table className="table table-striped table-bordered table-hover">
                             <thead className="table-light">
                                 <tr>
-                                    <th>Ảnh đại diện</th>
-                                    <th>Tên thành viên</th>
-                                    <th>Email</th>
-                                    <th>Số điện thoại</th>
-                                    <th>Vai trò</th>
+                                    <th>Mã thanh toán</th>
+                                    <th>Người dùng</th>
+                                    <th>Gói</th>
+                                    <th>Nhà cung cấp</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Ngày tạo thanh toán</th>
+                                    <th>Ngày thanh toán</th>
+                                    <th>Trạng thái</th>
                                     <th>Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {members.length > 0 ? (
-                                    members.map((member) => (
-                                        <tr key={member.userId}>
-                                            <td>
-                                                <img
-                                                    src={member.avatarUrl || avatar_default}
-                                                    alt={member.userName}
-                                                    className="img-fluid rounded-circle"
-                                                    style={{ width: "50px", height: "50px" }}
-                                                />
+                                {payments.length > 0 ? (
+                                    payments.map((payment) => (
+                                        <tr key={payment.paymentId}>
+                                            <td>{payment.paymentCode}</td>
+                                            <td>{payment.userId}</td>
+                                            <td>{payment.packageId}</td>
+                                            <td>{payment.provider}</td>
+                                            <td>{fmtVND(payment.finalAmount)}</td>
+                                            <td title={payment.createdAt}>{fmtDateTime(payment.createdAt)}</td>
+                                            <td title={payment.paidAt}>
+                                                {payment.paidAt ? fmtDateTime(payment.paidAt) : <span className="badge bg-secondary">Chưa thanh toán</span>}
                                             </td>
-                                            <td>{member.userName}</td>
-                                            <td>{member.email}</td>
-                                            <td>{member.phoneNumber}</td>
-                                            <td>{member.role}</td>
+                                            <td>
+                                                <span
+                                                    className={`badge ${payment.status === 'SUCCESS'
+                                                        ? 'bg-success'
+                                                        : payment.status === 'CANCELED'
+                                                            ? 'bg-danger'
+                                                            : "bg-secondary"
+                                                        }`}
+                                                >
+                                                    {payment.status === 'SUCCESS'
+                                                        ? 'Thành công'
+                                                        : payment.status === 'CANCELED'
+                                                            ? 'Không thành công'
+                                                            : 'Đang chờ xử lý'}
+                                                </span>
+                                            </td>
                                             <td><button
                                                 className="btn btn-sm btn-outline-warning"
                                                 style={{ borderRadius: 10, padding: '5px 10px', fontSize: 14 }}
-                                                onClick={() => handleOpenDetail(member.userId)}
+                                                onClick={() => handleOpenDetail(payment.paymentId)}
                                             >
-                                                <i className="fa fa-eye" /> Xem lịch sử mua gói
+                                                <i className="fa fa-eye" /> Xem chi tiết
                                             </button>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={5} className="text-center">
+                                        <td colSpan={9} className="text-center">
                                             Không có dữ liệu
                                         </td>
                                     </tr>
@@ -165,14 +183,14 @@ const MemberManagementPage = () => {
                         )}
                     </div>
                 </div>
-                <MemberDetailModal
-                    open={selectedMember !== null}
-                    onClose={() => setSelectedMember(null)}
-                    memberId={selectedMember}
+                <PaymentDetailModal
+                    open={selectedPayment !== null}
+                    onClose={() => setSelectedPayment(null)}
+                    paymentId={selectedPayment}
                 />
             </div>
         </div>
     );
 };
 
-export default MemberManagementPage;
+export default PaymentManagementPage;
