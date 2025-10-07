@@ -8,7 +8,9 @@ import { useAuth } from "../context/AuthContext";
 import TrailerPlayer from "../components/TrailerPlayer";
 import "../css/MovieDetailPage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart, faPlus, faShare, faCommentDots, faPlay } from "@fortawesome/free-solid-svg-icons";
+import { faHeart, faPlus, faShare, faCommentDots, faPlay, faTimes, faCopy } from "@fortawesome/free-solid-svg-icons";
+import { faFacebook } from "@fortawesome/free-brands-svg-icons";
+import { faXTwitter } from "@fortawesome/free-brands-svg-icons";
 import { toast } from "react-toastify";
 import FeedbackService from "../services/FeedbackService";
 import dayjs from "dayjs";
@@ -43,6 +45,7 @@ const MovieDetailPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // state thêm:
   const [seasons, setSeasons] = useState([]);       // [{seasonId, seasonNumber, ...}]
@@ -438,6 +441,55 @@ const handleWatch = (episode) => {
     }
   };
 
+  // Functions xử lý chia sẻ
+  const getCurrentUrl = () => {
+    return window.location.href;
+  };
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Đã sao chép link!");
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast.success("Đã sao chép link!");
+      } catch (err) {
+        toast.error("Không thể sao chép link");
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
+  const handleShareFacebook = () => {
+    const url = getCurrentUrl();
+    copyToClipboard(url);
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    window.open(fbUrl, '_blank', 'width=600,height=400');
+    setShowShareModal(false);
+  };
+
+  const handleShareTwitter = () => {
+    const url = getCurrentUrl();
+    const text = `Xem phim "${movie?.title}" - ${movie?.originalTitle || ''}`;
+    copyToClipboard(url);
+    const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+    window.open(twitterUrl, '_blank', 'width=600,height=400');
+    setShowShareModal(false);
+  };
+
+  const handleCopyLink = () => {
+    const url = getCurrentUrl();
+    copyToClipboard(url);
+    setShowShareModal(false);
+  };
+
   if (!movie) return <div className="text-center mt-5">Đang tải thông tin phim...</div>;
 
   const directors = authors.filter((a) => a.authorRole === "DIRECTOR");
@@ -795,7 +847,7 @@ const handleWatch = (episode) => {
                         <FontAwesomeIcon icon={faPlus} className="mb-1" />
                         <div className="action-label small">Thêm vào</div>
                       </div>
-                      <div className="action-item text-center">
+                      <div className="action-item text-center" onClick={() => setShowShareModal(true)}>
                         <FontAwesomeIcon icon={faShare} className="mb-1" />
                         <div className="action-label small">Chia sẻ</div>
                       </div>
@@ -1033,6 +1085,74 @@ const handleWatch = (episode) => {
           </div>
         </div>
       </div>
+
+      {/* Modal Chia sẻ */}
+      {showShareModal && (
+        <div 
+          className="modal fade show d-block share-modal" 
+          style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowShareModal(false);
+            }
+          }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Chia sẻ phim hay này</h5>
+                <button
+                  type="button"
+                  className="btn-close-white"
+                  onClick={() => setShowShareModal(false)}
+                  aria-label="Close"
+                >
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="share-buttons-container">
+                  {/* Facebook */}
+                  <div className="share-item">
+                    <button
+                      className="share-button facebook"
+                      onClick={handleShareFacebook}
+                      title="Chia sẻ lên Facebook"
+                    >
+                      <FontAwesomeIcon icon={faFacebook} size="lg" />
+                    </button>
+                    <div className="share-label">Facebook</div>
+                  </div>
+
+                  {/* X (Twitter) */}
+                  <div className="share-item">
+                    <button
+                      className="share-button twitter"
+                      onClick={handleShareTwitter}
+                      title="Chia sẻ lên X"
+                    >
+                      <FontAwesomeIcon icon={faXTwitter} size="lg" />
+                    </button>
+                    <div className="share-label">X</div>
+                  </div>
+
+                  {/* Copy Link */}
+                  <div className="share-item">
+                    <button
+                      className="share-button copy"
+                      onClick={handleCopyLink}
+                      title="Sao chép liên kết"
+                    >
+                      <FontAwesomeIcon icon={faCopy} size="lg" />
+                    </button>
+                    <div className="share-label">Copy Link</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
