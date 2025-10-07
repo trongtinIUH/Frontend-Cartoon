@@ -12,12 +12,6 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("ChatService API Error:", {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      url: error.config?.url
-    });
     return Promise.reject(error);
   }
 );
@@ -28,7 +22,6 @@ export const sendMessageToServer = async (message, currentMovieId, conversationI
     const { data } = await API.post("/api/ai/chat", payload);
     return data;
   } catch (error) {
-    console.error("❌ sendMessageToServer failed:", error);
     if (error.code === 'ECONNREFUSED') {
       throw new Error("Backend server không chạy. Hãy chạy BE trước.");
     } else if (error.response?.status === 500) {
@@ -48,7 +41,6 @@ export const fetchWelcome = async (conversationId) => {
     const { data } = await API.get("/api/ai/welcome", { params: { conversationId } });
     return data;
   } catch (error) {
-    console.error("❌ fetchWelcome failed:", error);
     if (error.code === 'ECONNREFUSED') {
       throw new Error("Backend server không chạy. Hãy chạy BE trước.");
     } else if (error.response?.status === 500) {

@@ -501,61 +501,181 @@ a.movie-suggestion-card { text-decoration: none; color: inherit; }
   background-color: #9ca3af;
 }
 
-/* Promo cards */
+/* Promo cards - Updated for new Backend Promotion model */
 .promo-grid { 
   display: grid; 
   grid-template-columns: 1fr; 
-  gap: 10px; 
-  margin-top: 8px; 
+  gap: 12px; 
+  margin-top: 10px; 
 }
 
 .promo-card {
-  background: #fff; 
-  border: 1px solid #e5e7eb; 
-  border-radius: 10px;
-  padding: 10px; 
-  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); 
+  border: 2px solid #e2e8f0; 
+  border-radius: 12px;
+  padding: 14px; 
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.promo-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b6b, #ffa500, #32cd32);
+}
+
+.promo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.12);
+  border-color: #cbd5e0;
 }
 
 .promo-title { 
   font-weight: 700; 
-  color: #111827; 
-  margin-bottom: 4px; 
+  color: #2d3748; 
+  margin-bottom: 8px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .promo-meta { 
   font-size: 13px; 
-  color: #374151; 
+  color: #4a5568;
+  line-height: 1.4;
+}
+
+.promo-meta > div {
+  margin-bottom: 4px;
+}
+
+.promo-meta > div:last-child {
+  margin-bottom: 0;
 }
 
 .voucher-code-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 6px 0;
 }
 
 .voucher-code {
   background: linear-gradient(135deg, #ff6b6b, #ee5a24);
   color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  border: none;
+  position: relative;
 }
 
 .voucher-code:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(238, 90, 36, 0.3);
+  box-shadow: 0 6px 12px rgba(238, 90, 36, 0.4);
+  background: linear-gradient(135deg, #ee5a24, #d63031);
 }
 
 .voucher-code:active {
   transform: translateY(0);
 }
 
+.voucher-code::after {
+  content: '📋';
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+.promo-type {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.discount-percent {
+  color: #e53e3e;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.max-discount {
+  color: #38a169;
+  font-weight: 600;
+}
+
+.expiry-date {
+  color: #d69e2e;
+  font-weight: 500;
+}
+
+.status {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status.active {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status.inactive {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
 .promo-note { 
-  margin-top: 6px; 
+  margin-top: 10px; 
+  padding: 8px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
   font-size: 12px; 
-  color: #4b5563; 
+  color: #553c9a;
+  border-left: 3px solid #667eea;
+  font-style: italic;
+}
+
+/* Responsive cho promo cards */
+@media (min-width: 600px) {
+  .promo-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .promo-card {
+    padding: 12px;
+  }
+  
+  .promo-title {
+    font-size: 14px;
+  }
+  
+  .promo-meta {
+    font-size: 12px;
+  }
+  
+  .voucher-code {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
 }
