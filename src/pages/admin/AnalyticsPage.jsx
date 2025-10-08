@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef  } from "react";
 import Sidebar from "../../components/Sidebar";
 import RevenueService from "../../services/DataAnalyzerSerivce";
+import DataAnalyzerService from "../../services/DataAnalyzerSerivce";
 import { Bar, Doughnut, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -46,6 +47,20 @@ const AnalyticsPage = () => {
   const [txPage, setTxPage] = useState(1);
   const [txSize, setTxSize] = useState(10);
 
+  // Promotion states (integrated with Revenue)
+  const [promoSummary, setPromoSummary] = useState({
+    totalRedemptions: 0,
+    uniqueUsers: 0,
+    totalDiscountGranted: 0,
+    totalOriginalAmount: 0,
+    totalFinalAmount: 0,
+    firstRedemptionDate: null,
+    lastRedemptionDate: null,
+    topVoucher: null
+  });
+  const [voucherLeaderboard, setVoucherLeaderboard] = useState([]);
+  const [promotionLineStats, setPromotionLineStats] = useState([]);
+
   // Movie states
   const [mvChart, setMvChart] = useState({ labels: [], data: [] });
   const [mvSummary, setMvSummary] = useState({
@@ -79,6 +94,19 @@ const AnalyticsPage = () => {
     RevenueService.getRevenueByRange(startDate, endDate, groupBy).then((r) => setRevChart(r.data));
     RevenueService.getRevenueSummaryByRange(startDate, endDate).then((r) => setRevSummary(r.data));
     RevenueService.getQuickStats().then((r) => setQuickStats(r.data));
+    // Fetch promotion data
+    DataAnalyzerService.getPromotionSummary(startDate, endDate).then((r) => {
+      console.log("Promotion Summary Response:", r.data);
+      setPromoSummary(r.data);
+    }).catch(e => console.error("Error fetching promotion summary:", e));
+    DataAnalyzerService.getVoucherLeaderboard(startDate, endDate, 5).then((r) => {
+      console.log("Voucher Leaderboard Response:", r.data);
+      setVoucherLeaderboard(r.data);
+    }).catch(e => console.error("Error fetching voucher leaderboard:", e));
+    DataAnalyzerService.getPromotionLineStats(startDate, endDate).then((r) => {
+      console.log("Promotion Line Stats Response:", r.data);
+      setPromotionLineStats(r.data);
+    }).catch(e => console.error("Error fetching promotion line stats:", e));
   }, [mode, startDate, endDate, groupBy]);
 
   useEffect(() => {
@@ -651,6 +679,65 @@ const clientExportPDF = async (isRevenue) => {
               </div>
             </div>
 
+            {/* Promotion Cards */}
+            <div className="row g-3 mb-3">
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-secondary text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-users fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">User dùng CTKM</div>
+                      <div className="h4 mb-0">
+                        {promoSummary.uniqueUsers?.toLocaleString("vi-VN") || "0"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-danger text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-ticket-alt fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Lượt dùng voucher</div>
+                      <div className="h4 mb-0">
+                        {promoSummary.totalRedemptions?.toLocaleString("vi-VN") || "0"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-dark text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-percentage fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Tổng giảm giá</div>
+                      <div className="h4 mb-0">
+                        {promoSummary.totalDiscountGranted?.toLocaleString("vi-VN") || "0"}₫
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-info text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-crown fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Voucher hot</div>
+                      <div className="h4 mb-0">
+                        {promoSummary.topVoucher?.voucherCode || "N/A"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Chart + Quick stats */}
             <div className="row g-3 mb-3">
               <div className="col-12 col-xl-8">
@@ -681,6 +768,10 @@ const clientExportPDF = async (isRevenue) => {
                     <div className="d-flex justify-content-between mb-2">
                       <span>Tăng trưởng:</span>
                       {renderGrowth(quickStats.growthPercent)}
+                    </div>
+                    <div className="d-flex justify-content-between mb-2">
+                      <span>Voucher sử dụng:</span>
+                      <strong>{promoSummary.totalRedemptions?.toLocaleString("vi-VN") || "0"}</strong>
                     </div>
                     <hr />
                     <div className="d-flex justify-content-between">
@@ -769,6 +860,85 @@ const clientExportPDF = async (isRevenue) => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Promotion Summary Table */}
+            <div className="row g-3">
+              <div className="col-md-6">
+                <div className="card">
+                  <div className="card-header bg-white">
+                    <h6 className="mb-0">Top Voucher được sử dụng</h6>
+                  </div>
+                  <div className="card-body">
+                    {voucherLeaderboard && voucherLeaderboard.length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Mã Voucher</th>
+                              <th>Loại</th>
+                              <th>Lượt dùng</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {voucherLeaderboard.map((voucher, idx) => (
+                              <tr key={idx}>
+                                <td><code>{voucher.voucherCode}</code></td>
+                                <td>
+                                  <span className="badge bg-warning">
+                                    Voucher
+                                  </span>
+                                </td>
+                                <td>{voucher.uses?.toLocaleString("vi-VN")}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-muted mb-0">Chưa có dữ liệu voucher</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <div className="card">
+                  <div className="card-header bg-white">
+                    <h6 className="mb-0">Thống kê theo dòng CTKM</h6>
+                  </div>
+                  <div className="card-body">
+                    {promotionLineStats && promotionLineStats.length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Dòng CTKM</th>
+                              <th>Loại</th>
+                              <th>Lượt dùng</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {promotionLineStats.map((line, idx) => (
+                              <tr key={idx}>
+                                <td>{line.promotionLineName || "N/A"}</td>
+                                <td>
+                                  <span className={`badge ${line.type === 'VOUCHER' ? 'bg-warning' : 'bg-primary'}`}>
+                                    {line.type === 'VOUCHER' ? 'Voucher' : 'Gói'}
+                                  </span>
+                                </td>
+                                <td>{line.redemptions?.toLocaleString("vi-VN")}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-muted mb-0">Chưa có dữ liệu dòng khuyến mãi</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

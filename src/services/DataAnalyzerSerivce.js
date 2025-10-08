@@ -166,6 +166,37 @@ const RevenueService = {
       responseType: 'blob'
     }),
 
+  // ======= PROMOTIONS ANALYTICS =======
+  // 1) Tổng quan khuyến mãi trong khoảng ngày
+  getPromotionSummary: (startDate, endDate) => {
+    // Đảm bảo có default dates nếu không truyền vào
+    const defaultStartDate = startDate || '2024-01-01';
+    const defaultEndDate = endDate || new Date().toISOString().split('T')[0];
+    return axiosInstance.get(`${API_BASE_URL}/promotions/summary`, { 
+      params: { startDate: defaultStartDate, endDate: defaultEndDate } 
+    });
+  },
+
+  // 2) BXH voucher (top N)
+  getVoucherLeaderboard: (startDate, endDate, limit = 10) => {
+    // Đảm bảo có default dates nếu không truyền vào
+    const defaultStartDate = startDate || '2024-01-01';
+    const defaultEndDate = endDate || new Date().toISOString().split('T')[0];
+    return axiosInstance.get(`${API_BASE_URL}/promotions/vouchers/leaderboard`, { 
+      params: { startDate: defaultStartDate, endDate: defaultEndDate, limit } 
+    });
+  },
+
+  // 3) Stats theo promotion line (có thể lọc theo promotionId)
+  getPromotionLineStats: (startDate, endDate, promotionId = null) => {
+    // Đảm bảo có default dates nếu không truyền vào
+    const defaultStartDate = startDate || '2024-01-01';
+    const defaultEndDate = endDate || new Date().toISOString().split('T')[0];
+    const params = { startDate: defaultStartDate, endDate: defaultEndDate };
+    if (promotionId) params.promotionId = promotionId;
+    return axiosInstance.get(`${API_BASE_URL}/promotions/lines`, { params });
+  },
+
 };
 
 export default RevenueService;
