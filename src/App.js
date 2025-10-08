@@ -6,7 +6,6 @@ import MainPage from './pages/MainPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import ControlPanelPage from './pages/ControlPanelPage';
-import ManageMoviePage from './pages/ManageMoviePage';
 import SearchResultPage from './pages/SearchResultPage';  
 import ProfilePage from './pages/ProfilePage';
 import WatchPage from "./pages/WatchPage";
@@ -34,8 +33,7 @@ import FavoritesPage from './pages/FavoritesPage';
 import PromotionManagementPage from './pages/admin/PromotionManagementPage';
 
 import ProtectedRoute from './components/ProtectedRoute';
-import RevenueManagementPage from './pages/admin/RevenueManagementPage';
-import MovieStatsPage from './pages/admin/MovieStatsPage';
+
 import MemberManagementPage from './pages/admin/MemberManagementPage';
 import AnalyticsPage from './pages/admin/AnalyticsPage';
 import SubscriptionPackageManagementPage from './pages/admin/SubscriptionPackageManagementPage';
@@ -77,7 +75,6 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/main" element={<MainPage />} />
                     <Route path="/movie/:id" element={<MovieDetailPage />} />
                     <Route path="/control-panel" element={<ControlPanelPage />} />
-                    <Route path="/manage-movie" element={<ManageMoviePage />} />
                     <Route path="/tim-kiem/:title" element={<SearchResultPage />} />
                     <Route path="/danh-muc/:kind/:value" element={<BrowseMoviesPage />} />
                     <Route path="/browse/:kind/:value" element={<BrowseMoviesPage />} />
@@ -100,8 +97,6 @@ if (!MyUser && !idToken && protectedRoutes.includes(location.pathname)) {
                     <Route path="/admin-promotion" element={<PromotionManagementPage />} />
                     <Route path="/admin-author" element={<AuthorManagementPage />} />
                     <Route path="/admin-analytics" element={<AnalyticsPage />} />
-                    <Route path="/admin-revenue" element={<RevenueManagementPage />} />
-                    <Route path="/admin-movie-stats" element={<MovieStatsPage />} />
                     <Route path="/admin-member" element={<MemberManagementPage />} />
                     <Route path="/admin-subscription-package" element={<SubscriptionPackageManagementPage />} />
                     <Route path="/admin-price-list" element={<PriceListManagementPage />} />

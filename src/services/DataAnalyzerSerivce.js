@@ -140,15 +140,17 @@ const RevenueService = {
       responseType: 'blob'
     }),
 
-  // Tải Excel theo khoảng ngày + groupBy (có thể truyền thông tin công ty)
-  downloadDashboardExcelRange: (startDate, endDate, groupBy = 'DAY', brand = {}) =>
+  // Tải Excel theo khoảng ngày + groupBy (có thể truyền thông tin công ty + CTKM)
+  downloadDashboardExcelRange: (startDate, endDate, groupBy = 'DAY', brand = {}, includePromotions = false, topVoucherLimit = 10) =>
     axiosInstance.get(`${API_BASE_URL}/export/dashboard-range.xlsx`, {
       params: { 
         startDate, 
         endDate, 
         groupBy, 
         companyName: brand.companyName,
-        companyAddress: brand.companyAddress
+        companyAddress: brand.companyAddress,
+        includePromotions: includePromotions,
+        topVoucherLimit: topVoucherLimit
       },
       responseType: 'blob'
     }),

@@ -275,20 +275,32 @@ const handleExportFE = async (format) => {
 };
 
 // ---------- Export Excel thông minh theo tab hiện tại ----------
-const handleExportBE = async () => {
+const handleExportBE = async (includePromotions = false) => {
   try {
     const isRevenue = mode === "REVENUE";
-    console.log("Export mode:", mode, "isRevenue:", isRevenue); // Debug log
+    console.log("Export mode:", mode, "isRevenue:", isRevenue, "includePromotions:", includePromotions);
     
     if (isRevenue) {
-      // Tab DOANH THU: Xuất báo cáo doanh thu từ backend (đẹp)
+      // Tab DOANH THU: Xuất báo cáo doanh thu từ backend
       const brandInfo = {
         companyName: "CartoonToo — Web xem phim trực tuyến",
         companyAddress: "Nguyễn Văn Bảo/12 P. Hạnh Thông, Phường, Gò Vấp, Hồ Chí Minh"
       };
       
-      const res = await RevenueService.downloadDashboardExcelRange(startDate, endDate, groupBy, brandInfo);
-      saveBlob(res.data, `BaoCao_DoanhThu_${startDate}_${endDate}_${groupBy}.xlsx`);
+      const res = await RevenueService.downloadDashboardExcelRange(
+        startDate, 
+        endDate, 
+        groupBy, 
+        brandInfo, 
+        includePromotions, 
+        20 // topVoucherLimit
+      );
+      
+      const fileName = includePromotions 
+        ? `BaoCao_DoanhThu_CTKM_${startDate}_${endDate}_${groupBy}.xlsx`
+        : `BaoCao_DoanhThu_${startDate}_${endDate}_${groupBy}.xlsx`;
+      
+      saveBlob(res.data, fileName);
     } else {
       // Tab PHIM: Xuất báo cáo thống kê phim từ FE (kế thừa logic cũ)
       console.log("Exporting movies data using FE logic...");
@@ -576,14 +588,28 @@ const clientExportPDF = async (isRevenue) => {
 
             {/* Export actions (right after date range) */}
             <div className="ap-actions d-flex gap-2">
-              <button 
-                className="btn btn-success btn-sm" 
-                onClick={handleExportBE}
-                title={mode === "REVENUE" ? "Xuất báo cáo doanh thu" : "Xuất báo cáo thống kê phim"}
-              >
-                <i className="fas fa-file-excel me-1" /> 
-                Excel ({mode === "REVENUE" ? "Doanh thu" : "Phim"})
-              </button>
+              {/* Show regular Excel button only for Movies tab */}
+              {mode === "MOVIES" && (
+                <button 
+                  className="btn btn-success btn-sm" 
+                  onClick={handleExportBE}
+                  title="Xuất báo cáo thống kê phim"
+                >
+                  <i className="fas fa-file-excel me-1" /> 
+                  Excel
+                </button>
+              )}
+              {/* Show Excel with CTKM button only for Revenue tab */}
+              {mode === "REVENUE" && (
+                <button 
+                  className="btn btn-warning btn-sm" 
+                  onClick={() => handleExportBE(true)}
+                  title="Xuất báo cáo doanh thu kèm CTKM"
+                >
+                  <i className="fas fa-tags me-1" /> 
+                  Excel
+                </button>
+              )}
               <button className="btn btn-outline-danger btn-sm" onClick={() => handleExportFE?.("pdf") }>
                 <i className="fas fa-file-pdf me-1" /> PDF
               </button>
