@@ -135,23 +135,20 @@ const PaymentPage = () => {
 
       // 1) Lấy voucher info trước
       const info = await PromotionDetailService.getVoucherInfo(code);
-      console.log("Voucher info from API:", info);
+      // console.log("Voucher info from API:", info);
 
       // 2) Lấy promotions & lines theo promotionId
       const [promos, lines] = await Promise.all([
-        PromotionService.getAllPromotions(),
+        PromotionService.getAllPromotionsNoPagination(),
         PromotionLineService.getAllPromotionLinesByPromotionId(info.promotionId),
       ]);
       setPromotions(promos);
-      console.log("All promotions:", promos);
-      console.log("All promotion lines for promo:", lines);
+      // console.log("All promotions:", promos);
+      // console.log("All promotion lines for promo:", lines);
 
       // 3) Tìm promotion + line tương ứng
       const promo = promos.find((p) => p.promotionId === info.promotionId);
       const line = lines.find((l) => l.promotionLineId === info.promotionLineId);
-
-      console.log("Found promotion:", promo);
-      console.log("Found promotion line:", line);
 
       // 4) Gộp dữ liệu
       const todayISO = new Date().toISOString().slice(0, 10);
@@ -170,7 +167,6 @@ const PaymentPage = () => {
       };
 
       setVoucherInfo(voucherData);
-      console.log("Final voucher data with status:", voucherData);
       return voucherData;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {

@@ -16,6 +16,15 @@ const PromotionService = {
     }
   },
 
+  getAllPromotionsNoPagination: async () => {
+    try {
+      const response = await axiosInstance.get(API_BASE_URL + '/all');
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  },
+
   getPromotionById: async (id) => {
     try {
       const response = await axiosInstance.get(`${API_BASE_URL}/${id}`);
