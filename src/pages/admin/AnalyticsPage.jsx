@@ -841,14 +841,14 @@ const clientExportPDF = async (isRevenue) => {
                           <td>{tx.packageId}</td>
                           <td
                             className={
-                              tx.status === "PAID" ? "text-success fw-bold" : "text-danger fw-bold"
+                              tx.status === "SUCCESS" ? "text-success fw-bold" : "text-danger fw-bold"
                             }
                           >
                             {tx.finalAmount?.toLocaleString("vi-VN")}₫
                           </td>
                           <td>{new Date(tx.createdAt).toLocaleDateString("vi-VN")}</td>
                           <td>
-                            {tx.status === "PAID" ? (
+                            {tx.status === "SUCCESS" ? (
                               <span className="badge bg-success">Thành công</span>
                             ) : tx.status === "PENDING" ? (
                               <span className="badge bg-warning">Đang xử lý</span>
