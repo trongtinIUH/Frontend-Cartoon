@@ -47,8 +47,6 @@ const UserService = {
             throw error.response ? error.response.data : error;
         }
     }
-
-
 };
 
 

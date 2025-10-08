@@ -53,3 +53,20 @@ export const minEndFromStart = (startIso) => {
   return addDays(startIso, 1);
 };
 
+
+export const fmtDate = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d)) return "—";
+  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(d);
+};
+
+export const fmtDateTime = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d)) return "—";
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(d);
+};

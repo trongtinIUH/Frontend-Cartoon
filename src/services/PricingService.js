@@ -3,14 +3,16 @@ import axiosInstance from "../api/axiosInstance";
 const API_BASE_URL = 'http://localhost:8080/pricing';
 
 const PricingService = {
-    // get all price list
-    getAllPriceList: async () => {
+    // fetch all price lists with pagination and optional keyword filtering
+     getAllPriceList: async (page, size, keyword = "") => {
         try {
-            const response = await axiosInstance.get(`${API_BASE_URL}/all-price-lists`);
-            return response.data;
+            const response = await axiosInstance.get(`${API_BASE_URL}/all-price-lists`, {
+                params: { page: page - 1, size, keyword },
+            });
+            const total = Number(response.headers["x-total-count"] ?? 0);
+            return { items: response.data, total };
         } catch (error) {
-            console.error('Error fetching price list:', error);
-            throw error;
+            throw error.response ? error.response.data : error;
         }
     },
     // create price list

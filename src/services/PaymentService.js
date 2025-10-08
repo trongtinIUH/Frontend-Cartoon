@@ -1,4 +1,3 @@
-import axios from "axios";
 import axiosInstance from "../api/axiosInstance";
 
 const API_BASE_URL = 'http://localhost:8080/payment';
@@ -39,7 +38,39 @@ const PaymentService = {
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
-    }   
+    },
+    // Get all payments (for admin purposes)
+    getAllPayments: async (page, size, keyword = "") => {
+        try {
+            const response = await axiosInstance.get(API_BASE_URL, {
+                params: { page: page - 1, size, keyword },
+            });
+            const total = Number(response.headers["x-total-count"] ?? 0);
+            return { items: response.data, total };
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+    // Get payment by ID
+    getPaymentById: async (paymentId) => {
+        try {
+            const response = await axiosInstance.get(`${API_BASE_URL}/info/${paymentId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
+    // Get payment detail by ID
+    getPaymentDetailById: async (paymentId) => {
+        try {
+            const response = await axiosInstance.get(`${API_BASE_URL}/details/${paymentId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
 };
 
 export default PaymentService;
