@@ -168,3 +168,64 @@
 
 /* Export buttons in toolbar */
 .ap-actions .btn{ border-radius:8px; }
+
+/* ===== Advanced Analytics Styling ===== */
+.text-purple { color: #8b5cf6 !important; }
+
+/* Heatmap styling */
+.table td.bg-danger { background-color: #dc3545 !important; }
+.table td.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
+.table td.bg-info { background-color: #0dcaf0 !important; }
+.table td.bg-light { background-color: #f8f9fa !important; color: #6c757d !important; }
+
+/* Chart containers with better spacing */
+.card-body canvas {
+  max-height: 400px !important;
+}
+
+/* Mini progress bars in tables */
+.mini-progress {
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mini-progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Voucher code styling */
+code.bg-light {
+  background-color: #f1f3f4 !important;
+  color: #1f2937;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+}
+
+/* Status badges with better colors */
+.badge.bg-danger { background-color: #ef4444 !important; }
+.badge.bg-success { background-color: #10b981 !important; }
+.badge.bg-warning { background-color: #f59e0b !important; color: #000 !important; }
+.badge.bg-secondary { background-color: #6b7280 !important; }
+
+/* Card insights footer */
+.card-footer.bg-light {
+  background-color: #f8fafc !important;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Responsive heatmap */
+@media (max-width: 768px) {
+  .table-responsive .table {
+    font-size: 0.75rem;
+  }
+  
+  .table-responsive .table td,
+  .table-responsive .table th {
+    padding: 0.25rem;
+    min-width: 25px;
+  }
+}
