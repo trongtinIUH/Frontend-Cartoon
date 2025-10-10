@@ -41,22 +41,37 @@ const SubscriptionPackageService = {
         }
     },
     //create package
-    createPackage: async (packageData) => {
-        try {
-            const response = await axiosInstance.post(`${API_BASE_URL}`, packageData);
-            return response.data;
-        } catch (error) {
-            throw error.response ? error.response.data : error;
+    createPackage: async (payload, imageFile) => {
+        const fd = new FormData();
+        // Part "data" phải có content-type application/json
+        fd.append(
+            "data",
+            new Blob([JSON.stringify(payload)], { type: "application/json" })
+        );
+        if (imageFile) {
+            fd.append("image", imageFile); // browser sẽ tự set type image/*
         }
+
+        const res = await axiosInstance.post(`${API_BASE_URL}`, fd, {
+            headers: { "Content-Type": "multipart/form-data" }, // có thể bỏ, axios tự set boundary
+        });
+        return res.data;
     },
     //update package
-    updatePackage: async (id, packageData) => {
-        try {
-            const response = await axiosInstance.put(`${API_BASE_URL}/${id}`, packageData);
-            return response.data;
-        } catch (error) {
-            throw error.response ? error.response.data : error;
+    updatePackage: async (packageId, payload, imageFile) => {
+        const fd = new FormData();
+        fd.append(
+            "data",
+            new Blob([JSON.stringify(payload)], { type: "application/json" })
+        );
+        if (imageFile) {
+            fd.append("image", imageFile);
         }
+
+        const res = await axiosInstance.put(`${API_BASE_URL}/${packageId}`, fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+        return res.data;
     },
     //delete package
     deletePackage: async (id) => {
