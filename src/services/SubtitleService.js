@@ -107,6 +107,50 @@ const SubtitleService = {
     }
   },
 
+  // Cập nhật subtitle
+  updateSubtitle: async (seasonId, episodeNumber, lang, subtitleData, file, options = {}) => {
+    try {
+      const formData = new FormData();
+      if (subtitleData.label) formData.append('label', subtitleData.label);
+      formData.append('kind', subtitleData.kind || 'subtitles');
+      formData.append('isDefault', subtitleData.isDefault || false);
+      
+      if (file) {
+        // Clean subtitle content if requested
+        if (options.cleanContent && file.type === 'text/plain') {
+          try {
+            const fileContent = await file.text();
+            const cleanedContent = SubtitleService.cleanSubtitleContent(fileContent);
+            const cleanedBlob = new Blob([cleanedContent], { type: 'text/plain' });
+            const cleanedFile = new File([cleanedBlob], file.name, { type: file.type });
+            formData.append('file', cleanedFile);
+          } catch (cleanError) {
+            console.warn('Failed to clean subtitle content, using original:', cleanError);
+            formData.append('file', file);
+          }
+        } else {
+          formData.append('file', file);
+        }
+      } else if (subtitleData.url) {
+        formData.append('url', subtitleData.url);
+      }
+
+      const response = await axiosInstance.put(
+        `${BASE_URL}/${seasonId}/${episodeNumber}/subtitles/${lang}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error updating subtitle:', error);
+      throw error;
+    }
+  },
+
   // Lấy danh sách subtitles
   getSubtitles: async (seasonId, episodeNumber) => {
     try {

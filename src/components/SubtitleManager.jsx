@@ -11,6 +11,7 @@ const SubtitleManager = ({
   const [subtitles, setSubtitles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingSubtitle, setEditingSubtitle] = useState(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -82,11 +83,11 @@ const SubtitleManager = ({
     }
   };
 
-  // Add subtitle
-  const handleAddSubtitle = async (e) => {
+  // Add or Update subtitle
+  const handleSubmitSubtitle = async (e) => {
     e.preventDefault();
     
-    if (!formData.file) {
+    if (!editingSubtitle && !formData.file) {
       toast.error('Vui lòng chọn file phụ đề');
       return;
     }
@@ -98,32 +99,64 @@ const SubtitleManager = ({
 
     try {
       setLoading(true);
-      await SubtitleService.addSubtitle(seasonId, episodeNumber, formData, formData.file);
       
-      toast.success('Thêm phụ đề thành công!');
+      if (editingSubtitle) {
+        // Update subtitle
+        await SubtitleService.updateSubtitle(
+          seasonId, 
+          episodeNumber, 
+          editingSubtitle.lang, 
+          formData, 
+          formData.file
+        );
+        toast.success('Cập nhật phụ đề thành công!');
+      } else {
+        // Add subtitle
+        await SubtitleService.addSubtitle(seasonId, episodeNumber, formData, formData.file);
+        toast.success('Thêm phụ đề thành công!');
+      }
       
       // Reset form
-      setFormData({
-        lang: 'vi',
-        label: '',
-        kind: 'subtitles',
-        isDefault: false,
-        file: null
-      });
-      
-      // Reset file input
-      const fileInput = document.getElementById('subtitle-file-input');
-      if (fileInput) fileInput.value = '';
-      
-      setShowAddForm(false);
+      resetForm();
       await loadSubtitles();
       
     } catch (error) {
-      console.error('Error adding subtitle:', error);
-      toast.error('Thêm phụ đề thất bại');
+      console.error('Error saving subtitle:', error);
+      toast.error(editingSubtitle ? 'Cập nhật phụ đề thất bại' : 'Thêm phụ đề thất bại');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      lang: 'vi',
+      label: '',
+      kind: 'subtitles',
+      isDefault: false,
+      file: null
+    });
+    
+    // Reset file input
+    const fileInput = document.getElementById('subtitle-file-input');
+    if (fileInput) fileInput.value = '';
+    
+    setShowAddForm(false);
+    setEditingSubtitle(null);
+  };
+
+  // Edit subtitle
+  const handleEditSubtitle = (subtitle) => {
+    setFormData({
+      lang: subtitle.lang,
+      label: subtitle.label || '',
+      kind: subtitle.kind || 'subtitles',
+      isDefault: subtitle.isDefault || false,
+      file: null
+    });
+    setEditingSubtitle(subtitle);
+    setShowAddForm(true);
   };
 
   // Delete subtitle
@@ -160,19 +193,34 @@ const SubtitleManager = ({
         </h6>
         <button 
           className="btn btn-sm btn-primary"
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            if (showAddForm && !editingSubtitle) {
+              resetForm();
+            } else {
+              setEditingSubtitle(null);
+              setShowAddForm(!showAddForm);
+            }
+          }}
           disabled={loading}
         >
           <i className="fas fa-plus me-1"></i>
-          Thêm phụ đề
+          {showAddForm && editingSubtitle ? 'Thêm mới' : 'Thêm phụ đề'}
         </button>
       </div>
 
-      {/* Add Form */}
+      {/* Add/Edit Form */}
       {showAddForm && (
         <div className="card mb-3">
+          <div className="card-header">
+            <h6 className="mb-0">
+              {editingSubtitle ? 
+                `Chỉnh sửa phụ đề: ${editingSubtitle.label} (${editingSubtitle.lang.toUpperCase()})` : 
+                'Thêm phụ đề mới'
+              }
+            </h6>
+          </div>
           <div className="card-body">
-            <form onSubmit={handleAddSubtitle}>
+            <form onSubmit={handleSubmitSubtitle}>
               <div className="row">
                 <div className="col-md-4">
                   <label className="form-label">Ngôn ngữ *</label>
@@ -180,6 +228,7 @@ const SubtitleManager = ({
                     className="form-select"
                     value={formData.lang}
                     onChange={(e) => handleInputChange('lang', e.target.value)}
+                    disabled={!!editingSubtitle}
                     required
                   >
                     {languageOptions.map(lang => (
@@ -216,16 +265,23 @@ const SubtitleManager = ({
 
               <div className="row mt-3">
                 <div className="col-md-8">
-                  <label className="form-label">File phụ đề *</label>
+                  <label className="form-label">
+                    File phụ đề {editingSubtitle ? '(tùy chọn)' : '*'}
+                  </label>
                   <input 
                     id="subtitle-file-input"
                     type="file"
                     className="form-control"
                     accept=".vtt,.srt"
                     onChange={handleFileChange}
-                    required
+                    required={!editingSubtitle}
                   />
-                  <small className="text-muted">Hỗ trợ: .vtt, .srt (tối đa 5MB)</small>
+                  <small className="text-muted">
+                    {editingSubtitle ? 
+                      'Để trống nếu chỉ muốn cập nhật thông tin. Hỗ trợ: .vtt, .srt (tối đa 5MB)' :
+                      'Hỗ trợ: .vtt, .srt (tối đa 5MB)'
+                    }
+                  </small>
                 </div>
 
                 <div className="col-md-4">
@@ -253,12 +309,12 @@ const SubtitleManager = ({
                   {loading ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-1"></span>
-                      Đang thêm...
+                      {editingSubtitle ? 'Đang cập nhật...' : 'Đang thêm...'}
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-save me-1"></i>
-                      Thêm phụ đề
+                      <i className={`fas ${editingSubtitle ? 'fa-edit' : 'fa-plus'} me-1`}></i>
+                      {editingSubtitle ? 'Cập nhật' : 'Thêm phụ đề'}
                     </>
                   )}
                 </button>
@@ -266,7 +322,7 @@ const SubtitleManager = ({
                 <button 
                   type="button" 
                   className="btn btn-secondary btn-sm"
-                  onClick={() => setShowAddForm(false)}
+                  onClick={resetForm}
                 >
                   Hủy
                 </button>
@@ -319,6 +375,14 @@ const SubtitleManager = ({
                 </div>
 
                 <div className="d-flex gap-2">
+                  <button 
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => handleEditSubtitle(subtitle)}
+                    disabled={loading}
+                    title="Chỉnh sửa phụ đề"
+                  >
+                    <i className="fas fa-edit"></i>
+                  </button>
                   <button 
                     className="btn btn-sm btn-outline-danger"
                     onClick={() => handleDeleteSubtitle(subtitle.lang)}

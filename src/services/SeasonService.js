@@ -28,6 +28,37 @@ const SeasonService = {
     return res.data;
   },
 
+  // Cập nhật season
+  updateSeason: async (movieId, seasonNumber, { title, description, releaseYear }) => {
+    const params = new URLSearchParams();
+    if (title) params.append("title", title);
+    if (description) params.append("description", description);
+    if (releaseYear) params.append("releaseYear", releaseYear);
+    try {
+      // Use POST with update in path to distinguish from create
+      const postUrl = `${API_BASE_URL}/update/${movieId}/${seasonNumber}?${params.toString()}`;
+      const res = await axios.post(postUrl);
+      return res.data;
+    } catch (error) {
+
+      
+      // Fallback: Try the original PUT one more time
+      if (error.response?.status === 404) {
+
+        try {
+          const putUrl = `${API_BASE_URL}/movie/${movieId}/number/${seasonNumber}?${params.toString()}`;
+          const res = await axios.put(putUrl);
+          return res.data;
+        } catch (putError) {
+
+          throw putError;
+        }
+      }
+      
+      throw error;
+    }
+  },
+  // Xoá season
   deleteSeason: async (movieId, seasonNumber) => {
     const res = await axios.delete(`${API_BASE_URL}/movie/${movieId}/number/${seasonNumber}`);
     return res.data;

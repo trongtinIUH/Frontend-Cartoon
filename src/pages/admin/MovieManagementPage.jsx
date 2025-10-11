@@ -13,8 +13,7 @@ import "../../css/admin/admin-movie.css";
 // ✅ modal rời (đặt ở src/models)
 const ModelAddMovie = React.lazy(() => import("../../models/ModelAddMovie"));
 const ModelUpdateMovie = React.lazy(() => import("../../models/ModelUpdateMovie"));
-const ModelAddNewEpisode = React.lazy(() => import("../../models/ModelAddNewEpisode"));
-const ModelManageSeason = React.lazy(() => import("../../models/ModelManageSeason"));
+const ModelManageEpisodes = React.lazy(() => import("../../models/ModelManageEpisodes"));
 
 
 const defaultFilters = { status: "", movieType: "", year: "", genre: "", issueStatus: "" };
@@ -41,8 +40,7 @@ export default function MovieManagementPage() {
   // Modal states
   const [openAdd, setOpenAdd] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [openEpisodeFor, setOpenEpisodeFor] = useState(null);
-  const [openSeasonFor, setOpenSeasonFor] = useState(null);
+  const [openEpisodesFor, setOpenEpisodesFor] = useState(null);
   const [issueReportsFor, setIssueReportsFor] = useState(null);
 
 
@@ -523,13 +521,9 @@ const resetAll = useCallback((reload = false) => {
                                   onClick={()=>setEditTarget(m)}>
                             <FaEdit className="me-1"/> Sửa
                           </button>
-                          <button className="btn btn-sm btn-outline-secondary"
-                                  onClick={()=>setOpenSeasonFor(m)}
-                                  title="Quản lý phần phim">
-                            <FaFilm className="me-1"/> Phần
-                          </button>
-                          <button className="btn btn-sm btn-outline-dark"
-                                  onClick={()=>setOpenEpisodeFor(m)}>
+                          <button className="btn btn-sm btn-outline-success"
+                                  onClick={()=>setOpenEpisodesFor(m)}
+                                  title="Quản lý tập phim (bao gồm phần)">
                             <FaListUl className="me-1"/> Tập
                           </button>
                           <IssueReportButton
@@ -572,16 +566,16 @@ const resetAll = useCallback((reload = false) => {
               onSuccess={()=>{ setEditTarget(null); load(); }}
             />
           )}
-          {openSeasonFor && (
-            <ModelManageSeason
+          {openEpisodesFor && (
+            <ModelManageEpisodes
               isOpen={true}
-              movieId={openSeasonFor.movieId || openSeasonFor.id}
-              movieTitle={openSeasonFor.title}
-              movieType={openSeasonFor.movieType}
+              movieId={openEpisodesFor.movieId || openEpisodesFor.id}
+              movieTitle={openEpisodesFor.title}
+              movieType={openEpisodesFor.movieType}
               onClose={()=>{
-                setOpenSeasonFor(null);
+                setOpenEpisodesFor(null);
                 // Refresh season count cho phim này
-                const movieId = openSeasonFor.movieId || openSeasonFor.id;
+                const movieId = openEpisodesFor.movieId || openEpisodesFor.id;
                 SeasonService.getSeasonsByMovie(movieId)
                   .then(seasons => {
                     setSeasonCounts(prev => ({
@@ -591,13 +585,6 @@ const resetAll = useCallback((reload = false) => {
                   })
                   .catch(err => console.error('Error refreshing season count:', err));
               }}
-            />
-          )}
-          {openEpisodeFor && (
-            <ModelAddNewEpisode
-              movieId={openEpisodeFor.movieId || openEpisodeFor.id}
-              onClose={()=>setOpenEpisodeFor(null)}
-              onSuccess={()=> setOpenEpisodeFor(null)}
             />
           )}
           {issueReportsFor && (
