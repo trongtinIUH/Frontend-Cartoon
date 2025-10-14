@@ -16,6 +16,8 @@ const PaymentManagementPage = () => {
     const loadPayments = async () => {
         try {
             const data = await PaymentService.getAllPayments(page, size, keyword);
+            // sap xep giam dan theo createdAt
+            data.items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             setPayments(data.items);
             setTotal(data.total);
         } catch (err) {

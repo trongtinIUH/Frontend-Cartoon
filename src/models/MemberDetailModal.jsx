@@ -112,7 +112,7 @@ const MemberDetailModal = ({ open, onClose, memberId }) => {
                                             ) : (
                                                 <tr>
                                                     <td colSpan="5" className="text-center">
-                                                        Bạn chưa mua gói đăng ký nào.
+                                                        Chưa mua gói đăng ký nào.
                                                     </td>
                                                 </tr>
                                             )}

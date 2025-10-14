@@ -153,7 +153,7 @@ const PaymentDetailModal = ({ open, onClose, paymentId }) => {
                           <td>{detail?.promotionId || "—"}</td>
                           <td>{detail?.voucherCode || "—"}</td>
                           <td>{fmtVND(detail?.originalAmount)}</td>
-                          <td>{fmtVND(detail?.discountAmount)}</td>
+                          <td>{fmtVND(detail?.originalAmount - detail?.finalAmount)}</td>
                           <td className="fw-bold">{fmtVND(detail?.finalAmount ?? payment?.finalAmount)}</td>
                         </tr>
                       </tbody>
