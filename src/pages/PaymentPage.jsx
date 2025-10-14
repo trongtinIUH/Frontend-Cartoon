@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import SubscriptionPackageService from "../services/SubscriptionPackageService"; // nhớ chỉnh lại path import
+import { useEffect, useState, useMemo, useCallback } from "react";
+import SubscriptionPackageService from "../services/SubscriptionPackageService";
 import { useAuth } from "../context/AuthContext";
 import PaymentQRCodeModal from "../models/PaymentQRCodeModal";
 import PaymentService from "../services/PaymentService";
@@ -26,6 +26,8 @@ const PaymentPage = () => {
   const [voucherInfo, setVoucherInfo] = useState(null);
 
   const [promotions, setPromotions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [applyingVoucher, setApplyingVoucher] = useState(false);
 
   useEffect(() => {
     if (!MyUser?.my_user) {
@@ -45,14 +47,34 @@ const PaymentPage = () => {
 
   useEffect(() => {
     const fetchSameVipPackages = async () => {
+      if (!selectedPackage) return;
+      
+      // Check cache
+      const cacheKey = `payment_packages_${selectedPackage.applicablePackageType}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      const cacheTime = sessionStorage.getItem(`${cacheKey}_time`);
+      
+      // Cache for 10 minutes
+      if (cachedData && cacheTime) {
+        const age = Date.now() - parseInt(cacheTime);
+        if (age < 10 * 60 * 1000) {
+          const cached = JSON.parse(cachedData);
+          setPackagesByVip(cached);
+          setSelectedDurationPackage(selectedPackage);
+          return;
+        }
+      }
+      
       try {
+        setLoading(true);
         const data = await SubscriptionPackageService.getAllPackages();
+        
         const normalized = data.map(p => ({
           ...p,
           discountedAmount:
             p?.discountedAmount != null && p.discountedAmount < p.amount
               ? p.discountedAmount
-              : null, // nếu = amount thì set null
+              : null,
         }));
 
         const filtered = normalized
@@ -61,18 +83,37 @@ const PaymentPage = () => {
 
         setPackagesByVip(filtered);
         setSelectedDurationPackage(selectedPackage);
+        
+        // Save cache
+        sessionStorage.setItem(cacheKey, JSON.stringify(filtered));
+        sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
       } catch (error) {
         console.error("Lỗi khi lấy gói theo VIP:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (selectedPackage) {
-      fetchSameVipPackages();
-    }
+    fetchSameVipPackages();
   }, [selectedPackage]);
 
   if (!selectedPackage) {
     return <div className="text-white text-center mt-5">Không có gói nào được chọn.</div>;
+  }
+
+  if (loading) {
+    return (
+      <div className="container-fluid bg-dark text-white min-vh-100 py-5">
+        <div className="d-flex bg-dark justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+          <div className="text-center">
+            <div className="spinner-border text-primary mb-3" style={{ width: '3rem', height: '3rem' }}>
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p>Đang tải thông tin thanh toán...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const handleCreatePayment = async () => {
@@ -179,6 +220,7 @@ const PaymentPage = () => {
       return null;
     }
   };
+  // Memoize expensive calculations
   const getEffectivePrice = (pkg) => pkg?.discountedAmount ?? pkg?.amount ?? 0;
 
   const handleApplyVoucher = async () => {
@@ -188,51 +230,52 @@ const PaymentPage = () => {
     }
     if (!selectedDurationPackage) return;
 
-    const info = await fetchVoucherInfo();
-    if (!info) return;
-
-    // 1) Promotion ACTIVE
-    if (info?.promoStatus !== "ACTIVE") {
-      toast.error("Mã giảm giá không còn hiệu lực.");
-      return;
-    }
-
-    // 2) Line phải là VOUCHER + ACTIVE + trong thời gian
-    if (info?.promotionLineType !== "VOUCHER") {
-      toast.error("Mã giảm giá không thuộc promotion line loại VOUCHER.");
-      return;
-    }
-    if (info?.promotionLineStatus !== "ACTIVE") {
-      toast.error("Mã giảm giá không còn hiệu lực.");
-      return;
-    }
-    if (
-      (info?.promotionLineStartDate || info?.promotionLineEndDate) &&
-      !isWithinPeriod(new Date().toISOString().slice(0, 10), info?.promotionLineStartDate, info?.promotionLineEndDate)
-    ) {
-      toast.error("Promotion line không còn hiệu lực theo thời gian.");
-      return;
-    }
-
-    // 3) Min order theo giá đang hiển thị
-    const effectivePrice = getEffectivePrice(selectedDurationPackage);
-    if ((info?.minOrderAmount ?? 0) > effectivePrice) {
-      toast.error("Mã giảm giá không đủ điều kiện giá trị đơn hàng.");
-      return;
-    }
-
-    // 4) Quota (nếu BE có trả)
-    if (
-      typeof info?.usedCount === "number" &&
-      typeof info?.maxUsage === "number" &&
-      info.usedCount >= info.maxUsage
-    ) {
-      toast.error("Mã giảm giá đã hết lượt sử dụng.");
-      return;
-    }
-
-    // 5) Gọi BE áp dụng (BE vẫn là nơi kiểm tra cuối cùng)
     try {
+      setApplyingVoucher(true);
+      const info = await fetchVoucherInfo();
+      if (!info) return;
+
+      // 1) Promotion ACTIVE
+      if (info?.promoStatus !== "ACTIVE") {
+        toast.error("Mã giảm giá không còn hiệu lực.");
+        return;
+      }
+
+      // 2) Line phải là VOUCHER + ACTIVE + trong thời gian
+      if (info?.promotionLineType !== "VOUCHER") {
+        toast.error("Mã giảm giá không thuộc promotion line loại VOUCHER.");
+        return;
+      }
+      if (info?.promotionLineStatus !== "ACTIVE") {
+        toast.error("Mã giảm giá không còn hiệu lực.");
+        return;
+      }
+      if (
+        (info?.promotionLineStartDate || info?.promotionLineEndDate) &&
+        !isWithinPeriod(new Date().toISOString().slice(0, 10), info?.promotionLineStartDate, info?.promotionLineEndDate)
+      ) {
+        toast.error("Promotion line không còn hiệu lực theo thời gian.");
+        return;
+      }
+
+      // 3) Min order theo giá đang hiển thị
+      const effectivePrice = getEffectivePrice(selectedDurationPackage);
+      if ((info?.minOrderAmount ?? 0) > effectivePrice) {
+        toast.error("Mã giảm giá không đủ điều kiện giá trị đơn hàng.");
+        return;
+      }
+
+      // 4) Quota (nếu BE có trả)
+      if (
+        typeof info?.usedCount === "number" &&
+        typeof info?.maxUsage === "number" &&
+        info.usedCount >= info.maxUsage
+      ) {
+        toast.error("Mã giảm giá đã hết lượt sử dụng.");
+        return;
+      }
+
+      // 5) Gọi BE áp dụng (BE vẫn là nơi kiểm tra cuối cùng)
       const result = await PromotionDetailService.applyVoucherCode({
         voucherCode: voucherCode.trim().toUpperCase(),
         userId: MyUser.my_user.userId,
@@ -244,6 +287,8 @@ const PaymentPage = () => {
     } catch (error) {
       console.error(error);
       toast.error("Lỗi khi áp dụng mã giảm giá.");
+    } finally {
+      setApplyingVoucher(false);
     }
   };
 
@@ -370,8 +415,16 @@ const PaymentPage = () => {
                         type="button"
                         className="btn btn-secondary"
                         onClick={handleApplyVoucher}
+                        disabled={applyingVoucher || loading}
                       >
-                        Áp dụng
+                        {applyingVoucher ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                            Đang xử lý...
+                          </>
+                        ) : (
+                          'Áp dụng'
+                        )}
                       </button>
                     </div>
                   </div>

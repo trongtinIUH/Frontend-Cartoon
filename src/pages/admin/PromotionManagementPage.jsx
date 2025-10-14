@@ -28,6 +28,7 @@ const PromotionManagementPage = () => {
   const [size] = useState(10);
   const [total, setTotal] = useState(0);
   const [keyword, setKeyword] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   // FETCH theo page + keyword từ BE
   useEffect(() => {
@@ -41,7 +42,7 @@ const PromotionManagementPage = () => {
       }
     };
     fetchPromotions();
-  }, [page, size, keyword]);
+  }, [page, size, keyword, reloadKey]);
 
   const totalPages = Math.ceil(total / size);
 
@@ -113,6 +114,21 @@ const PromotionManagementPage = () => {
     setDetailTitleSuffix(line?.name || line?.promotionLineName || line?.promotionLineId || "");
     setDetailOpen(true);
   };
+
+  const refreshLines = async (promotionId) => {
+    if (!promotionId) return;
+    setLoadingLines(s => ({ ...s, [promotionId]: true }));
+    try {
+      const lines = await PromotionLineService.getAllPromotionLinesByPromotionId(promotionId);
+      setLinesByPromotion(s => ({ ...s, [promotionId]: Array.isArray(lines) ? lines : [] }));
+    } catch (e) {
+      console.error("Reload lines failed:", e);
+      setLinesByPromotion(s => ({ ...s, [promotionId]: [] }));
+    } finally {
+      setLoadingLines(s => ({ ...s, [promotionId]: false }));
+    }
+  };
+
 
   return (
     <div className="d-flex bg-white min-vh-100">
@@ -255,19 +271,18 @@ const PromotionManagementPage = () => {
                                           <td>{fmtDate(line.endDate)}</td>
                                           <td>
                                             <span
-                                              className={`badge ${
-                                                line.status === 'ACTIVE'
+                                              className={`badge ${line.status === 'ACTIVE'
                                                   ? 'bg-success'
                                                   : line.status === 'EXPIRED'
-                                                  ? 'bg-danger'
-                                                  : 'bg-secondary'
-                                              }`}
+                                                    ? 'bg-danger'
+                                                    : 'bg-secondary'
+                                                }`}
                                             >
                                               {line.status === 'ACTIVE'
                                                 ? 'Hoạt động'
                                                 : line.status === 'EXPIRED'
-                                                ? 'Hết hạn'
-                                                : 'Không hoạt động'}
+                                                  ? 'Hết hạn'
+                                                  : 'Không hoạt động'}
                                             </span>
                                           </td>
                                           <td>
@@ -353,9 +368,9 @@ const PromotionManagementPage = () => {
           open={createPromotionOpen}
           onClose={() => setCreatePromotionOpen(false)}
           onCreated={() => {
-            // refetch list sau khi tạo/sửa
             setPage(1);
             setKeyword("");
+            setReloadKey(k => k + 1);
           }}
           existingIds={promotions.map((p) => p.promotionId)}
           initialData={editingPromotion}

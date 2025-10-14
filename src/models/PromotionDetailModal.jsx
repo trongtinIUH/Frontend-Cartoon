@@ -222,7 +222,12 @@ const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode,
       setPicking(false);
       await loadTabData();
     } catch (e) {
-      toast.error(e?.response?.data || "Tạo voucher thất bại!");
+      if (e?.response?.status === 409) {
+        toast.error("Mã Voucher đã tồn tại");
+      } else {
+        toast.error("Tạo voucher thất bại!");
+      }
+
     } finally {
       setSavingVoucher(false);
     }
@@ -320,13 +325,13 @@ const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode,
   // === Header: Promotion & Line info
   const promoStatusBadge =
     promotion?.status?.toUpperCase() === "ACTIVE" ? <Badge text="ACTIVE" kind="ok" /> :
-    promotion?.status?.toUpperCase() === "UPCOMING" ? <Badge text="UPCOMING" kind="warn" /> :
-    <Badge text={promotion?.status || "-"} kind="muted" />;
+      promotion?.status?.toUpperCase() === "UPCOMING" ? <Badge text="UPCOMING" kind="warn" /> :
+        <Badge text={promotion?.status || "-"} kind="muted" />;
 
   const lineStatusBadge =
     line?.status?.toUpperCase() === "ACTIVE" ? <Badge text="ACTIVE" kind="ok" /> :
-    line?.status?.toUpperCase() === "UPCOMING" ? <Badge text="UPCOMING" kind="warn" /> :
-    <Badge text={line?.status || "-"} kind="muted" />;
+      line?.status?.toUpperCase() === "UPCOMING" ? <Badge text="UPCOMING" kind="warn" /> :
+        <Badge text={line?.status || "-"} kind="muted" />;
 
   const lineTypeBadge =
     <Badge text={(line?.promotionLineType || "").toUpperCase() || "-"} kind="info" />;
@@ -691,7 +696,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode,
                     )}
                   </tbody>
                 </table>
-                
+
                 <div className="d-flex justify-content-between align-items-center">
                   {!picking ? (
                     <button className="btn btn-secondary" onClick={startPick} disabled={!canCreatePackage || line?.status === "EXPIRED" || availableOptions.length === 0}>
