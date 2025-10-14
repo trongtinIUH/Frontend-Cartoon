@@ -77,7 +77,7 @@ const Sidebar = () => {
           <nav aria-label="Admin navigation">
             <ul className="nav flex-column gap-1">
 
-              <li className="nav-item">
+              {/* <li className="nav-item">
                 <NavLink
                   to="/admin-dashboard"
                   className={({ isActive }) =>
@@ -86,7 +86,7 @@ const Sidebar = () => {
                 >
                   <i className="fas fa-gauge me-2" /> <span>Dashboard</span>
                 </NavLink>
-              </li>
+              </li> */}
 
               <li className="nav-item">
                 <NavLink
