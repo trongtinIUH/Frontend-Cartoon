@@ -1488,7 +1488,11 @@ const markAdSeen = useCallback(() => {
       return el;
     }
     
-    handleClick() { 
+    handleClick(e) { 
+      // Ngăn sự kiện lan truyền để tránh trigger handleClickOutside
+      if (e) {
+        e.stopPropagation();
+      }
       setShowSettingsMenu(prev => !prev);
     }
   }
@@ -1572,22 +1576,56 @@ const markAdSeen = useCallback(() => {
     };
 
     const handleClickOutside = (e) => {
-      if (showSettingsMenu && !e.target.closest('.settings-menu') && !e.target.closest('.vjs-settings-button') && !e.target.closest('.video-settings-container')) {
+      // Chỉ close menu khi click RA NGOÀI và menu đang mở
+      if (!showSettingsMenu) return;
+      
+      // Kiểm tra xem click có nằm trong menu hay nút settings không
+      const clickedInsideMenu = e.target.closest('.settings-menu') || 
+                               e.target.closest('.video-settings-container');
+      const clickedSettingsButton = e.target.closest('.vjs-settings-button');
+      
+      // Chỉ close khi click ra ngoài (không phải menu và không phải nút)
+      if (!clickedInsideMenu && !clickedSettingsButton) {
         setShowSettingsMenu(false);
         setCurrentSettingsView('main');
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('click', handleClickOutside);
+    // Dùng 'mousedown' thay vì 'click' để tránh conflict
+    document.addEventListener('mousedown', handleClickOutside);
     
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [playerRef.current, showRatingModal, showUpgradeModal, showSettingsMenu]);
   
+  // ✅ FIX: Giữ controls hiển thị khi menu settings đang mở
+  useEffect(() => {
+    const p = playerRef.current;
+    if (!p) return;
 
+    if (showSettingsMenu) {
+      // Khi menu mở: thêm class để giữ controls luôn hiển thị
+      p.addClass('vjs-user-active');
+      p.addClass('vjs-has-started');
+      
+      // Ngăn Video.js tự động ẩn controls
+      const keepControlsVisible = () => {
+        p.addClass('vjs-user-active');
+      };
+      
+      // Chạy interval để đảm bảo controls không bị ẩn
+      const intervalId = setInterval(keepControlsVisible, 100);
+      
+      return () => {
+        clearInterval(intervalId);
+        // Khi đóng menu: cho phép Video.js hoạt động bình thường
+        p.removeClass('vjs-user-active');
+      };
+    }
+  }, [showSettingsMenu]);
 
   if (dataLoading) return <div className="watch-loading">Đang tải...</div>;
   if (!currentEp) return <div className="watch-empty">Không tìm thấy tập phim.</div>;
