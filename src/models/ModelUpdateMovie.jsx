@@ -29,18 +29,24 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
 const [errors, setErrors] = useState({});
 
 // ==== Regex khớp BE ====
-const RE_TITLE    = /^[\p{L}\p{N}\s]{1,200}$/u;  // chữ có dấu, số, khoảng trắng
+const RE_TITLE    = /^[\p{L}\p{N}\s\-:,.!?()'"]+$/u;  // chữ có dấu, số, khoảng trắng, dấu câu
 const RE_DURATION = /^\d{1,4}(?:\s*(?:p|phút|phut)(?:\s*\/\s*tập)?)?\s*$/i;   // "120p" hoặc "120 phút"
 
 function validateMovie(values, trailerInputType, initialStatus) {
   const e = {};
 
   if (!values.title?.trim()) e.title = "Vui lòng nhập tiêu đề.";
+  else if (values.title.trim().length > 200)
+    e.title = "Tiêu đề tối đa 200 ký tự.";
   else if (!RE_TITLE.test(values.title.trim()))
-    e.title = "Chỉ gồm chữ (có dấu), số và khoảng trắng, tối đa 200 ký tự.";
+    e.title = "Tiêu đề chứa ký tự không hợp lệ.";
 
-  if (values.originalTitle?.trim() && !RE_TITLE.test(values.originalTitle.trim()))
-    e.originalTitle = "Chỉ gồm chữ/số/khoảng trắng, tối đa 200 ký tự.";
+  if (values.originalTitle?.trim()) {
+    if (values.originalTitle.trim().length > 200)
+      e.originalTitle = "Tên gốc tối đa 200 ký tự.";
+    else if (!RE_TITLE.test(values.originalTitle.trim()))
+      e.originalTitle = "Tên gốc chứa ký tự không hợp lệ.";
+  }
 
   if (values.releaseYear) {
     const y = Number(values.releaseYear);
