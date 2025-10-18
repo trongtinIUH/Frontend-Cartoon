@@ -2,7 +2,7 @@ import axiosInstance from "../api/axiosInstance";
 
 const API_BASE_URL = 'http://localhost:8080/data-analyzer';
 
-const RevenueService = {
+const DataAnalyzerService = {
   // ======= REVENUE ANALYTICS =======
   // Lấy doanh thu theo ngày của 1 tháng
   getRevenueByDay: (year, month) => {
@@ -157,7 +157,7 @@ const RevenueService = {
 
   // Tải Excel báo cáo phim từ backend endpoint /export/movies.xlsx
   downloadMoviesExcelRange: (startDate, endDate, groupBy = 'DAY', brand = {}) =>
-    axiosInstance.get('/export/export/movies.xlsx', {
+    axiosInstance.get(`${API_BASE_URL}/export/movies.xlsx`, {
       params: { 
         startDate, 
         endDate, 
@@ -199,6 +199,14 @@ const RevenueService = {
     return axiosInstance.get(`${API_BASE_URL}/promotions/lines`, { params });
   },
 
+  // ======= CUSTOMERS ANALYTICS =======
+  // Doanh số khách hàng theo khoảng ngày
+  getCustomerSales: (startDate, endDate) => {
+    return axiosInstance.get(`${API_BASE_URL}/customers/sales`, {
+      params: { startDate, endDate }
+    });
+  },
+
 };
 
-export default RevenueService;
+export default DataAnalyzerService;

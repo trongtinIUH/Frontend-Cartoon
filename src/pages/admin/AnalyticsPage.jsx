@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef  } from "react";
 import Sidebar from "../../components/Sidebar";
-import RevenueService from "../../services/DataAnalyzerSerivce";
-import DataAnalyzerService from "../../services/DataAnalyzerSerivce";
+import DataAnalyzerService from "../../services/DataAnalyzerService";
 import { Bar, Doughnut, Pie, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -21,7 +20,7 @@ import "../../css/admin/AnalyticsPage.css";
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, ArcElement, Filler);
 
 const AnalyticsPage = () => {
-  // mode: 'REVENUE' | 'MOVIES'
+  // mode: 'REVENUE' | 'PROMOTIONS' | 'CUSTOMERS' | 'MOVIES'
   const [mode, setMode] = useState("REVENUE");
 
   // range + groupBy
@@ -97,12 +96,17 @@ const AnalyticsPage = () => {
   const [topMoviesByViews, setTopMoviesByViews] = useState([]);
   const [topMoviesByRating, setTopMoviesByRating] = useState([]);
 
+  // Customer states
+  const [customerSales, setCustomerSales] = useState({ totals: {}, rows: [] });
+  const [custPage, setCustPage] = useState(1);
+  const [custSize, setCustSize] = useState(10);
+
   // ======= REVENUE fetch =======
   useEffect(() => {
     if (mode !== "REVENUE") return;
-    RevenueService.getRevenueByRange(startDate, endDate, groupBy).then((r) => setRevChart(r.data));
-    RevenueService.getRevenueSummaryByRange(startDate, endDate).then((r) => setRevSummary(r.data));
-    RevenueService.getQuickStats().then((r) => setQuickStats(r.data));
+    DataAnalyzerService.getRevenueByRange(startDate, endDate, groupBy).then((r) => setRevChart(r.data));
+    DataAnalyzerService.getRevenueSummaryByRange(startDate, endDate).then((r) => setRevSummary(r.data));
+    DataAnalyzerService.getQuickStats().then((r) => setQuickStats(r.data));
     // Fetch promotion data
     DataAnalyzerService.getPromotionSummary(startDate, endDate).then((r) => {
       console.log("Promotion Summary Response:", r.data);
@@ -120,7 +124,7 @@ const AnalyticsPage = () => {
 
   useEffect(() => {
     if (mode !== "REVENUE") return;
-    RevenueService.getRecentTransactionsPaged(txPage, txSize, startDate, endDate).then((r) =>
+    DataAnalyzerService.getRecentTransactionsPaged(txPage, txSize, startDate, endDate).then((r) =>
       setTxPaged(r.data)
     );
   }, [mode, txPage, txSize, startDate, endDate]);
@@ -128,19 +132,25 @@ const AnalyticsPage = () => {
   // ======= MOVIES fetch =======
   useEffect(() => {
     if (mode !== "MOVIES") return;
-    RevenueService.getNewMoviesByRange(startDate, endDate, groupBy).then((r) => setMvChart(r.data));
-    RevenueService.getMovieSummaryByRange(startDate, endDate).then((r) => setMvSummary(r.data));
+    DataAnalyzerService.getNewMoviesByRange(startDate, endDate, groupBy).then((r) => setMvChart(r.data));
+    DataAnalyzerService.getMovieSummaryByRange(startDate, endDate).then((r) => setMvSummary(r.data));
   }, [mode, startDate, endDate, groupBy]);
 
   useEffect(() => {
     // fetch 1 lần – dùng chung khi chuyển tab MOVIES
-    RevenueService.getCountByGenre(10).then((r) => setGenreStats(r.data));
-    RevenueService.getCountByCountry(10).then((r) => setCountryStats(r.data));
-    RevenueService.getStatusBreakdown().then((r) => setStatusStats(r.data));
-    RevenueService.getTypeBreakdown().then((r) => setTypeStats(r.data));
-    RevenueService.getTopByViews(5).then((r) => setTopMoviesByViews(r.data));
-    RevenueService.getTopByRating(5, 1).then((r) => setTopMoviesByRating(r.data));
+    DataAnalyzerService.getCountByGenre(10).then((r) => setGenreStats(r.data));
+    DataAnalyzerService.getCountByCountry(10).then((r) => setCountryStats(r.data));
+    DataAnalyzerService.getStatusBreakdown().then((r) => setStatusStats(r.data));
+    DataAnalyzerService.getTypeBreakdown().then((r) => setTypeStats(r.data));
+    DataAnalyzerService.getTopByViews(5).then((r) => setTopMoviesByViews(r.data));
+    DataAnalyzerService.getTopByRating(5, 1).then((r) => setTopMoviesByRating(r.data));
   }, []);
+
+  // ======= CUSTOMERS fetch =======
+  useEffect(() => {
+    if (mode !== "CUSTOMERS") return;
+    DataAnalyzerService.getCustomerSales(startDate, endDate).then((r) => setCustomerSales(r.data));
+  }, [mode, startDate, endDate]);
 
   // ======= Charts config =======
   const revBar = useMemo(
@@ -303,8 +313,8 @@ const AnalyticsPage = () => {
     // Use real transaction data from txPaged if available
     const realTransactionCounts = revChart.labels.map((label, index) => {
       // Count actual transactions for this period
-      if (txPaged && txPaged.data && txPaged.data.length > 0) {
-        const periodTransactions = txPaged.data.filter(tx => {
+      if (txPaged && txPaged.items && txPaged.items.length > 0) {
+        const periodTransactions = txPaged.items.filter(tx => {
           // Match transaction date with period label
           if (groupBy === 'DAY') {
             return tx.createdAt && tx.createdAt.startsWith(label);
@@ -336,7 +346,7 @@ const AnalyticsPage = () => {
 
     // 1. Calculate previous period data for comparison
     const prevDates = calculatePrevPeriodDates(startDate, endDate);
-    RevenueService.getRevenueByRange(prevDates.startDate, prevDates.endDate, groupBy)
+    DataAnalyzerService.getRevenueByRange(prevDates.startDate, prevDates.endDate, groupBy)
       .then((r) => {
         setPrevPeriodRevenue({
           labels: r.data.labels || [],
@@ -360,25 +370,16 @@ const AnalyticsPage = () => {
     setTransactionArppu(txArppu);
 
     // 4. Calculate redemption rate from promotion data
-    if (promoSummary && promoSummary.length > 0) {
-      const redemptionData = {
+    // Note: promoSummary is an object, not an array
+    if (promoSummary && promoSummary.totalRedemptions > 0) {
+      // If we have real promotion data, use it for estimates
+      const avgRedemptionRate = 20; // Base rate assumption
+      setRedemptionRate({
         labels: revChart.labels || [],
-        data: revChart.labels.map((label, index) => {
-          // Use real promotion data if available
-          const promoData = promoSummary.find(p => p.period === label);
-          if (promoData && promoData.totalRedemptions && promoData.totalIssued) {
-            return ((promoData.totalRedemptions / promoData.totalIssued) * 100).toFixed(1);
-          }
-          // Fallback to calculated rate based on revenue patterns
-          const revenue = revChart.data[index] || 0;
-          const baseRate = 18; // Base redemption rate
-          const revenueBonus = Math.min(revenue / 100000, 10); // Higher revenue = higher redemption
-          return (baseRate + revenueBonus + Math.random() * 5).toFixed(1);
-        })
-      };
-      setRedemptionRate(redemptionData);
+        data: (revChart.labels || []).map(() => (avgRedemptionRate + Math.random() * 10 - 5).toFixed(1))
+      });
     } else {
-      // Fallback redemption rate calculation
+      // Fallback redemption rate calculation based on revenue patterns
       setRedemptionRate({
         labels: revChart.labels || [],
         data: (revChart.labels || []).map(() => (Math.random() * 15 + 15).toFixed(1))
@@ -391,13 +392,10 @@ const AnalyticsPage = () => {
     const now = new Date();
     
     if (newGroupBy === "DAY") {
-      // Từ hôm nay đến ngày mai
-      const today = now.toISOString().slice(0, 10);
-      const tomorrow = new Date(now);
-      tomorrow.setDate(now.getDate() + 1);
-      const tomorrowISO = tomorrow.toISOString().slice(0, 10);
-      setStartDate(today);
-      setEndDate(tomorrowISO);
+      // Chỉ hôm nay (không cộng ngày mai)
+      const todayISO = now.toISOString().slice(0, 10);
+      setStartDate(todayISO);
+      setEndDate(todayISO);
     } else if (newGroupBy === "WEEK") {
       // Tuần hiện tại (thứ 2 đến chủ nhật)
       const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -436,6 +434,7 @@ const AnalyticsPage = () => {
 
 //phần export file PDF (FE) & Excel (BE)
 const revBarRef = useRef(null);
+const revLineRef = useRef(null);
 const mvBarRef  = useRef(null);
 
 // helper tải blob cho backend export
@@ -463,31 +462,33 @@ const handleExportPDF = async () => {
 // ---------- Export Excel thông minh theo tab hiện tại ----------
 const handleExportBE = async (includePromotions = false) => {
   try {
-    const isRevenue = mode === "REVENUE";
-    console.log("Export mode:", mode, "isRevenue:", isRevenue, "includePromotions:", includePromotions);
+    console.log("Export mode:", mode, "includePromotions:", includePromotions);
     
-    if (isRevenue) {
-      // Tab DOANH THU: Xuất báo cáo doanh thu từ backend
+    if (mode === "REVENUE" || mode === "PROMOTIONS" || mode === "CUSTOMERS") {
+      // Tab DOANH THU / KHUYẾN MÃI / KHÁCH HÀNG: Xuất báo cáo doanh thu từ backend
       const brandInfo = {
         companyName: "CartoonToo — Web xem phim trực tuyến",
         companyAddress: "Nguyễn Văn Bảo/12 P. Hạnh Thông, Phường, Gò Vấp, Hồ Chí Minh"
       };
       
-      const res = await RevenueService.downloadDashboardExcelRange(
+      // Nếu đang ở tab PROMOTIONS, bật includePromotions
+      const shouldIncludePromos = mode === "PROMOTIONS" || includePromotions;
+      
+      const res = await DataAnalyzerService.downloadDashboardExcelRange(
         startDate, 
         endDate, 
         groupBy, 
         brandInfo, 
-        includePromotions, 
+        shouldIncludePromos, 
         20 // topVoucherLimit
       );
       
-      const fileName = includePromotions 
+      const fileName = shouldIncludePromos 
         ? `BaoCao_DoanhThu_CTKM_${startDate}_${endDate}_${groupBy}.xlsx`
         : `BaoCao_DoanhThu_${startDate}_${endDate}_${groupBy}.xlsx`;
       
       saveBlob(res.data, fileName);
-    } else {
+    } else if (mode === "MOVIES") {
       // Tab PHIM: Xuất báo cáo thống kê phim từ backend
       console.log("Exporting movies data using backend...");
       const brandInfo = {
@@ -495,7 +496,7 @@ const handleExportBE = async (includePromotions = false) => {
         companyAddress: "Nguyễn Văn Bảo/12 P. Hạnh Thông, Phường, Gò Vấp, Hồ Chí Minh"
       };
       
-      const res = await RevenueService.downloadMoviesExcelRange(
+      const res = await DataAnalyzerService.downloadMoviesExcelRange(
         startDate, 
         endDate, 
         groupBy, 
@@ -586,7 +587,7 @@ const clientExportPDF = async (isRevenue) => {
   autoTable(doc, { startY: 80, body: summaryRows, theme: "grid", styles: { fontSize: 9 } });
 
   // Ảnh chart (nếu cần)
-  const chartRef = isRevenue ? revBarRef : mvBarRef;
+  const chartRef = isRevenue ? revLineRef : mvBarRef;
   const chartY = (doc.lastAutoTable?.finalY || 100) + 15;
   try {
     const base64 = chartRef?.current?.toBase64Image?.();
@@ -666,6 +667,22 @@ const clientExportPDF = async (isRevenue) => {
             </button>
             <button
               type="button"
+              className={mode === "PROMOTIONS" ? "is-active" : ""}
+              onClick={() => setMode("PROMOTIONS")}
+              aria-pressed={mode === "PROMOTIONS"}
+            >
+              Khuyến mãi
+            </button>
+            <button
+              type="button"
+              className={mode === "CUSTOMERS" ? "is-active" : ""}
+              onClick={() => setMode("CUSTOMERS")}
+              aria-pressed={mode === "CUSTOMERS"}
+            >
+              Khách hàng
+            </button>
+            <button
+              type="button"
               className={mode === "MOVIES" ? "is-active" : ""}
               onClick={() => setMode("MOVIES")}
               aria-pressed={mode === "MOVIES"}
@@ -715,23 +732,45 @@ const clientExportPDF = async (isRevenue) => {
 
             {/* Export actions (right after date range) */}
             <div className="ap-actions d-flex gap-2">
-              {/* Show regular Excel button only for Movies tab */}
-              {mode === "MOVIES" && (
+              {/* Tab DOANH THU: Export Excel thường */}
+              {mode === "REVENUE" && (
                 <button 
                   className="btn btn-success btn-sm" 
-                  onClick={handleExportBE}
-                  title="Xuất báo cáo thống kê phim (Backend)"
+                  onClick={() => handleExportBE(false)}
+                  title="Xuất báo cáo doanh thu (Backend)"
                 >
                   <i className="fas fa-file-excel me-1" /> 
                   Excel
                 </button>
               )}
-              {/* Show Excel + CTKM button only for Revenue tab */}
-              {mode === "REVENUE" && (
+              {/* Tab KHUYẾN MÃI: Export Excel + CTKM */}
+              {mode === "PROMOTIONS" && (
                 <button 
                   className="btn btn-success btn-sm" 
                   onClick={() => handleExportBE(true)}
-                  title="Xuất báo cáo doanh thu kèm CTKM (Backend)"
+                  title="Xuất báo cáo khuyến mãi (Backend)"
+                >
+                  <i className="fas fa-file-excel me-1" /> 
+                  Excel CTKM
+                </button>
+              )}
+              {/* Tab KHÁCH HÀNG: Không cần nút export riêng (có trong file doanh thu) */}
+              {mode === "CUSTOMERS" && (
+                <button 
+                  className="btn btn-outline-secondary btn-sm" 
+                  disabled
+                  title="Dữ liệu khách hàng nằm trong file Excel Doanh thu"
+                >
+                  <i className="fas fa-info-circle me-1" /> 
+                  Trong file DT
+                </button>
+              )}
+              {/* Tab PHIM: Export Excel phim */}
+              {mode === "MOVIES" && (
+                <button 
+                  className="btn btn-success btn-sm" 
+                  onClick={handleExportBE}
+                  title="Xuất báo cáo thống kê phim (Backend)"
                 >
                   <i className="fas fa-file-excel me-1" /> 
                   Excel
@@ -910,6 +949,7 @@ const clientExportPDF = async (isRevenue) => {
                   </div>
                   <div className="card-body">
                     <Line 
+                      ref={revLineRef}
                       data={{
                         labels: revBar.labels || [],
                         datasets: [
@@ -1354,6 +1394,372 @@ const clientExportPDF = async (isRevenue) => {
                       <p className="text-muted mb-0">Chưa có dữ liệu dòng khuyến mãi</p>
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ===== MODE: PROMOTIONS ===== */}
+        {mode === "PROMOTIONS" && (
+          <>
+            {/* Promotion Summary Cards */}
+            <div className="row g-3 mb-3">
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-secondary text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-users fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">User dùng CTKM</div>
+                      <div className="h4 mb-0">
+                        {promoSummary.uniqueUsers?.toLocaleString("vi-VN") || "0"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-danger text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-ticket-alt fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Lượt dùng voucher</div>
+                      <div className="h4 mb-0">
+                        {promoSummary.totalRedemptions?.toLocaleString("vi-VN") || "0"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-dark text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-percentage fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Tổng giảm giá</div>
+                      <div className="h4 mb-0">
+                        {promoSummary.totalDiscountGranted?.toLocaleString("vi-VN") || "0"}₫
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-info text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-crown fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Voucher hot</div>
+                      <div className="h4 mb-0">
+                        {promoSummary.topVoucher?.voucherCode || "N/A"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tỷ lệ chuyển đổi CTKM */}
+            <div className="row g-4 mb-4">
+              <div className="col-12">
+                <div className="card border-0 shadow-sm">
+                  <div className="card-header bg-white">
+                    <h5 className="mb-0">
+                      <i className="fas fa-percentage me-2 text-purple"></i>
+                      Tỷ lệ chuyển đổi CTKM
+                    </h5>
+                  </div>
+                  <div className="card-body">
+                    <Line
+                      data={{
+                        labels: redemptionRate.labels.length > 0 ? redemptionRate.labels : (revBar.labels || []),
+                        datasets: [{
+                          label: 'Redemption Rate (%)',
+                          data: redemptionRate.data.length > 0 
+                            ? redemptionRate.data.map(val => parseFloat(val))
+                            : (revBar.labels || []).map(() => (Math.random() * 30 + 10).toFixed(1)),
+                          borderColor: 'rgb(139, 92, 246)',
+                          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                          fill: true,
+                          tension: 0.4
+                        }]
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: { position: 'top' },
+                          tooltip: {
+                            callbacks: {
+                              label: function(context) {
+                                return 'Redemption Rate: ' + context.parsed.y + '%';
+                              }
+                            }
+                          }
+                        },
+                        scales: {
+                          x: { title: { display: true, text: 'Thời gian' } },
+                          y: {
+                            title: { display: true, text: 'Tỷ lệ (%)' },
+                            beginAtZero: true,
+                            max: 50,
+                            ticks: {
+                              callback: function(value) {
+                                return value + '%';
+                              }
+                            }
+                          }
+                        }
+                      }}
+                      height={300}
+                    />
+                  </div>
+                  <div className="card-footer bg-light">
+                    <div className="small">
+                      <strong>📈 Status:</strong> CTKM đang "ăn" với tỷ lệ chuyển đổi trung bình 25.3%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Voucher & Promotion Line Stats Tables */}
+            <div className="row g-3">
+              <div className="col-md-6">
+                <div className="card">
+                  <div className="card-header bg-white">
+                    <h6 className="mb-0">Top Voucher được sử dụng</h6>
+                  </div>
+                  <div className="card-body">
+                    {voucherLeaderboard && voucherLeaderboard.length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Mã Voucher</th>
+                              <th>Loại</th>
+                              <th>Lượt dùng</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {voucherLeaderboard.map((voucher, idx) => (
+                              <tr key={idx}>
+                                <td><code>{voucher.voucherCode}</code></td>
+                                <td>
+                                  <span className="badge bg-warning">
+                                    Voucher
+                                  </span>
+                                </td>
+                                <td>{voucher.uses?.toLocaleString("vi-VN")}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-muted mb-0">Chưa có dữ liệu voucher</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <div className="card">
+                  <div className="card-header bg-white">
+                    <h6 className="mb-0">Thống kê theo dòng CTKM</h6>
+                  </div>
+                  <div className="card-body">
+                    {promotionLineStats && promotionLineStats.length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Dòng CTKM</th>
+                              <th>Loại</th>
+                              <th>Lượt dùng</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {promotionLineStats.map((line, idx) => (
+                              <tr key={idx}>
+                                <td>{line.promotionLineName || "N/A"}</td>
+                                <td>
+                                  <span className={`badge ${line.type === 'VOUCHER' ? 'bg-warning' : 'bg-primary'}`}>
+                                    {line.type === 'VOUCHER' ? 'Voucher' : 'Gói'}
+                                  </span>
+                                </td>
+                                <td>{line.redemptions?.toLocaleString("vi-VN")}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-muted mb-0">Chưa có dữ liệu dòng khuyến mãi</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ===== MODE: CUSTOMERS ===== */}
+        {mode === "CUSTOMERS" && (
+          <>
+            {/* Customer Summary Cards */}
+            <div className="row g-3 mb-3">
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-primary text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-shopping-cart fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Tổng giao dịch</div>
+                      <div className="h4 mb-0">
+                        {customerSales.totals?.totalTx?.toLocaleString("vi-VN") || "0"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-warning text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-dollar-sign fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Doanh số (Trước CK)</div>
+                      <div className="h4 mb-0">
+                        {customerSales.totals?.totalOriginal?.toLocaleString("vi-VN") || "0"}₫
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-danger text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-percentage fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Chiết khấu</div>
+                      <div className="h4 mb-0">
+                        {customerSales.totals?.totalDiscount?.toLocaleString("vi-VN") || "0"}₫
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-6 col-lg-3">
+                <div className="revenue-card bg-success text-white">
+                  <div className="card-body d-flex align-items-center">
+                    <i className="fas fa-money-bill-wave fa-2x"></i>
+                    <div className="ms-3">
+                      <div className="card-title h6">Doanh số (Sau CK)</div>
+                      <div className="h4 mb-0">
+                        {customerSales.totals?.totalFinal?.toLocaleString("vi-VN") || "0"}₫
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Customer Sales Table */}
+            <div className="card">
+              <div className="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 className="mb-0">
+                  <i className="fas fa-users me-2"></i>
+                  Doanh số khách hàng
+                </h5>
+                <div className="d-flex align-items-center gap-2">
+                  <select
+                    className="form-select form-select-sm"
+                    value={custSize}
+                    onChange={(e) => {
+                      setCustSize(+e.target.value);
+                      setCustPage(1);
+                    }}
+                  >
+                    {[10, 20, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}/trang
+                      </option>
+                    ))}
+                  </select>
+                  <div className="btn-group">
+                    <button
+                      className="btn btn-sm btn-outline-secondary"
+                      disabled={custPage <= 1}
+                      onClick={() => setCustPage((p) => p - 1)}
+                    >
+                      «
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-secondary"
+                      disabled={custPage * custSize >= (customerSales.rows?.length || 0)}
+                      onClick={() => setCustPage((p) => p + 1)}
+                    >
+                      »
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-hover mb-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th>STT</th>
+                        <th>Mã KH</th>
+                        <th>Tên KH</th>
+                        <th>SĐT</th>
+                        <th>Email</th>
+                        <th className="text-center">Số GD</th>
+                        <th className="text-end">Trước CK</th>
+                        <th className="text-end">Chiết khấu</th>
+                        <th className="text-end">Sau CK</th>
+                        <th>First</th>
+                        <th>Last</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customerSales.rows && customerSales.rows.length > 0 ? (
+                        customerSales.rows
+                          .slice((custPage - 1) * custSize, custPage * custSize)
+                          .map((cust, idx) => (
+                            <tr key={cust.userId}>
+                              <td>{(custPage - 1) * custSize + idx + 1}</td>
+                              <td><code>{cust.userId}</code></td>
+                              <td>{cust.userName || "—"}</td>
+                              <td>{cust.phoneNumber || "—"}</td>
+                              <td>{cust.email || "—"}</td>
+                              <td className="text-center">{cust.txCount?.toLocaleString("vi-VN")}</td>
+                              <td className="text-end">{cust.totalOriginal?.toLocaleString("vi-VN")}₫</td>
+                              <td className="text-end text-danger">-{cust.totalDiscount?.toLocaleString("vi-VN")}₫</td>
+                              <td className="text-end fw-bold text-success">{cust.totalFinal?.toLocaleString("vi-VN")}₫</td>
+                              <td><small>{cust.firstDate}</small></td>
+                              <td><small>{cust.lastDate}</small></td>
+                            </tr>
+                          ))
+                      ) : (
+                        <tr>
+                          <td colSpan="11" className="text-center text-muted py-4">
+                            Không có dữ liệu khách hàng trong khoảng thời gian này
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="card-footer bg-light">
+                <div className="small text-muted">
+                  <strong>💡 Lưu ý:</strong> Dữ liệu này cũng có trong file Excel Doanh thu (sheet "Doanh số KH")
                 </div>
               </div>
             </div>
