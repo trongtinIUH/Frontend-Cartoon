@@ -427,6 +427,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode,
                       <th>Giá trị giảm</th>
                       <th>Giảm tối đa</th>
                       <th>Lượt dùng</th>
+                      <th>Đã dùng</th>
                       <th>Đơn tối thiểu</th>
                       <th>Hành động</th>
                     </tr>
@@ -515,6 +516,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode,
                               />
                             ) : (Number(item.maxUsage || 0).toLocaleString())}
                           </td>
+                          <td>{Number(item.usedCount || 0).toLocaleString()}</td>
                           <td>
                             {isEditing ? (
                               <input

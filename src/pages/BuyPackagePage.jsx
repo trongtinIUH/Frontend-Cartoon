@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../css/BuyPackagePage.css';
@@ -17,7 +17,7 @@ const BuyPackagePage = () => {
   const navigate = useNavigate();
   const { MyUser } = useAuth();
   const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedPackage, setSelectedPackage] = useState(null);
 
   useEffect(() => {
     const fetchPackages = async () => {
@@ -25,72 +25,34 @@ const BuyPackagePage = () => {
         navigate('/');
         return;
       }
-      
-      // Check cache first
-      const cacheKey = 'packages_buy_page';
-      const cachedData = sessionStorage.getItem(cacheKey);
-      const cacheTime = sessionStorage.getItem(`${cacheKey}_time`);
-      
-      // Cache valid for 10 minutes
-      if (cachedData && cacheTime) {
-        const age = Date.now() - parseInt(cacheTime);
-        if (age < 10 * 60 * 1000) {
-          setPackages(JSON.parse(cachedData));
-          setLoading(false);
-          return;
-        }
-      }
-      
       try {
-        setLoading(true);
         const data = await SubscriptionPackageService.getAllPackages();
 
-        // Optimize grouping with Map
-        const packageMap = new Map();
-        for (const pkg of data) {
+        // Nhóm theo loại VIP, chọn gói có thời hạn ngắn nhất cho mỗi loại
+        const grouped = {};
+        data.forEach(pkg => {
           const level = pkg.applicablePackageType;
-          const current = packageMap.get(level);
-          if (!current || pkg.durationInDays < current.durationInDays) {
-            packageMap.set(level, pkg);
+          if (!grouped[level] || pkg.durationInDays < grouped[level].durationInDays) {
+            grouped[level] = pkg;
           }
-        }
+        });
 
-        // Sort by amount
-        const sorted = Array.from(packageMap.values()).sort((a, b) => (a.amount || 0) - (b.amount || 0));
+        // Sắp xếp theo amount
+        const sorted = Object.values(grouped).sort((a, b) => a.amount - b.amount);
 
         setPackages(sorted);
-        
-        // Save to cache
-        sessionStorage.setItem(cacheKey, JSON.stringify(sorted));
-        sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
       } catch (error) {
         console.error('Lỗi khi lấy gói:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchPackages();
-  }, [MyUser, navigate]);
+  }, []);
 
-  const handleSelectPackage = useCallback((pkg) => {
+  const handleSelectPackage = (pkg) => {
+    setSelectedPackage(pkg);
     navigate('/payment', { state: { selectedPackage: pkg } });
-  }, [navigate]);
-
-  if (loading) {
-    return (
-      <div className="buy-package-page">
-        <div className="container d-flex bg-dark justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
-          <div className="text-center">
-            <div className="spinner-border text-primary mb-3" style={{ width: '3rem', height: '3rem' }}>
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="text-white">Đang tải gói dịch vụ...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
     <div className="buy-package-page">

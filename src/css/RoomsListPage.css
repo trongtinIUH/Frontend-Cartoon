@@ -1,0 +1,133 @@
+.rooms-list-page{
+  background:linear-gradient(90deg,#0f2027,#203a43,#2c5364);
+  min-height:100vh;
+  padding:80px 20px 40px;
+}
+
+/* Title */
+.rooms-list-page .section-title{
+  color:#fff;
+  font-size:1.6rem;
+  font-weight:700;
+  margin:0 0 16px 0;
+}
+
+/* Tabs/More (nếu dùng) */
+.wp-tab{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  color:#9fb3c8;
+  padding:8px 20px;
+  border-radius:20px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .25s ease;
+}
+.wp-tab.active{ background:#e50914; color:#fff; border-color:#e50914; }
+.wp-tab:hover:not(.active){ background:rgba(255,255,255,.1); color:#fff; }
+
+.wp-round{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  color:#fff;
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px; cursor:pointer; transition:all .25s ease;
+}
+.wp-round:hover{ background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); transform:rotate(90deg); }
+
+/* ======= GRID giống wishlist ======= */
+.room-list .room-grid{
+  display:grid;
+  gap:1rem;
+  grid-template-columns:repeat(2,1fr); /* mobile mặc định: 2 cột cho cân */
+}
+@media(min-width:768px){
+  .room-list .room-grid{ grid-template-columns:repeat(3,1fr); } /* tablet */
+}
+@media(min-width:1200px){
+  .room-list .room-grid{ grid-template-columns:repeat(6,1fr); } /* desktop */
+}
+
+/* Card giống wishlist: poster 2:3 */
+.room-list .room-card{
+  display:flex; flex-direction:column; gap:8px;
+  text-decoration:none; width:100%; cursor:pointer;
+}
+
+.room-list .room-wrap{
+  position:relative;
+  border-radius:10px; overflow:hidden;
+  aspect-ratio:2/3;
+  background:#0b1220;
+  box-shadow:0 4px 12px rgba(0,0,0,.25);
+  transition:transform .25s ease, box-shadow .25s ease, filter .25s ease;
+}
+.room-list .room-img{
+  width:100%; height:100%; object-fit:cover; transition:transform .35s ease;
+}
+.room-list .room-card:hover .room-wrap{
+  transform:translateY(-4px);
+  box-shadow:0 14px 32px rgba(229,9,20,.30);
+  filter:saturate(1.1) brightness(1.05);
+}
+.room-list .room-card:hover .room-img{ transform:scale(1.05); }
+
+/* Badges */
+.room-list .room-badge{
+  position:absolute; top:8px; left:8px;
+  font-size:.7rem; padding:4px 8px; border-radius:6px;
+  color:#fff; font-weight:800; letter-spacing:.3px;
+  background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.2);
+  display:flex; align-items:center; gap:6px; z-index:2;
+}
+.room-list .live-badge{
+  background:linear-gradient(45deg,#e50914,#ff1744);
+  box-shadow:0 2px 12px rgba(229,9,20,.6);
+}
+.room-list .live-badge .dot{
+  width:8px;height:8px;border-radius:50%;background:#fff;
+  animation:dotPulse 1.5s ease-in-out infinite;
+}
+@keyframes dotPulse{
+  0%,100%{ opacity:1; transform:scale(1); }
+  50%{ opacity:.6; transform:scale(1.3); }
+}
+
+/* Countdown / Ended dùng chung class ended-badge */
+.room-list .ended-badge{
+  background:rgba(0,0,0,.7); color:#ddd;
+}
+
+/* Viewers */
+.room-list .room-viewers{
+  position:absolute; bottom:8px; left:8px;
+  background:rgba(0,0,0,.7); color:#fff;
+  padding:4px 8px; border-radius:6px; font-size:.75rem; font-weight:700;
+  display:flex; align-items:center; gap:6px; z-index:2;
+}
+
+/* Meta: avatar + text dưới poster */
+.room-list .room-meta{ padding:0 2px; }
+.room-list .room-avatar{
+  width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;
+  border:2px solid rgba(255,255,255,.1);
+}
+.room-list .room-title{
+  color:#fff; font-size:.95rem; font-weight:800; line-height:1.25;
+  margin:0; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;
+}
+.room-list .room-subtitle{
+  color:#9fb3c8; font-size:.82rem; margin:1px 0 0; line-height:1.2;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;
+}
+.room-list .room-info{
+  color:#6b7280; font-size:.75rem; margin:2px 0 0; line-height:1.2;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Empty state */
+.text-secondary{
+  color:#9fb3c8; font-size:1.1rem; text-align:center; padding:60px 20px;
+}

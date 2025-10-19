@@ -3,8 +3,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import MovieService from "../services/MovieService";
 import AuthorService from "../services/AuthorService";
-import "../css/MainPage.css"; // reuse .main-page-wrapper, .newlist, .movie-grid,...
-
+import "../css/MainPage.css";
 const MOVIES_PER_PAGE = 20;
 
 const BrowseMoviesPage = () => {

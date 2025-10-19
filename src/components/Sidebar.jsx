@@ -161,7 +161,7 @@ const Sidebar = () => {
                     `nav-link sidebar-link d-flex align-items-center ${isActive ? "active" : ""}`
                   }
                 >
-                  <i className="fas fa-shopping-cart me-2" /> <span>Quản lý thanh toán</span>
+                  <i className="fas fa-shopping-cart me-2" /> <span>Hóa đơn thanh toán</span>
                 </NavLink>
               </li>
 

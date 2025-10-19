@@ -37,12 +37,10 @@ import { buildFeedbackTree, FeedbackItem } from "../components/FeedbackItem";
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
 
-
-
-
 export default function WatchPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   const params = useParams();
   const [searchParams] = useSearchParams();
   const { MyUser } = useAuth();
@@ -100,7 +98,7 @@ export default function WatchPage() {
   const getPackageDisplayName = (minVipLevel) => {
     const packageMap = {
       'NO_ADS': 'NO ADS',
-      'PREMIUM': 'PREMIUM', 
+      'PREMIUM': 'PREMIUM',
       'MEGA_PLUS': 'MEGA+',
       'COMBO_PREMIUM_MEGA_PLUS': 'COMBO PREMIUM'
     };
@@ -125,10 +123,10 @@ export default function WatchPage() {
   const [subtitlesEnabled, setSubtitlesEnabled] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [currentSettingsView, setCurrentSettingsView] = useState('main'); // 'main', 'speed', 'quality', 'subtitle'
-  
+
   // -------- Player Element for Portal
   const [playerEl, setPlayerEl] = useState(null);
-  
+
   // -------- Subtitle States
   const [availableSubtitles, setAvailableSubtitles] = useState([]);
   const [selectedSubtitle, setSelectedSubtitle] = useState(null);
@@ -159,19 +157,19 @@ export default function WatchPage() {
   useEffect(() => {
     (async () => {
       if (!currentMovie?.movieId) return;
-      
+
       // Reset trial states khi đổi phim
       setIsTrialMode(false);
       setTrialExpired(false);
       setCurrentTime(0);
       setShowUpgradeModal(false);
-      
+
       const required = currentMovie.minVipLevel || "FREE";
 
       // ✅ ALWAYS CHECK BACKEND FIRST - Luôn kiểm tra quyền thực tế với BE
       try {
         const res = await MovieService.canWatch(currentMovie.movieId, userId);
-        
+
         if (res.allowed) {
           setIsTrialMode(false);
           setGate({ status: 'allowed', message: "" });
@@ -179,33 +177,33 @@ export default function WatchPage() {
         } else {
           // Nếu phim FREE mà không được phép xem thì chặn hoàn toàn
           if (required === "FREE") {
-            setGate({ 
-              status: 'not_allowed', 
-              message: res.message || "Bạn chưa đủ quyền xem phim này." 
+            setGate({
+              status: 'not_allowed',
+              message: res.message || "Bạn chưa đủ quyền xem phim này."
             });
             return;
           }
-          
+
           // Nếu phim VIP mà không có quyền thì cho trial mode
           const packageName = getPackageDisplayName(required);
           setIsTrialMode(true);
-          setGate({ 
-            status: 'trial', 
+          setGate({
+            status: 'trial',
             message: `Đang xem thử phim ${packageName} - ${trialTimeLimit} giây miễn phí`,
             requiredPackage: packageName
           });
         }
       } catch (error) {
         console.error("VIP check error:", error);
-        
+
         // Fallback logic based on movie type
         if (required === "FREE") {
           setGate({ status: 'allowed', message: "" });
         } else {
           const packageName = getPackageDisplayName(required);
           setIsTrialMode(true);
-          setGate({ 
-            status: 'trial', 
+          setGate({
+            status: 'trial',
             message: `Đang xem thử phim ${packageName} - ${trialTimeLimit} giây miễn phí`,
             requiredPackage: packageName
           });
@@ -227,12 +225,12 @@ export default function WatchPage() {
         setLoadingSubtitles(true);
         const subtitles = await SubtitleService.getSubtitles(currentEp.seasonId, currentEp.episodeNumber);
         setAvailableSubtitles(Array.isArray(subtitles) ? subtitles : []);
-        
+
         // Auto-select default subtitle or first available
         const defaultSub = subtitles.find(sub => sub.isDefault);
         const firstSub = subtitles[0];
         setSelectedSubtitle(defaultSub || firstSub || null);
-        
+
         if (defaultSub) {
           setSubtitlesEnabled(true);
         }
@@ -264,14 +262,14 @@ export default function WatchPage() {
     availableSubtitles.forEach((subtitle, index) => {
       // Use backend proxy to handle CORS, SRT→VTT conversion, and content cleaning
       const proxyUrl = `http://localhost:8080/proxy/subtitle?url=${encodeURIComponent(subtitle.url)}&clean=true`;
-      
+
       console.log('🎬 Adding subtitle via proxy (with cleaning):', {
         original: subtitle.url,
         proxy: proxyUrl,
         lang: subtitle.lang,
         label: subtitle.label
       });
-      
+
       player.addRemoteTextTrack({
         kind: 'subtitles',
         src: proxyUrl,
@@ -451,137 +449,137 @@ export default function WatchPage() {
   };
 
 
-  
+
 
   // Cấu hình ad (có thể lấy từ BE, file JSON, hoặc AB test)
-const PREROLL_CONFIG = {
-  src: "https://web-app-cartoontoo.s3.ap-southeast-1.amazonaws.com/inputs/M%C3%8C+SIUKAY+TUNG+PHI%C3%8AN+B%E1%BA%A2N+GI%E1%BB%9AI+H%E1%BA%A0N+M%C3%99A+HALLOWEEN+V%E1%BB%9AI+G%C3%93I+%E1%BB%9AT+MA+M%E1%BB%9AI+-+CAY+T%E1%BB%98T+%C4%90%E1%BB%88NH%2C+B%C3%99NG+B%E1%BA%A2N+L%C4%A8NH.mp4", // MP4/HLS đều được
-  skipAfterSeconds: 3,
-  frequencyMinutes: 0, // không spam: tối thiểu cách nhau X phút
-};
+  const PREROLL_CONFIG = {
+    src: "https://web-app-cartoontoo.s3.ap-southeast-1.amazonaws.com/inputs/M%C3%8C+SIUKAY+TUNG+PHI%C3%8AN+B%E1%BA%A2N+GI%E1%BB%9AI+H%E1%BA%A0N+M%C3%99A+HALLOWEEN+V%E1%BB%9AI+G%C3%93I+%E1%BB%9AT+MA+M%E1%BB%9AI+-+CAY+T%E1%BB%98T+%C4%90%E1%BB%88NH%2C+B%C3%99NG+B%E1%BA%A2N+L%C4%A8NH.mp4", // MP4/HLS đều được
+    skipAfterSeconds: 3,
+    frequencyMinutes: 0, // không spam: tối thiểu cách nhau X phút
+  };
 
-// eligibility: user chưa login hoặc gói FREE
-const isFreeOrGuest = !MyUser?.my_user || MyUser?.my_user?.packageType === "FREE";
+  // eligibility: user chưa login hoặc gói FREE
+  const isFreeOrGuest = !MyUser?.my_user || MyUser?.my_user?.packageType === "FREE";
 
 
   // preroll ad states
-const [showPreroll, setShowPreroll] = useState(false);
-const [canSkip, setCanSkip] = useState(false);
-const [skipLeft, setSkipLeft] = useState(PREROLL_CONFIG.skipAfterSeconds);
-const adVideoRef = useRef(null);
-const skipTimerRef = useRef(null);
+  const [showPreroll, setShowPreroll] = useState(false);
+  const [canSkip, setCanSkip] = useState(false);
+  const [skipLeft, setSkipLeft] = useState(PREROLL_CONFIG.skipAfterSeconds);
+  const adVideoRef = useRef(null);
+  const skipTimerRef = useRef(null);
 
-// Gọi lại mỗi khi đổi episode
-useEffect(() => {
-  // chỉ chạy khi gate cho xem (allowed/trial)
-  if (!['allowed','trial'].includes(gate.status)) return;
+  // Gọi lại mỗi khi đổi episode
+  useEffect(() => {
+    // chỉ chạy khi gate cho xem (allowed/trial)
+    if (!['allowed', 'trial'].includes(gate.status)) return;
 
-  // chỉ hiện khi guest hoặc FREE
-  if (!isFreeOrGuest) return;
+    // chỉ hiện khi guest hoặc FREE
+    if (!isFreeOrGuest) return;
 
-  // có nguồn ad không?
-  if (!PREROLL_CONFIG.src) return;
+    // có nguồn ad không?
+    if (!PREROLL_CONFIG.src) return;
 
-  // tần suất
-  const key = "preroll_last_seen_at";
-  let okByFrequency = true;
-  try {
-    const last = Number(sessionStorage.getItem(key) || 0);
-    const minutes = (Date.now() - last) / 60000;
-    okByFrequency = minutes >= (PREROLL_CONFIG.frequencyMinutes || 0);
-  } catch {}
+    // tần suất
+    const key = "preroll_last_seen_at";
+    let okByFrequency = true;
+    try {
+      const last = Number(sessionStorage.getItem(key) || 0);
+      const minutes = (Date.now() - last) / 60000;
+      okByFrequency = minutes >= (PREROLL_CONFIG.frequencyMinutes || 0);
+    } catch { }
 
-  if (!okByFrequency) return;
+    if (!okByFrequency) return;
 
-  // bật ad
-  setShowPreroll(true);
-  setCanSkip(false);
-  setSkipLeft(PREROLL_CONFIG.skipAfterSeconds);
+    // bật ad
+    setShowPreroll(true);
+    setCanSkip(false);
+    setSkipLeft(PREROLL_CONFIG.skipAfterSeconds);
 
-  // chặn player chính
-  try { playerRef.current?.pause(); } catch {}
+    // chặn player chính
+    try { playerRef.current?.pause(); } catch { }
 
-  // đếm ngược mở Skip
-  clearInterval(skipTimerRef.current);
-  skipTimerRef.current = setInterval(() => {
-    setSkipLeft((s) => {
-      if (s <= 1) {
-        clearInterval(skipTimerRef.current);
-        setCanSkip(true);
-        return 0;
-      }
-      return s - 1;
-    });
-  }, 1000);
-
-  // cleanup khi đổi tập/unmount
-  return () => {
+    // đếm ngược mở Skip
     clearInterval(skipTimerRef.current);
+    skipTimerRef.current = setInterval(() => {
+      setSkipLeft((s) => {
+        if (s <= 1) {
+          clearInterval(skipTimerRef.current);
+          setCanSkip(true);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+
+    // cleanup khi đổi tập/unmount
+    return () => {
+      clearInterval(skipTimerRef.current);
+    };
+  }, [currentEpisode?.episodeId, gate.status, isFreeOrGuest]);
+  // Pause/mute main player while preroll is showing
+  useEffect(() => {
+    const p = playerRef.current;
+    if (!p) return;
+
+    if (showPreroll) {
+      try {
+        p.pause();
+        p.muted(true);              // chắc chắn không “song song” tiếng
+        p.addClass('is-preroll');   // để CSS ẩn control, chặn click
+      } catch { }
+      // đảm bảo video ad bắt đầu từ đầu và play
+      const adv = adVideoRef.current;
+      if (adv) {
+        try { adv.currentTime = 0; } catch { }
+        adv.play().catch(() => { });
+      }
+    } else {
+      // trả lại bình thường
+      try {
+        p.muted(false);
+        p.removeClass('is-preroll');
+      } catch { }
+    }
+  }, [showPreroll]);
+
+
+  const startMainPlayback = () => {
+    setShowPreroll(false);
+    clearInterval(skipTimerRef.current);
+    const p = playerRef.current;
+    if (p) setTimeout(() => p.play().catch(() => { }), 50);
   };
-}, [currentEpisode?.episodeId, gate.status, isFreeOrGuest]);
-// Pause/mute main player while preroll is showing
-useEffect(() => {
-  const p = playerRef.current;
-  if (!p) return;
 
-  if (showPreroll) {
+  const handleAdEnded = () => {
+    // kết thúc quảng cáo -> phát nội dung chính
+    startMainPlayback();
+  };
+
+  const handleAdError = (e) => {
+    console.error("Preroll error", e);
+    // lỗi quảng cáo thì bỏ qua luôn để không kẹt màn đen
+    startMainPlayback();
+  };
+
+  const handleSkipAd = () => {
+    if (!canSkip) return;
     try {
-      p.pause();
-      p.muted(true);              // chắc chắn không “song song” tiếng
-      p.addClass('is-preroll');   // để CSS ẩn control, chặn click
-    } catch {}
-    // đảm bảo video ad bắt đầu từ đầu và play
-    const adv = adVideoRef.current;
-    if (adv) {
-      try { adv.currentTime = 0; } catch {}
-      adv.play().catch(()=>{});
-    }
-  } else {
-    // trả lại bình thường
+      const v = adVideoRef.current;
+      if (v) {
+        v.pause();
+        v.removeAttribute('src'); // ngắt tải
+        v.load();
+      }
+    } catch { }
+    startMainPlayback();
+  };
+  // đánh dấu đã xem quảng cáo (để tính frequency)
+  const markAdSeen = useCallback(() => {
     try {
-      p.muted(false);
-      p.removeClass('is-preroll');
-    } catch {}
-  }
-}, [showPreroll]);
-
-
-const startMainPlayback = () => {
-  setShowPreroll(false);
-  clearInterval(skipTimerRef.current);
-  const p = playerRef.current;
-  if (p) setTimeout(() => p.play().catch(() => {}), 50);
-};
-
-const handleAdEnded = () => {
-  // kết thúc quảng cáo -> phát nội dung chính
-  startMainPlayback();
-};
-
-const handleAdError = (e) => {
-  console.error("Preroll error", e);
-  // lỗi quảng cáo thì bỏ qua luôn để không kẹt màn đen
-  startMainPlayback();
-};
-
-const handleSkipAd = () => {
-  if (!canSkip) return;
-  try {
-    const v = adVideoRef.current;
-    if (v) {
-      v.pause();
-      v.removeAttribute('src'); // ngắt tải
-      v.load();
-    }
-  } catch {}
-  startMainPlayback();
-};
-// đánh dấu đã xem quảng cáo (để tính frequency)
-const markAdSeen = useCallback(() => {
-  try {
-    sessionStorage.setItem("preroll_last_seen_at", String(Date.now()));
-  } catch {}
-}, []);
+      sessionStorage.setItem("preroll_last_seen_at", String(Date.now()));
+    } catch { }
+  }, []);
 
 
 
@@ -642,7 +640,7 @@ const markAdSeen = useCallback(() => {
     setShowResumeModal(false);
     if (p) {
       try { p.currentTime(Number(resumeTime) || 0); } catch (e) { }
-      p.play().catch(() => {});
+      p.play().catch(() => { });
     }
     lastSavedRef.current = Number(resumeTime) || 0;
   };
@@ -654,7 +652,7 @@ const markAdSeen = useCallback(() => {
     setShowResumeModal(false);
     if (p) {
       try { p.currentTime(0); } catch (e) { }
-      p.play().catch(() => {});
+      p.play().catch(() => { });
     }
     lastSavedRef.current = 0;
   };
@@ -784,7 +782,7 @@ const markAdSeen = useCallback(() => {
     if (!cur || !epsOfSeason?.length) return null;
     const idx = epsOfSeason.findIndex((e) => e.episodeId === cur.episodeId);
     const next = idx >= 0 && idx + 1 < epsOfSeason.length ? epsOfSeason[idx + 1] : null;
-    
+
     return next;
   }, [currentEpisode, episodeFromState, epsOfSeason]);
 
@@ -800,7 +798,7 @@ const markAdSeen = useCallback(() => {
   const playerRef = useRef(null);
   const videoRef = useRef(null);
   const antiCapCleanupRef = useRef(null);
-  
+
   // CloudFront optimized URL state
   const [optimizedUrl, setOptimizedUrl] = useState(null);
 
@@ -859,12 +857,12 @@ const markAdSeen = useCallback(() => {
   useEffect(() => {
     // Chỉ init khi gate allowed/trial và video element tồn tại
     if (!['allowed', 'trial'].includes(gate.status) || !videoRef.current || playerRef.current) return;
-    
+
     // ✅ Set crossorigin BEFORE initializing video.js
     if (videoRef.current) {
       videoRef.current.setAttribute('crossorigin', 'anonymous');
     }
-    
+
     const p = videojs(videoRef.current, {
       controls: true,
       autoplay: false, // prevent automatic playback on init
@@ -874,8 +872,8 @@ const markAdSeen = useCallback(() => {
       html5: { vhs: { overrideNative: false } },
     });
 
-  //vì có nút option nên thời cmt 
-  //p.hlsQualitySelector?.({ displayCurrentQuality: false });
+    //vì có nút option nên thời cmt 
+    //p.hlsQualitySelector?.({ displayCurrentQuality: false });
 
     p.on('error', (e) => console.error('Video error:', e));
 
@@ -884,7 +882,7 @@ const markAdSeen = useCallback(() => {
       p.on('timeupdate', () => {
         const time = p.currentTime();
         setCurrentTime(time);
-        
+
         if (time >= trialTimeLimit && !trialExpired) {
           p.pause();
           setTrialExpired(true);
@@ -898,7 +896,7 @@ const markAdSeen = useCallback(() => {
     antiCapCleanupRef.current = initAntiCapture(p);
 
     playerRef.current = p;
-    
+
     // ✅ Capture player element for Portal
     setPlayerEl(p.el());
 
@@ -922,12 +920,12 @@ const markAdSeen = useCallback(() => {
 
     const originalUrl = (currentEpisode || episodeFromState)?.videoUrl;
     const p = playerRef.current;
-    
+
     if (!originalUrl) {
       console.error("❌ No video URL found!");
       return;
     }
-    
+
     if (!p) {
       console.error("❌ Video player not initialized!");
       return;
@@ -935,7 +933,7 @@ const markAdSeen = useCallback(() => {
 
     // Use video URL directly 
     setOptimizedUrl(originalUrl); // Update state
-    
+
     // Test URL trước khi set
     fetch(originalUrl, { method: 'HEAD' })
       .then(response => {
@@ -944,7 +942,7 @@ const markAdSeen = useCallback(() => {
         }
       })
       .catch(err => console.error("❌ Video URL fetch failed:", err));
-    
+
     p.pause();
     p.src({ src: originalUrl, type: "application/x-mpegURL" });
     p.load(); // Force load the new source
@@ -1059,9 +1057,9 @@ const markAdSeen = useCallback(() => {
 
   //chế độ rạp phim
   useEffect(() => {
-  document.body.classList.toggle('theater-mode', isTheater);
-  return () => document.body.classList.remove('theater-mode');
-}, [isTheater]);
+    document.body.classList.toggle('theater-mode', isTheater);
+    return () => document.body.classList.remove('theater-mode');
+  }, [isTheater]);
 
   // ESC để thoát theater mode
   useEffect(() => {
@@ -1083,10 +1081,10 @@ const markAdSeen = useCallback(() => {
         clearTimeout(cursorTimer);
         cursorTimer = setTimeout(hideCursor, 3000);
       };
-      
+
       document.addEventListener('mousemove', showCursor);
       cursorTimer = setTimeout(hideCursor, 3000);
-      
+
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
         document.removeEventListener('mousemove', showCursor);
@@ -1097,10 +1095,10 @@ const markAdSeen = useCallback(() => {
   }, [isTheater]);
   // Cập nhật fluid khi isTheater thay đổi
   useEffect(() => {
-  const p = playerRef.current;
-  if (!p) return;
-  p.fluid(!isTheater);   // Theater: false, Normal: true
-}, [isTheater]);
+    const p = playerRef.current;
+    if (!p) return;
+    p.fluid(!isTheater);   // Theater: false, Normal: true
+  }, [isTheater]);
 
   // -------- Drag mini-player (sticky)
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -1154,7 +1152,7 @@ const markAdSeen = useCallback(() => {
           <>
             <div className="settings-header">
               <h4>Cài đặt</h4>
-              <button 
+              <button
                 className="settings-close"
                 onClick={() => {
                   setShowSettingsMenu(false);
@@ -1164,7 +1162,7 @@ const markAdSeen = useCallback(() => {
                 ×
               </button>
             </div>
-            
+
             <div className="settings-section">
               <div className="settings-item" onClick={(e) => {
                 e.preventDefault();
@@ -1177,7 +1175,7 @@ const markAdSeen = useCallback(() => {
                   <span className="settings-arrow">›</span>
                 </div>
               </div>
-              
+
               <div className="settings-item" onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1189,7 +1187,7 @@ const markAdSeen = useCallback(() => {
                   <span className="settings-arrow">›</span>
                 </div>
               </div>
-              
+
               <div className="settings-item" onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1204,18 +1202,18 @@ const markAdSeen = useCallback(() => {
             </div>
           </>
         )}
-        
+
         {currentSettingsView === 'speed' && (
           <>
             <div className="settings-header">
-              <button 
+              <button
                 className="back-btn"
                 onClick={() => setCurrentSettingsView('main')}
               >
                 ‹
               </button>
               <h4>Tốc độ phát</h4>
-              <button 
+              <button
                 className="settings-close"
                 onClick={() => {
                   setShowSettingsMenu(false);
@@ -1227,7 +1225,7 @@ const markAdSeen = useCallback(() => {
             </div>
             <div className="speed-options">
               {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(speed => (
-                <div 
+                <div
                   key={speed}
                   className={`speed-option ${playbackRate === speed ? 'active' : ''}`}
                   onClick={() => {
@@ -1246,18 +1244,18 @@ const markAdSeen = useCallback(() => {
             </div>
           </>
         )}
-        
+
         {currentSettingsView === 'quality' && (
           <>
             <div className="settings-header">
-              <button 
+              <button
                 className="back-btn"
                 onClick={() => setCurrentSettingsView('main')}
               >
                 ‹
               </button>
               <h4>Chất lượng video</h4>
-              <button 
+              <button
                 className="settings-close"
                 onClick={() => {
                   setShowSettingsMenu(false);
@@ -1269,7 +1267,7 @@ const markAdSeen = useCallback(() => {
             </div>
             <div className="quality-options">
               {['Auto (720p)', 'FHD 1080p', 'HD 720p', '480p', '360p'].map(quality => (
-                <div 
+                <div
                   key={quality}
                   className={`quality-option ${selectedQuality === quality ? 'active' : ''}`}
                   onClick={() => {
@@ -1278,7 +1276,7 @@ const markAdSeen = useCallback(() => {
                     const player = playerRef.current;
                     if (player && player.qualityLevels) {
                       const qualityLevels = player.qualityLevels();
-                      
+
                       if (quality === 'Auto (720p)') {
                         // Enable auto quality selection
                         for (let i = 0; i < qualityLevels.length; i++) {
@@ -1289,14 +1287,14 @@ const markAdSeen = useCallback(() => {
                         for (let i = 0; i < qualityLevels.length; i++) {
                           qualityLevels[i].enabled = false;
                         }
-                        
+
                         // Enable only the selected quality
                         let targetHeight;
                         if (quality === 'FHD 1080p') targetHeight = 1080;
                         else if (quality === 'HD 720p') targetHeight = 720;
                         else if (quality === '480p') targetHeight = 480;
                         else if (quality === '360p') targetHeight = 360;
-                        
+
                         for (let i = 0; i < qualityLevels.length; i++) {
                           const level = qualityLevels[i];
                           if (level.height === targetHeight) {
@@ -1320,14 +1318,14 @@ const markAdSeen = useCallback(() => {
         {currentSettingsView === 'subtitle' && (
           <>
             <div className="settings-header">
-              <button 
+              <button
                 className="back-btn"
                 onClick={() => setCurrentSettingsView('main')}
               >
                 ‹
               </button>
               <h4>Phụ đề</h4>
-              <button 
+              <button
                 className="settings-close"
                 onClick={() => {
                   setShowSettingsMenu(false);
@@ -1339,12 +1337,12 @@ const markAdSeen = useCallback(() => {
             </div>
             <div className="subtitle-options">
               {/* Option to turn off subtitles */}
-              <div 
+              <div
                 className={`subtitle-option ${!selectedSubtitle ? 'active' : ''}`}
                 onClick={() => {
                   setSelectedSubtitle(null);
                   setSubtitlesEnabled(false);
-                  
+
                   // Disable all subtitle tracks
                   const player = playerRef.current;
                   if (player) {
@@ -1362,13 +1360,13 @@ const markAdSeen = useCallback(() => {
 
               {/* Available subtitle tracks */}
               {availableSubtitles.map((subtitle) => (
-                <div 
+                <div
                   key={`${subtitle.lang}-${subtitle.label}`}
                   className={`subtitle-option ${selectedSubtitle?.lang === subtitle.lang ? 'active' : ''}`}
                   onClick={() => {
                     setSelectedSubtitle(subtitle);
                     setSubtitlesEnabled(true);
-                    
+
                     // Enable the selected subtitle track
                     const player = playerRef.current;
                     if (player) {
@@ -1412,120 +1410,120 @@ const markAdSeen = useCallback(() => {
   );
 
   useEffect(() => {
-  const p = playerRef.current;
-  if (!p) return;
+    const p = playerRef.current;
+    if (!p) return;
 
-  const Button = videojs.getComponent('Button');
+    const Button = videojs.getComponent('Button');
 
-  class PrevEpButton extends Button {
-    constructor(player, options) {
-      super(player, options);
-      this.addClass('vjs-prev-ep');
-      this.controlText('Tập trước');
-    }
-    handleClick() { goPrev(); }
-  }
-
-  class NextEpButton extends Button {
-    constructor(player, options) {
-      super(player, options);
-      this.addClass('vjs-next-ep');
-      this.controlText('Tập sau');
-    }
-    handleClick() { goNext(); }
-  }
-
-  // ⭐ NEW: Nút tua lùi 10 giây
-  class Rewind10Button extends Button {
-    constructor(player, options) {
-      super(player, options);
-      this.addClass('vjs-rewind-10');
-      this.controlText('Tua lùi 10 giây');
-    }
-    handleClick() { 
-      const currentTime = this.player().currentTime();
-      this.player().currentTime(Math.max(0, currentTime - 10));
-    }
-  }
-
-  // ⭐ NEW: Nút tua tiến 10 giây  
-  class Forward10Button extends Button {
-    constructor(player, options) {
-      super(player, options);
-      this.addClass('vjs-forward-10');
-      this.controlText('Tua tiến 10 giây');
-    }
-    handleClick() { 
-      const currentTime = this.player().currentTime();
-      const duration = this.player().duration();
-      this.player().currentTime(Math.min(duration, currentTime + 10));
-    }
-  }
-
-  // ⭐ NEW: Settings button  
-  class SettingsButton extends Button {
-    constructor(player, options) {
-      super(player, options);
-      this.addClass('vjs-settings-button');
-      this.controlText('Cài đặt');
-    }
-    
-    createEl() {
-      const el = super.createEl();
-      // Add icon placeholder for React component
-      el.innerHTML = '<span class="vjs-icon-placeholder"></span>';
-      
-      // Use ReactDOM to render FontAwesome component
-      setTimeout(() => {
-        const iconPlaceholder = el.querySelector('.vjs-icon-placeholder');
-        if (iconPlaceholder) {
-          iconPlaceholder.innerHTML = '';
-          const root = ReactDOM.createRoot(iconPlaceholder);
-          root.render(<FontAwesomeIcon icon={faGear} style={{ fontSize: '16px', color: 'white' }} />);
-        }
-      }, 0);
-      
-      return el;
-    }
-    
-    handleClick(e) { 
-      // Ngăn sự kiện lan truyền để tránh trigger handleClickOutside
-      if (e) {
-        e.stopPropagation();
+    class PrevEpButton extends Button {
+      constructor(player, options) {
+        super(player, options);
+        this.addClass('vjs-prev-ep');
+        this.controlText('Tập trước');
       }
-      setShowSettingsMenu(prev => !prev);
+      handleClick() { goPrev(); }
     }
-  }
 
-  // đăng ký component 1 lần
-  if (!videojs.getComponent('PrevEpButton')) videojs.registerComponent('PrevEpButton', PrevEpButton);
-  if (!videojs.getComponent('NextEpButton')) videojs.registerComponent('NextEpButton', NextEpButton);
-  if (!videojs.getComponent('Rewind10Button')) videojs.registerComponent('Rewind10Button', Rewind10Button);
-  if (!videojs.getComponent('Forward10Button')) videojs.registerComponent('Forward10Button', Forward10Button);
-  if (!videojs.getComponent('SettingsButton')) videojs.registerComponent('SettingsButton', SettingsButton);
+    class NextEpButton extends Button {
+      constructor(player, options) {
+        super(player, options);
+        this.addClass('vjs-next-ep');
+        this.controlText('Tập sau');
+      }
+      handleClick() { goNext(); }
+    }
 
-  const cb = p.getChild('controlBar');
+    // ⭐ NEW: Nút tua lùi 10 giây
+    class Rewind10Button extends Button {
+      constructor(player, options) {
+        super(player, options);
+        this.addClass('vjs-rewind-10');
+        this.controlText('Tua lùi 10 giây');
+      }
+      handleClick() {
+        const currentTime = this.player().currentTime();
+        this.player().currentTime(Math.max(0, currentTime - 10));
+      }
+    }
 
-  // chèn ngay trước nút Fullscreen (nếu không tìm thấy thì chèn cuối)
-  const fsIndex = cb.children().findIndex(c => c?.name?.() === 'FullscreenToggle');
-  const insertIndex = fsIndex >= 0 ? fsIndex : cb.children().length;
+    // ⭐ NEW: Nút tua tiến 10 giây  
+    class Forward10Button extends Button {
+      constructor(player, options) {
+        super(player, options);
+        this.addClass('vjs-forward-10');
+        this.controlText('Tua tiến 10 giây');
+      }
+      handleClick() {
+        const currentTime = this.player().currentTime();
+        const duration = this.player().duration();
+        this.player().currentTime(Math.min(duration, currentTime + 10));
+      }
+    }
 
-  // Thêm các nút theo thứ tự: rewind10, forward10, prev episode, next episode, settings
-  rewind10BtnRef.current = cb.addChild('Rewind10Button', {}, insertIndex);
-  forward10BtnRef.current = cb.addChild('Forward10Button', {}, insertIndex + 1);
-  prevBtnRef.current = cb.addChild('PrevEpButton', {}, insertIndex + 2);
-  nextBtnRef.current = cb.addChild('NextEpButton', {}, insertIndex + 3);
-  settingsBtnRef.current = cb.addChild('SettingsButton', {}, insertIndex + 4);
+    // ⭐ NEW: Settings button  
+    class SettingsButton extends Button {
+      constructor(player, options) {
+        super(player, options);
+        this.addClass('vjs-settings-button');
+        this.controlText('Cài đặt');
+      }
 
-  return () => {
-    // gỡ khi unmount
-    rewind10BtnRef.current?.dispose?.(); rewind10BtnRef.current = null;
-    prevBtnRef.current?.dispose?.(); prevBtnRef.current = null;
-    nextBtnRef.current?.dispose?.(); nextBtnRef.current = null;
-    forward10BtnRef.current?.dispose?.(); forward10BtnRef.current = null;
-    settingsBtnRef.current?.dispose?.(); settingsBtnRef.current = null;
-  };
-}, [playerRef.current]); // chạy sau khi player đã được tạo
+      createEl() {
+        const el = super.createEl();
+        // Add icon placeholder for React component
+        el.innerHTML = '<span class="vjs-icon-placeholder"></span>';
+
+        // Use ReactDOM to render FontAwesome component
+        setTimeout(() => {
+          const iconPlaceholder = el.querySelector('.vjs-icon-placeholder');
+          if (iconPlaceholder) {
+            iconPlaceholder.innerHTML = '';
+            const root = ReactDOM.createRoot(iconPlaceholder);
+            root.render(<FontAwesomeIcon icon={faGear} style={{ fontSize: '16px', color: 'white' }} />);
+          }
+        }, 0);
+
+        return el;
+      }
+
+      handleClick(e) {
+        // Ngăn sự kiện lan truyền để tránh trigger handleClickOutside
+        if (e) {
+          e.stopPropagation();
+        }
+        setShowSettingsMenu(prev => !prev);
+      }
+    }
+
+    // đăng ký component 1 lần
+    if (!videojs.getComponent('PrevEpButton')) videojs.registerComponent('PrevEpButton', PrevEpButton);
+    if (!videojs.getComponent('NextEpButton')) videojs.registerComponent('NextEpButton', NextEpButton);
+    if (!videojs.getComponent('Rewind10Button')) videojs.registerComponent('Rewind10Button', Rewind10Button);
+    if (!videojs.getComponent('Forward10Button')) videojs.registerComponent('Forward10Button', Forward10Button);
+    if (!videojs.getComponent('SettingsButton')) videojs.registerComponent('SettingsButton', SettingsButton);
+
+    const cb = p.getChild('controlBar');
+
+    // chèn ngay trước nút Fullscreen (nếu không tìm thấy thì chèn cuối)
+    const fsIndex = cb.children().findIndex(c => c?.name?.() === 'FullscreenToggle');
+    const insertIndex = fsIndex >= 0 ? fsIndex : cb.children().length;
+
+    // Thêm các nút theo thứ tự: rewind10, forward10, prev episode, next episode, settings
+    rewind10BtnRef.current = cb.addChild('Rewind10Button', {}, insertIndex);
+    forward10BtnRef.current = cb.addChild('Forward10Button', {}, insertIndex + 1);
+    prevBtnRef.current = cb.addChild('PrevEpButton', {}, insertIndex + 2);
+    nextBtnRef.current = cb.addChild('NextEpButton', {}, insertIndex + 3);
+    settingsBtnRef.current = cb.addChild('SettingsButton', {}, insertIndex + 4);
+
+    return () => {
+      // gỡ khi unmount
+      rewind10BtnRef.current?.dispose?.(); rewind10BtnRef.current = null;
+      prevBtnRef.current?.dispose?.(); prevBtnRef.current = null;
+      nextBtnRef.current?.dispose?.(); nextBtnRef.current = null;
+      forward10BtnRef.current?.dispose?.(); forward10BtnRef.current = null;
+      settingsBtnRef.current?.dispose?.(); settingsBtnRef.current = null;
+    };
+  }, [playerRef.current]); // chạy sau khi player đã được tạo
 
   useEffect(() => {
     if (prevBtnRef.current) {
@@ -1541,16 +1539,16 @@ const markAdSeen = useCallback(() => {
     const handleKeyDown = (e) => {
       const p = playerRef.current;
       if (!p) return;
-      
+
       // Chỉ hoạt động khi không có modal nào mở và không đang focus vào input
       const isModalOpen = showRatingModal || showUpgradeModal || showSettingsMenu;
-      const isInputFocused = document.activeElement?.tagName === 'INPUT' || 
-                           document.activeElement?.tagName === 'TEXTAREA' ||
-                           document.activeElement?.contentEditable === 'true';
-      
+      const isInputFocused = document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA' ||
+        document.activeElement?.contentEditable === 'true';
+
       if (isModalOpen || isInputFocused) return;
 
-      switch(e.code) {
+      switch (e.code) {
         case 'Space':
           e.preventDefault();
           if (p.paused()) {
@@ -1578,12 +1576,12 @@ const markAdSeen = useCallback(() => {
     const handleClickOutside = (e) => {
       // Chỉ close menu khi click RA NGOÀI và menu đang mở
       if (!showSettingsMenu) return;
-      
+
       // Kiểm tra xem click có nằm trong menu hay nút settings không
-      const clickedInsideMenu = e.target.closest('.settings-menu') || 
-                               e.target.closest('.video-settings-container');
+      const clickedInsideMenu = e.target.closest('.settings-menu') ||
+        e.target.closest('.video-settings-container');
       const clickedSettingsButton = e.target.closest('.vjs-settings-button');
-      
+
       // Chỉ close khi click ra ngoài (không phải menu và không phải nút)
       if (!clickedInsideMenu && !clickedSettingsButton) {
         setShowSettingsMenu(false);
@@ -1594,13 +1592,13 @@ const markAdSeen = useCallback(() => {
     document.addEventListener('keydown', handleKeyDown);
     // Dùng 'mousedown' thay vì 'click' để tránh conflict
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [playerRef.current, showRatingModal, showUpgradeModal, showSettingsMenu]);
-  
+
   // ✅ FIX: Giữ controls hiển thị khi menu settings đang mở
   useEffect(() => {
     const p = playerRef.current;
@@ -1610,15 +1608,15 @@ const markAdSeen = useCallback(() => {
       // Khi menu mở: thêm class để giữ controls luôn hiển thị
       p.addClass('vjs-user-active');
       p.addClass('vjs-has-started');
-      
+
       // Ngăn Video.js tự động ẩn controls
       const keepControlsVisible = () => {
         p.addClass('vjs-user-active');
       };
-      
+
       // Chạy interval để đảm bảo controls không bị ẩn
       const intervalId = setInterval(keepControlsVisible, 100);
-      
+
       return () => {
         clearInterval(intervalId);
         // Khi đóng menu: cho phép Video.js hoạt động bình thường
@@ -1644,10 +1642,10 @@ const markAdSeen = useCallback(() => {
 
       {/* VIP Gate Check */}
       {gate.status === 'checking' && (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           height: '400px',
           flexDirection: 'column',
           gap: '10px'
@@ -1658,10 +1656,10 @@ const markAdSeen = useCallback(() => {
       )}
 
       {gate.status === 'not_allowed' && (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           height: '400px',
           flexDirection: 'column',
           gap: '20px',
@@ -1681,7 +1679,7 @@ const markAdSeen = useCallback(() => {
             {gate.message}
           </div>
           <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
-            <button 
+            <button
               onClick={() => navigate('/buy-package')}
               style={{
                 background: 'linear-gradient(45deg, #ff6b6b, #ee5a24)',
@@ -1701,7 +1699,7 @@ const markAdSeen = useCallback(() => {
               🚀 Nâng cấp VIP ngay
             </button>
             {!userId && (
-              <button 
+              <button
                 onClick={() => navigate('/login')}
                 style={{
                   background: 'transparent',
@@ -1732,167 +1730,175 @@ const markAdSeen = useCallback(() => {
       {/* PLAYER - show when allowed or trial */}
       {['allowed', 'trial'].includes(gate.status) && (
         <section className="player-wrap">
-        <div
-          ref={frameRef}
-          className={`player-frame`}
-        >
-          {/* ==== PREROLL AD OVERLAY ==== */}
-    {showPreroll && (
-      <div className="preroll-overlay">
-        <video
-      ref={adVideoRef}
-      className="preroll-video"
-      playsInline
-      autoPlay
-      muted
-      controls={false}
-      onPlay={markAdSeen}
-      onCanPlay={markAdSeen}
-      onEnded={handleAdEnded}
-      onError={handleAdError}
-    >
-      <source src={PREROLL_CONFIG.src} type="video/mp4" />
-    </video>
-
-        <div className="preroll-topbar">
-          <span className="preroll-label">Quảng cáo</span>
-          <button
-            className={`preroll-skip ${canSkip ? 'enabled' : ''}`}
-            onClick={handleSkipAd}
-            disabled={!canSkip}
-            aria-disabled={!canSkip}
+          <div
+            ref={frameRef}
+            className={`player-frame`}
           >
-            {canSkip ? 'Bỏ qua ' : `Bỏ qua sau ${skipLeft}s`}
-          </button>
-        </div>
+            {/* ==== PREROLL AD OVERLAY ==== */}
+            {showPreroll && (
+              <div className="preroll-overlay">
+                <video
+                  ref={adVideoRef}
+                  className="preroll-video"
+                  playsInline
+                  autoPlay
+                  muted
+                  controls={false}
+                  onPlay={markAdSeen}
+                  onCanPlay={markAdSeen}
+                  onEnded={handleAdEnded}
+                  onError={handleAdError}
+                >
+                  <source src={PREROLL_CONFIG.src} type="video/mp4" />
+                </video>
 
-        <div className="preroll-bottom">
-          <span>Xem miễn phí cùng quảng cáo • <b>Đăng ký NO ADS</b> để xem không quảng cáo</span>
-        </div>
-      </div>
-    )}
+                <div className="preroll-topbar">
+                  <span className="preroll-label">Quảng cáo</span>
+                  <button
+                    className={`preroll-skip ${canSkip ? 'enabled' : ''}`}
+                    onClick={handleSkipAd}
+                    disabled={!canSkip}
+                    aria-disabled={!canSkip}
+                  >
+                    {canSkip ? 'Bỏ qua ' : `Bỏ qua sau ${skipLeft}s`}
+                  </button>
+                </div>
 
-          <div data-vjs-player style={{ position: 'relative' }}>
-            <video
-              id="watch-player"
-              ref={videoRef}
-              className="video-js vjs-default-skin vjs-big-play-centered"
-              playsInline
-              controls
-            />
-            
-            {/* ✅ Trial countdown overlay - hiển thị TRONG video player */}
-            {isTrialMode && !trialExpired && (
-              <div className="trial-overlay-video">
-                <div className="trial-countdown-box">
-                  <div className="trial-package-name">
-                    Xem thử {gate.requiredPackage || 'VIP'}
+                <div className="preroll-bottom">
+                  <span>Xem miễn phí cùng quảng cáo • <b>Đăng ký NO ADS</b> để xem không quảng cáo</span>
+                </div>
+              </div>
+            )}
+
+            <div data-vjs-player style={{ position: 'relative' }}>
+              <video
+                id="watch-player"
+                ref={videoRef}
+                className="video-js vjs-default-skin vjs-big-play-centered"
+                playsInline
+                controls
+              />
+
+              {/* ✅ Trial countdown overlay - hiển thị TRONG video player */}
+              {isTrialMode && !trialExpired && (
+                <div className="trial-overlay-video">
+                  <div className="trial-countdown-box">
+                    <div className="trial-package-name">
+                      Xem thử {gate.requiredPackage || 'VIP'}
+                    </div>
+                    <div className="trial-timer">
+                      <span className="timer-icon">⏱️</span>
+                      <span className="timer-text">
+                        {Math.max(0, Math.ceil(trialTimeLimit - currentTime))}s còn lại
+                      </span>
+                    </div>
+                    <div className="trial-subtitle">
+                      Nâng cấp để xem đầy đủ
+                    </div>
                   </div>
-                  <div className="trial-timer">
-                    <span className="timer-icon">⏱️</span>
-                    <span className="timer-text">
-                      {Math.max(0, Math.ceil(trialTimeLimit - currentTime))}s còn lại
-                    </span>
-                  </div>
-                  <div className="trial-subtitle">
-                    Nâng cấp để xem đầy đủ
-                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ✅ Settings menu - render via Portal into player element */}
+            {showSettingsMenu && playerEl &&
+              createPortal(<SettingsMenu />, playerEl)
+            }
+
+            {/* ✅ Trial expired overlay */}
+            {isTrialMode && trialExpired && (
+              <div className="trial-expired-overlay">
+                <div className="trial-expired-content">
+                  <div className="trial-expired-icon">⏰</div>
+                  <h3>Hết thời gian xem thử</h3>
+                  <p>Nâng cấp {getPackageDisplayName(currentMov?.minVipLevel) || 'VIP'} để tiếp tục xem phim</p>
+                  <button
+                    className="btn-upgrade-now"
+                    onClick={() => setShowUpgradeModal(true)}
+                  >
+                    Nâng cấp {getPackageDisplayName(currentMov?.minVipLevel) || 'VIP'} ngay
+                  </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* ✅ Settings menu - render via Portal into player element */}
-          {showSettingsMenu && playerEl && 
-            createPortal(<SettingsMenu />, playerEl)
-          }
-          
-          {/* ✅ Trial expired overlay */}
-          {isTrialMode && trialExpired && (
-            <div className="trial-expired-overlay">
-              <div className="trial-expired-content">
-                <div className="trial-expired-icon">⏰</div>
-                <h3>Hết thời gian xem thử</h3>
-                <p>Nâng cấp {getPackageDisplayName(currentMov?.minVipLevel) || 'VIP'} để tiếp tục xem phim</p>
-                <button 
-                  className="btn-upgrade-now"
-                  onClick={() => setShowUpgradeModal(true)}
-                >
-                  Nâng cấp {getPackageDisplayName(currentMov?.minVipLevel) || 'VIP'} ngay
-                </button>
+          {/* Khi sticky bật, hiển thị thông tin phim phía trên */}
+          {sticky && (
+            <div className="watch-info-top">
+              <h2>{currentMov?.title}</h2>
+              <div className="tags">
+                {currentMov?.year && <span className="chip">{currentMov.year}</span>}
+                {currentMov?.genres?.slice(0, 4).map((g) => (
+                  <span key={g} className="chip ghost">
+                    {g}
+                  </span>
+                ))}
               </div>
+              {currentMov?.desc && <p className="desc">{currentMov.desc}</p>}
             </div>
           )}
-        </div>
 
-        {/* Khi sticky bật, hiển thị thông tin phim phía trên */}
-        {sticky && (
-          <div className="watch-info-top">
-            <h2>{currentMov?.title}</h2>
-            <div className="tags">
-              {currentMov?.year && <span className="chip">{currentMov.year}</span>}
-              {currentMov?.genres?.slice(0, 4).map((g) => (
-                <span key={g} className="chip ghost">
-                  {g}
-                </span>
-              ))}
-            </div>
-            {currentMov?.desc && <p className="desc">{currentMov.desc}</p>}
-          </div>
-        )}
+          {/* giữ chỗ khi sticky để trang không “tụt” */}
+          {sticky && <div className="player-placeholder" style={{ height: playerH }} aria-hidden />}
 
-        {/* giữ chỗ khi sticky để trang không “tụt” */}
-        {sticky && <div className="player-placeholder" style={{ height: playerH }} aria-hidden />}
-
-        {/* CONTROL BAR */}
-        <div className="action-toolbar">
-          {/* nhóm 1: các hành động nhanh */}
-          <div className="at-group">
-            <button className={`at-item ${isInWishlist ? "active" : ""}`} onClick={handleToggleWishlist}>
-              <FontAwesomeIcon icon={faHeart} /> <span>Yêu thích</span>
-            </button>
-            <button className={`at-item ${inList ? "active" : ""}`} onClick={() => setInList(v => !v)}>
-              <FontAwesomeIcon icon={faPlus} /> <span>Thêm vào</span>
-            </button>
-            <button className="at-item">
-              <FontAwesomeIcon icon={faShareNodes} /> <span>Chia sẻ</span>
-            </button>
-            {MyUser && (
-              <button className="at-item danger" onClick={() => setShowReportModal(true)}>
-                <FontAwesomeIcon icon={faFlag} /> <span>Báo lỗi</span>
+          {/* CONTROL BAR */}
+          <div className="action-toolbar">
+            {/* nhóm 1: các hành động nhanh */}
+            <div className="at-group">
+              <button className={`at-item ${isInWishlist ? "active" : ""}`} onClick={handleToggleWishlist}>
+                <FontAwesomeIcon icon={faHeart} /> <span>Yêu thích</span>
               </button>
-            )}
-          </div>
-
-          {/* nhóm 2: các toggle */}
-          <div className="at-group">
-            <div className="at-toggle">
-              <span>Tự chuyển</span>
-              <label className="switch">
-                <input type="checkbox" checked={autoNext} onChange={e => setAutoNext(e.target.checked)} />
-                <span className="slider" />
-              </label>
+              <button className={`at-item ${inList ? "active" : ""}`} onClick={() => setInList(v => !v)}>
+                <FontAwesomeIcon icon={faPlus} /> <span>Thêm vào</span>
+              </button>
+              <button className="at-item">
+                <FontAwesomeIcon icon={faShareNodes} /> <span>Chia sẻ</span>
+              </button>
+              <button
+                className="at-item"
+                onClick={() =>
+                  navigate("/create-movie-room", { state: { movie: currentMov, episode: currentEp } })
+                }
+              >
+                <i className="fa-brands fa-forumbee"></i> <span>Xem chung</span>
+              </button>
+              {MyUser && (
+                <button className="at-item danger" onClick={() => setShowReportModal(true)}>
+                  <FontAwesomeIcon icon={faFlag} /> <span>Báo lỗi</span>
+                </button>
+              )}
             </div>
-            <div className="at-toggle">
-              <span>Rạp phim</span>
-              <label className="switch">
-                <input type="checkbox" checked={isTheater} onChange={e => setIsTheater(e.target.checked)} />
-                <span className="slider" />
-              </label>
+
+            {/* nhóm 2: các toggle */}
+            <div className="at-group">
+              <div className="at-toggle">
+                <span>Tự chuyển</span>
+                <label className="switch">
+                  <input type="checkbox" checked={autoNext} onChange={e => setAutoNext(e.target.checked)} />
+                  <span className="slider" />
+                </label>
+              </div>
+              <div className="at-toggle">
+                <span>Rạp phim</span>
+                <label className="switch">
+                  <input type="checkbox" checked={isTheater} onChange={e => setIsTheater(e.target.checked)} />
+                  <span className="slider" />
+                </label>
+              </div>
             </div>
+
+            {/* Rating – là nơi DUY NHẤT hiển thị điểm */}
+            <button className="at-rate" onClick={() => setShowRatingModal(true)} title="Đánh giá bộ phim">
+              <span className="star">★</span>
+              <span className="score">{avgRating.toFixed(1)}</span>
+              <span className="count">({totalRatings})</span>
+              <span className="label">Đánh giá</span>
+            </button>
+
+
           </div>
-
-          {/* Rating – là nơi DUY NHẤT hiển thị điểm */}
-          <button className="at-rate" onClick={() => setShowRatingModal(true)} title="Đánh giá bộ phim">
-            <span className="star">★</span>
-            <span className="score">{avgRating.toFixed(1)}</span>
-            <span className="count">({totalRatings})</span>
-            <span className="label">Đánh giá</span>
-          </button>
-
-         
-        </div>
-      </section>
+        </section>
       )}
 
       {/* MAIN CONTENT */}
@@ -2103,7 +2109,7 @@ const markAdSeen = useCallback(() => {
         <aside className="wg-side">
           <div className="cast-crew-box">
             <div className="box-head">Thông tin tham gia</div>
-            
+
             {/* Đạo diễn */}
             {authors.filter((a) => a.authorRole === "DIRECTOR").length > 0 && (
               <div className="crew-section">
@@ -2113,8 +2119,8 @@ const markAdSeen = useCallback(() => {
                     .filter((a) => a.authorRole === "DIRECTOR")
                     .map((a, index, arr) => (
                       <span key={a.authorId}>
-                        <Link 
-                          className="crew-name" 
+                        <Link
+                          className="crew-name"
                           to={`/browse/author-id/${encodeURIComponent(a.authorId)}`}
                         >
                           {a.name}
@@ -2135,8 +2141,8 @@ const markAdSeen = useCallback(() => {
                     .filter((a) => a.authorRole === "PERFORMER")
                     .map((a, index, arr) => (
                       <span key={a.authorId}>
-                        <Link 
-                          className="crew-name" 
+                        <Link
+                          className="crew-name"
                           to={`/browse/author-id/${encodeURIComponent(a.authorId)}`}
                         >
                           {a.name}
@@ -2186,7 +2192,7 @@ const markAdSeen = useCallback(() => {
       </div>
 
       {/* ✅ VIP Upgrade Modal - Component riêng */}
-      <UpgradeModal 
+      <UpgradeModal
         show={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         currentMovie={currentMov}

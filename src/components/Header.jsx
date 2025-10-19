@@ -223,7 +223,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
               <Link to="/danh-muc/type/SERIES" onClick={() => setIsMobileMenuOpen(false)}>
                 Phim bộ
               </Link>
-              <Link to="/main" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link to="/rooms" onClick={() => setIsMobileMenuOpen(false)}>
                 Xem chung
               </Link>
 
