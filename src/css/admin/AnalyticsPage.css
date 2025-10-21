@@ -229,3 +229,180 @@ code.bg-light {
     min-width: 25px;
   }
 }
+
+/* ===== BẢNG KÊ DOANH THU (TABLE VIEW) ===== */
+/* Styling giống Excel với viền rõ ràng */
+.table-bordered {
+  border: 2px solid #495057 !important;
+}
+
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid #6c757d !important;
+  vertical-align: middle;
+}
+
+/* Header của bảng kê */
+.table-secondary th {
+  background-color: #6c757d !important;
+  color: white !important;
+  font-weight: 600;
+  text-align: center;
+  padding: 12px 8px;
+  border: 1px solid #495057 !important;
+}
+
+/* Dòng tiêu đề nhóm (người dùng) */
+.table-active {
+  background-color: #e9ecef !important;
+  font-weight: 600;
+}
+
+.table-active td {
+  border-top: 2px solid #495057 !important;
+  border-bottom: 1px solid #6c757d !important;
+}
+
+/* Dòng tổng cộng nhóm */
+.table-warning {
+  background-color: #fff3cd !important;
+}
+
+.table-warning td {
+  border: 1px solid #ffc107 !important;
+  font-weight: 600;
+}
+
+/* Grand Total */
+.table-danger {
+  background-color: #f8d7da !important;
+}
+
+.table-danger td {
+  border: 2px solid #dc3545 !important;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Các ô số tiền - căn phải và format đẹp */
+.text-end {
+  text-align: right !important;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Zebra stripes cho bảng chi tiết */
+tbody tr:not(.table-active):not(.table-warning):not(.table-danger):nth-child(4n+2),
+tbody tr:not(.table-active):not(.table-warning):not(.table-danger):nth-child(4n+3) {
+  background-color: #f8f9fa;
+}
+
+/* Badge trong bảng kê */
+.badge {
+  padding: 0.35em 0.65em;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+/* Tổng quan box */
+.table tbody tr:first-child td {
+  padding: 10px 12px;
+}
+
+/* Print-friendly styling */
+@media print {
+  .ap-toolbar,
+  .card-footer,
+  button,
+  .btn {
+    display: none !important;
+  }
+  
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #dee2e6 !important;
+  }
+  
+  .table-bordered {
+    border: 2px solid #000 !important;
+  }
+  
+  .table-bordered th,
+  .table-bordered td {
+    border: 1px solid #000 !important;
+  }
+}
+
+/* Mobile responsive cho bảng kê */
+@media (max-width: 768px) {
+  .table-responsive .table {
+    font-size: 0.8rem;
+  }
+  
+  .table-danger td {
+    font-size: 0.9rem !important;
+  }
+  
+  .badge {
+    font-size: 0.7em;
+    padding: 0.25em 0.5em;
+  }
+  
+  /* Ẩn một số cột không quan trọng trên mobile */
+  .table th:nth-child(n+7),
+  .table td:nth-child(n+7) {
+    display: none;
+  }
+}
+
+/* ===== PHIM BẢNG KÊ ===== */
+/* Thumbnail trong bảng phim */
+.table img.rounded {
+  border: 1px solid #dee2e6;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Rating stars */
+.text-warning .fa-star {
+  color: #ffc107;
+  text-shadow: 0 0 2px rgba(255, 193, 7, 0.5);
+}
+
+/* Code tags for IDs */
+code.bg-light {
+  font-size: 0.85em;
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+
+/* Hover effect cho hàng có ảnh */
+.table tbody tr:hover img {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* ===== KHUYẾN MÃI & KHÁCH HÀNG ===== */
+/* Số âm (chiết khấu) */
+.text-danger {
+  font-weight: 600;
+}
+
+/* Success số dương */
+.text-success {
+  font-weight: 600;
+}
+
+/* Small text trong table */
+.table small {
+  font-size: 0.8em;
+  color: #6c757d;
+}
+
+/* Footer notes list */
+.card-footer ul {
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+
+.card-footer ul li {
+  margin-bottom: 0.3rem;
+}

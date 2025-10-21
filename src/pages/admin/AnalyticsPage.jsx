@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef  } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import DataAnalyzerService from "../../services/DataAnalyzerService";
 import { Bar, Doughnut, Pie, Line } from "react-chartjs-2";
@@ -22,6 +22,9 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointEleme
 const AnalyticsPage = () => {
   // mode: 'REVENUE' | 'PROMOTIONS' | 'CUSTOMERS' | 'MOVIES'
   const [mode, setMode] = useState("REVENUE");
+  
+  // viewMode: 'DASHBOARD' (cards + charts) | 'TABLE' (giống Excel)
+  const [viewMode, setViewMode] = useState("DASHBOARD");
 
   // range + groupBy
   const todayISO = new Date().toISOString().slice(0, 10);
@@ -432,33 +435,6 @@ const AnalyticsPage = () => {
 
 };
 
-//phần export file PDF (FE) & Excel (BE)
-const revBarRef = useRef(null);
-const revLineRef = useRef(null);
-const mvBarRef  = useRef(null);
-
-// helper tải blob cho backend export
-const saveBlob = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-};
-
-// helper cho PDF export (FE)
-const downloadBlob = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-};
-
-// ---------- Export PDF handler (FE-only) ----------
-const handleExportPDF = async () => {
-  const isRevenue = mode === "REVENUE";
-  return clientExportPDF(isRevenue);
-};
-
 // ---------- Export Excel thông minh theo tab hiện tại ----------
 const handleExportBE = async (includePromotions = false) => {
   try {
@@ -487,7 +463,12 @@ const handleExportBE = async (includePromotions = false) => {
         ? `BaoCao_DoanhThu_CTKM_${startDate}_${endDate}_${groupBy}.xlsx`
         : `BaoCao_DoanhThu_${startDate}_${endDate}_${groupBy}.xlsx`;
       
-      saveBlob(res.data, fileName);
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url; 
+      a.download = fileName; 
+      a.click();
+      URL.revokeObjectURL(url);
     } else if (mode === "MOVIES") {
       // Tab PHIM: Xuất báo cáo thống kê phim từ backend
       console.log("Exporting movies data using backend...");
@@ -504,148 +485,17 @@ const handleExportBE = async (includePromotions = false) => {
       );
       
       const fileName = `BaoCao_Phim_${startDate}_${endDate}_${groupBy}.xlsx`;
-      saveBlob(res.data, fileName);
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url; 
+      a.download = fileName; 
+      a.click();
+      URL.revokeObjectURL(url);
     }
   } catch (err) {
     console.error("Export Excel error:", err);
     alert("Xuất Excel lỗi. Vui lòng kiểm tra và thử lại.");
   }
-};
-
-// Đã loại bỏ clientExportXLSX - sử dụng Backend API thay thế
-
-const clientExportPDF = async (isRevenue) => {
-  const jsPDFModule = await import("jspdf");
-  const jsPDF = jsPDFModule.default || jsPDFModule;
-  const autoTableModule = await import("jspdf-autotable");
-  const autoTable = autoTableModule.default || autoTableModule;
-
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-
-  // Try to load a TTF font that supports Vietnamese (place NotoSans-Regular.ttf in public/fonts/)
-  const arrayBufferToBase64 = (buffer) => {
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    const chunkSize = 0x8000;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
-    }
-    return window.btoa(binary);
-  };
-
-  const loadAndRegisterFont = async () => {
-    if (window.__pdfFontRegistered) return true;
-    try {
-      const resp = await fetch("/fonts/NotoSans-Regular.ttf");
-      if (!resp.ok) throw new Error("Font not found");
-      const ab = await resp.arrayBuffer();
-      const b64 = arrayBufferToBase64(ab);
-      // register with jsPDF VFS
-      doc.addFileToVFS("NotoSans-Regular.ttf", b64);
-      doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
-      window.__pdfFontRegistered = true;
-      return true;
-    } catch (err) {
-      // fallback: leave default font (may not support Vietnamese)
-      console.warn("Could not load PDF font for Vietnamese; falling back to default.", err);
-      return false;
-    }
-  };
-
-  const fontLoaded = await loadAndRegisterFont();
-  if (fontLoaded) doc.setFont("NotoSans");
-  const title = isRevenue ? "BÁO CÁO DOANH THU" : "BÁO CÁO THỐNG KÊ PHIM";
-
-  // Header
-  doc.setFontSize(14); doc.text(title, 40, 40);
-  doc.setFontSize(10);
-  doc.text(`Khoảng: ${startDate} → ${endDate}  •  Nhóm theo: ${groupBy}`, 40, 60);
-
-  // Tóm tắt
-  const summaryRows = isRevenue
-    ? [
-        ["Tổng doanh thu", (revSummary.totalRevenue||0).toLocaleString("vi-VN")],
-        ["Doanh thu (khoảng)", (revSummary.monthlyRevenue||0).toLocaleString("vi-VN")],
-        ["Tổng giao dịch", (revSummary.totalTransactions||0).toLocaleString("vi-VN")],
-        ["GD (khoảng)", (revSummary.monthlyTransactions||0).toLocaleString("vi-VN")],
-        ["Hôm nay", (quickStats.todayRevenue||0).toLocaleString("vi-VN")],
-        ["Tuần này", (quickStats.weekRevenue||0).toLocaleString("vi-VN")],
-        ["Tăng trưởng (%)", `${Number(quickStats.growthPercent||0).toFixed(2)}%`],
-        ["Gói phổ biến", quickStats.popularPackage||"—"],
-      ]
-    : [
-        ["Tổng số phim", mvSummary.totalMovies||0],
-        ["Phim lẻ", mvSummary.totalSingle||0],
-        ["Phim bộ", mvSummary.totalSeries||0],
-        ["Hoàn thành", mvSummary.completedCount||0],
-        ["Số tập", mvSummary.totalEpisodes||0],
-        ["Thêm (tháng)", mvSummary.addedThisMonth||0],
-        ["Đánh giá TB", (mvSummary.avgRatingAll||0).toFixed(1)],
-        ["Thể loại phổ biến", mvSummary.topGenre||"—"],
-        ["Quốc gia hàng đầu", mvSummary.topCountry||"—"],
-      ];
-  autoTable(doc, { startY: 80, body: summaryRows, theme: "grid", styles: { fontSize: 9 } });
-
-  // Ảnh chart (nếu cần)
-  const chartRef = isRevenue ? revLineRef : mvBarRef;
-  const chartY = (doc.lastAutoTable?.finalY || 100) + 15;
-  try {
-    const base64 = chartRef?.current?.toBase64Image?.();
-    if (base64) {
-      const maxW = 515; // ~ page width 595pt - margin
-      const h = 180;
-      doc.addImage(base64, "PNG", 40, chartY, maxW, h);
-    }
-  } catch {}
-
-  // Bảng dữ liệu
-  let startY = (doc.lastAutoTable?.finalY || 100) + 200;
-  if (isRevenue) {
-    autoTable(doc, {
-      startY,
-      head: [["Nhóm", "Doanh thu"]],
-      body: (revChart.labels||[]).map((l,i)=>[l, (revChart.data?.[i]||0).toLocaleString("vi-VN")]),
-      styles: { fontSize: 9 }, theme: "striped"
-    });
-    startY = (doc.lastAutoTable?.finalY || startY) + 15;
-
-    autoTable(doc, {
-      startY,
-      head: [["ID","Người dùng","Gói","Số tiền","Ngày","Trạng thái"]],
-      body: (txPaged.items||[]).map(tx=>[
-        `#${tx.orderId}`, tx.userName, tx.packageId,
-        (tx.finalAmount||0).toLocaleString("vi-VN")+"₫",
-        new Date(tx.createdAt).toLocaleDateString("vi-VN"),
-        tx.status
-      ]),
-      styles: { fontSize: 8 }, theme: "grid"
-    });
-  } else {
-    autoTable(doc, {
-      startY,
-      head: [["Nhóm","Phim mới"]],
-      body: (mvChart.labels||[]).map((l,i)=>[l, mvChart.data?.[i]||0]),
-      styles: { fontSize: 9 }, theme: "striped"
-    });
-    startY = (doc.lastAutoTable?.finalY || startY) + 15;
-
-    autoTable(doc, {
-      startY,
-      head: [["#","Tên","Lượt xem","Rating","Năm","QG"]],
-      body: topMoviesByViews.map((m,i)=>[i+1, m.title, m.viewCount||0, (m.avgRating||0).toFixed(1), m.releaseYear, m.country]),
-      styles: { fontSize: 8 }, theme: "grid"
-    });
-    startY = (doc.lastAutoTable?.finalY || startY) + 15;
-
-    autoTable(doc, {
-      startY,
-      head: [["#","Tên","Rating","Lượt đánh giá","Năm","QG"]],
-      body: topMoviesByRating.map((m,i)=>[i+1, m.title, (m.avgRating||0).toFixed(1), m.ratingCount||0, m.releaseYear, m.country]),
-      styles: { fontSize: 8 }, theme: "grid"
-    });
-  }
-
-  doc.save(`${isRevenue?"revenue":"movies"}_${startDate}_${endDate}_${groupBy}.pdf`);
 };
 
   return (
@@ -695,6 +545,28 @@ const clientExportPDF = async (isRevenue) => {
 
           {/* Right controls */}
           <div className="ap-controls">
+            {/* View Mode Toggle (hiển thị cho tất cả các tab) */}
+            {(mode === "REVENUE" || mode === "PROMOTIONS" || mode === "CUSTOMERS" || mode === "MOVIES") && (
+              <div className="segmented small me-2">
+                <button
+                  type="button"
+                  className={viewMode === "DASHBOARD" ? "is-active" : ""}
+                  onClick={() => setViewMode("DASHBOARD")}
+                  title="Xem dạng Dashboard"
+                >
+                  <i className="fas fa-chart-bar me-1"></i> Dashboard
+                </button>
+                <button
+                  type="button"
+                  className={viewMode === "TABLE" ? "is-active" : ""}
+                  onClick={() => setViewMode("TABLE")}
+                  title="Xem dạng Bảng kê (giống Excel)"
+                >
+                  <i className="fas fa-table me-1"></i> Bảng kê
+                </button>
+              </div>
+            )}
+            
             {/* Quick presets dropdown (tùy chọn) */}
             <select
               className="ap-quick form-select"
@@ -776,9 +648,6 @@ const clientExportPDF = async (isRevenue) => {
                   Excel
                 </button>
               )}
-              <button className="btn btn-outline-danger btn-sm" onClick={handleExportPDF}>
-                <i className="fas fa-file-pdf me-1" /> PDF
-              </button>
             </div>
 
             {/* Group by */}
@@ -810,7 +679,165 @@ const clientExportPDF = async (isRevenue) => {
         </div>
 
         {/* ===== MODE: REVENUE ===== */}
-        {mode === "REVENUE" && (
+        {mode === "REVENUE" && viewMode === "TABLE" && (
+          <>
+            {/* ===== BẢNG KÊ DOANH THU (GIỐNG EXCEL) ===== */}
+            <div className="card mb-3">
+              <div className="card-header bg-white">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h4 className="mb-1 text-danger fw-bold">BẢNG KÊ DOANH THU</h4>
+                    <div className="text-muted small">
+                      Từ ngày: {new Date(startDate).toLocaleDateString("vi-VN")} 
+                      {" • "}
+                      Đến ngày: {new Date(endDate).toLocaleDateString("vi-VN")}
+                      {" • "}
+                      (Nhóm theo: {groupBy})
+                    </div>
+                  </div>
+                  <div className="text-end">
+                    <div className="small text-muted">Ngày in:</div>
+                    <div>{new Date().toLocaleDateString("vi-VN")}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="card-body">
+                {/* I. TỔNG QUAN */}
+                <table className="table table-bordered" style={{ maxWidth: "500px" }}>
+                  <tbody>
+                    <tr>
+                      <td className="fw-bold bg-light">Tổng doanh thu</td>
+                      <td className="text-end">{revSummary.totalRevenue?.toLocaleString("vi-VN")}₫</td>
+                    </tr>
+                    <tr>
+                      <td className="fw-bold bg-light">Doanh thu (khoảng)</td>
+                      <td className="text-end">{revSummary.monthlyRevenue?.toLocaleString("vi-VN")}₫</td>
+                    </tr>
+                    <tr>
+                      <td className="fw-bold bg-light">Tổng giao dịch</td>
+                      <td className="text-end">{revSummary.totalTransactions?.toLocaleString("vi-VN")}</td>
+                    </tr>
+                    <tr>
+                      <td className="fw-bold bg-light">GD (khoảng)</td>
+                      <td className="text-end">{revSummary.monthlyTransactions?.toLocaleString("vi-VN")}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* II. BẢNG KÊ GIAO DỊCH THEO NGƯỜI DÙNG */}
+            <div className="card">
+              <div className="card-header bg-light">
+                <h5 className="mb-0">II. BẢNG KÊ GIAO DỊCH THEO NGƯỜI DÙNG</h5>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-bordered table-hover mb-0" style={{ fontSize: "0.9rem" }}>
+                    <thead className="table-secondary">
+                      <tr>
+                        <th style={{ width: "50px" }} className="text-center">STT</th>
+                        <th style={{ width: "200px" }}>Người dùng</th>
+                        <th style={{ width: "150px" }}>Mã đơn</th>
+                        <th style={{ width: "120px" }} className="text-center">Ngày</th>
+                        <th style={{ width: "120px" }}>Gói</th>
+                        <th style={{ width: "130px" }} className="text-end">Số tiền (VND)</th>
+                        <th style={{ width: "100px" }} className="text-center">Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        // Group transactions by user
+                        const byUser = {};
+                        (txPaged.items || []).forEach(tx => {
+                          const userName = tx.userName || "(không rõ)";
+                          if (!byUser[userName]) byUser[userName] = [];
+                          byUser[userName].push(tx);
+                        });
+
+                        let runningNo = 1;
+                        let grandTotal = 0;
+                        
+                        return Object.entries(byUser).map(([userName, transactions]) => {
+                          const subtotal = transactions.reduce((sum, tx) => sum + (tx.finalAmount || 0), 0);
+                          grandTotal += subtotal;
+                          
+                          return (
+                            <React.Fragment key={userName}>
+                              {/* Dòng tiêu đề nhóm */}
+                              <tr className="table-active">
+                                <td className="text-center fw-bold">{runningNo++}</td>
+                                <td colSpan="6" className="fw-bold text-primary">
+                                  <i className="fas fa-user me-2"></i>{userName}
+                                </td>
+                              </tr>
+                              {/* Chi tiết giao dịch */}
+                              {transactions.map((tx, idx) => (
+                                <tr key={idx}>
+                                  <td></td>
+                                  <td className="ps-4 text-muted">{userName}</td>
+                                  <td>#{tx.orderId}</td>
+                                  <td className="text-center">
+                                    {new Date(tx.createdAt).toLocaleDateString("vi-VN")}
+                                  </td>
+                                  <td>{tx.packageId}</td>
+                                  <td className="text-end">{(tx.finalAmount || 0).toLocaleString("vi-VN")}</td>
+                                  <td className="text-center">
+                                    {tx.status === "SUCCESS" ? (
+                                      <span className="badge bg-success">Thành công</span>
+                                    ) : (
+                                      <span className="badge bg-warning">Khác</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                              {/* Dòng tổng cộng nhóm */}
+                              <tr className="table-warning">
+                                <td></td>
+                                <td colSpan="4" className="fw-bold text-end">
+                                  Tổng cộng ({userName})
+                                </td>
+                                <td className="text-end fw-bold">{subtotal.toLocaleString("vi-VN")}</td>
+                                <td></td>
+                              </tr>
+                              {/* Khoảng trắng */}
+                              <tr>
+                                <td colSpan="7" style={{ height: "10px", backgroundColor: "#f8f9fa" }}></td>
+                              </tr>
+                            </React.Fragment>
+                          );
+                        }).concat(
+                          // GRAND TOTAL
+                          <tr key="grand-total" className="table-danger">
+                            <td></td>
+                            <td colSpan="4" className="fw-bold text-end fs-5">
+                              TỔNG CỘNG
+                            </td>
+                            <td className="text-end fw-bold fs-5">{grandTotal.toLocaleString("vi-VN")}</td>
+                            <td></td>
+                          </tr>
+                        );
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="card-footer bg-light">
+                <div className="small">
+                  <strong>Ghi chú:</strong>
+                  <ul className="mb-0 ps-3">
+                    <li>Báo cáo liệt kê giao dịch theo người dùng trong khoảng ngày đã chọn.</li>
+                    <li>Số tiền là giá trị sau giảm (finalAmount).</li>
+                    <li>Dòng 'Tổng cộng (Tên người dùng)' là tổng giao dịch của người đó.</li>
+                    <li>Dòng 'TỔNG CỘNG' là tổng toàn bộ báo cáo.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {mode === "REVENUE" && viewMode === "DASHBOARD" && (
           <>
             {/* Cards */}
             <div className="row g-3 mb-3">
@@ -949,7 +976,6 @@ const clientExportPDF = async (isRevenue) => {
                   </div>
                   <div className="card-body">
                     <Line 
-                      ref={revLineRef}
                       data={{
                         labels: revBar.labels || [],
                         datasets: [
@@ -1401,7 +1427,193 @@ const clientExportPDF = async (isRevenue) => {
         )}
 
         {/* ===== MODE: PROMOTIONS ===== */}
-        {mode === "PROMOTIONS" && (
+        {mode === "PROMOTIONS" && viewMode === "TABLE" && (
+          <>
+            {/* ===== BẢNG KÊ KHUYẾN MÃI (GIỐNG EXCEL) ===== */}
+            <div className="card mb-3">
+              <div className="card-header bg-white">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h4 className="mb-1 text-danger fw-bold">BÁO CÁO TỔNG KẾT CTKM</h4>
+                    <div className="text-muted small">
+                      Thời gian: {new Date(startDate).toLocaleDateString("vi-VN")} 
+                      {" → "}
+                      {new Date(endDate).toLocaleDateString("vi-VN")}
+                    </div>
+                  </div>
+                  <div className="text-end">
+                    <div className="small text-muted">Ngày in:</div>
+                    <div>{new Date().toLocaleDateString("vi-VN")}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="card-body">
+                {/* I. TỔNG QUAN CTKM */}
+                <h5 className="mb-3 text-primary">I. TỔNG QUAN CTKM</h5>
+                <table className="table table-bordered" style={{ maxWidth: "600px" }}>
+                  <tbody>
+                    <tr>
+                      <td className="fw-bold bg-light">Tổng lượt áp dụng (redemptions)</td>
+                      <td className="text-end">{promoSummary.totalRedemptions?.toLocaleString("vi-VN") || "0"}</td>
+                    </tr>
+                    <tr>
+                      <td className="fw-bold bg-light">Số user dùng CTKM (unique)</td>
+                      <td className="text-end">{promoSummary.uniqueUsers?.toLocaleString("vi-VN") || "0"}</td>
+                    </tr>
+                    <tr>
+                      <td className="fw-bold bg-light">Tổng giảm giá (VND)</td>
+                      <td className="text-end">{promoSummary.totalDiscountGranted?.toLocaleString("vi-VN") || "0"}₫</td>
+                    </tr>
+                    <tr>
+                      <td className="fw-bold bg-light">Doanh thu sau giảm (VND)</td>
+                      <td className="text-end">{promoSummary.totalFinalAmount?.toLocaleString("vi-VN") || "0"}₫</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* II. THỐNG KÊ THEO LINE */}
+            <div className="card mb-3">
+              <div className="card-header bg-light">
+                <h5 className="mb-0">II. THỐNG KÊ THEO LINE</h5>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-bordered table-hover mb-0" style={{ fontSize: "0.9rem" }}>
+                    <thead className="table-secondary">
+                      <tr>
+                        <th>Promotion ID</th>
+                        <th>Line ID</th>
+                        <th>Tên Line</th>
+                        <th>Loại</th>
+                        <th className="text-end">Lượt dùng</th>
+                        <th className="text-end">Giảm giá (VND)</th>
+                        <th className="text-end">Giá gốc (VND)</th>
+                        <th className="text-end">Thu (sau giảm)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {promotionLineStats && promotionLineStats.length > 0 ? (
+                        <>
+                          {promotionLineStats.map((line, idx) => (
+                            <tr key={idx}>
+                              <td>{line.promotionId || "N/A"}</td>
+                              <td>{line.promotionLineId || "N/A"}</td>
+                              <td>{line.promotionLineName || "N/A"}</td>
+                              <td className="text-center">
+                                <span className={`badge ${line.type === 'VOUCHER' ? 'bg-warning' : 'bg-primary'}`}>
+                                  {line.type || "N/A"}
+                                </span>
+                              </td>
+                              <td className="text-end">{(line.redemptions || 0).toLocaleString("vi-VN")}</td>
+                              <td className="text-end">{(line.totalDiscount || 0).toLocaleString("vi-VN")}</td>
+                              <td className="text-end">{(line.totalOriginal || 0).toLocaleString("vi-VN")}</td>
+                              <td className="text-end">{(line.totalFinal || 0).toLocaleString("vi-VN")}</td>
+                            </tr>
+                          ))}
+                          {/* TOTAL */}
+                          <tr className="table-danger">
+                            <td colSpan="4" className="fw-bold text-end">TỔNG CỘNG:</td>
+                            <td className="text-end fw-bold">
+                              {promotionLineStats.reduce((sum, line) => sum + (line.redemptions || 0), 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="text-end fw-bold">
+                              {promotionLineStats.reduce((sum, line) => sum + (line.totalDiscount || 0), 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="text-end fw-bold">
+                              {promotionLineStats.reduce((sum, line) => sum + (line.totalOriginal || 0), 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="text-end fw-bold">
+                              {promotionLineStats.reduce((sum, line) => sum + (line.totalFinal || 0), 0).toLocaleString("vi-VN")}
+                            </td>
+                          </tr>
+                        </>
+                      ) : (
+                        <tr>
+                          <td colSpan="8" className="text-center text-muted py-4">
+                            Chưa có dữ liệu promotion line
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* III. TOP VOUCHER */}
+            <div className="card">
+              <div className="card-header bg-light">
+                <h5 className="mb-0">III. TOP VOUCHER</h5>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-bordered table-hover mb-0" style={{ fontSize: "0.9rem" }}>
+                    <thead className="table-secondary">
+                      <tr>
+                        <th>Voucher</th>
+                        <th>Promotion ID</th>
+                        <th>Line ID</th>
+                        <th className="text-end">Lượt dùng</th>
+                        <th className="text-end">User duy nhất</th>
+                        <th className="text-end">Giảm giá (VND)</th>
+                        <th className="text-end">Giá gốc</th>
+                        <th className="text-end">Thu sau giảm</th>
+                        <th className="text-end">Max usage</th>
+                        <th className="text-end">Đã dùng</th>
+                        <th>First use</th>
+                        <th>Last use</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {voucherLeaderboard && voucherLeaderboard.length > 0 ? (
+                        voucherLeaderboard.map((voucher, idx) => (
+                          <tr key={idx}>
+                            <td><code className="bg-light px-2 py-1">{voucher.voucherCode}</code></td>
+                            <td>{voucher.promotionId || "N/A"}</td>
+                            <td>{voucher.promotionLineId || "N/A"}</td>
+                            <td className="text-end">{(voucher.uses || 0).toLocaleString("vi-VN")}</td>
+                            <td className="text-end">{(voucher.uniqueUsers || 0).toLocaleString("vi-VN")}</td>
+                            <td className="text-end">{(voucher.totalDiscount || 0).toLocaleString("vi-VN")}</td>
+                            <td className="text-end">{(voucher.totalOriginal || 0).toLocaleString("vi-VN")}</td>
+                            <td className="text-end">{(voucher.totalFinal || 0).toLocaleString("vi-VN")}</td>
+                            <td className="text-end">{voucher.maxUsage || "∞"}</td>
+                            <td className="text-end">{voucher.usedCount || 0}</td>
+                            <td className="text-center">
+                              <small>{voucher.firstUse || "—"}</small>
+                            </td>
+                            <td className="text-center">
+                              <small>{voucher.lastUse || "—"}</small>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="12" className="text-center text-muted py-4">
+                            Chưa có dữ liệu voucher
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="card-footer bg-light">
+                <div className="small">
+                  <strong>Ghi chú:</strong>
+                  <ul className="mb-0 ps-3">
+                    <li>Bảng hiển thị top voucher được sử dụng nhiều nhất</li>
+                    <li>Max usage: Số lần tối đa có thể dùng (∞ = không giới hạn)</li>
+                    <li>First/Last use: Ngày đầu tiên và cuối cùng voucher được sử dụng</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {mode === "PROMOTIONS" && viewMode === "DASHBOARD" && (
           <>
             {/* Promotion Summary Cards */}
             <div className="row g-3 mb-3">
@@ -1608,7 +1820,137 @@ const clientExportPDF = async (isRevenue) => {
         )}
 
         {/* ===== MODE: CUSTOMERS ===== */}
-        {mode === "CUSTOMERS" && (
+        {mode === "CUSTOMERS" && viewMode === "TABLE" && (
+          <>
+            {/* ===== BẢNG KÊ DOANH SỐ KHÁCH HÀNG (GIỐNG EXCEL) ===== */}
+            <div className="card mb-3">
+              <div className="card-header bg-white">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h4 className="mb-1 text-danger fw-bold">DOANH SỐ THEO KHÁCH HÀNG</h4>
+                    <div className="text-muted small">
+                      Từ ngày: {new Date(startDate).toLocaleDateString("vi-VN")} 
+                      {" • "}
+                      Đến ngày: {new Date(endDate).toLocaleDateString("vi-VN")}
+                    </div>
+                  </div>
+                  <div className="text-end">
+                    <div className="small text-muted">Ngày in:</div>
+                    <div>{new Date().toLocaleDateString("vi-VN")}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="card-body">
+                {/* TỔNG QUAN */}
+                <table className="table table-bordered" style={{ maxWidth: "500px" }}>
+                  <tbody>
+                    <tr>
+                      <td className="fw-bold bg-light">Doanh số trước CK</td>
+                      <td className="text-end">{(customerSales.totals?.totalOriginal || 0).toLocaleString("vi-VN")}₫</td>
+                    </tr>
+                    <tr>
+                      <td className="fw-bold bg-light">Chiết khấu</td>
+                      <td className="text-end text-danger">-{(customerSales.totals?.totalDiscount || 0).toLocaleString("vi-VN")}₫</td>
+                    </tr>
+                    <tr>
+                      <td className="fw-bold bg-light">Doanh số sau CK</td>
+                      <td className="text-end text-success fw-bold">{(customerSales.totals?.totalFinal || 0).toLocaleString("vi-VN")}₫</td>
+                    </tr>
+                    <tr>
+                      <td className="fw-bold bg-light">Số giao dịch</td>
+                      <td className="text-end">{(customerSales.totals?.totalTx || 0).toLocaleString("vi-VN")}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* CHI TIẾT KHÁCH HÀNG */}
+            <div className="card">
+              <div className="card-header bg-light">
+                <h5 className="mb-0">CHI TIẾT DOANH SỐ KHÁCH HÀNG</h5>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-bordered table-hover mb-0" style={{ fontSize: "0.9rem" }}>
+                    <thead className="table-secondary">
+                      <tr>
+                        <th className="text-center" style={{ width: "50px" }}>STT</th>
+                        <th style={{ width: "150px" }}>Mã KH</th>
+                        <th style={{ width: "200px" }}>Tên KH</th>
+                        <th style={{ width: "120px" }}>SĐT</th>
+                        <th style={{ width: "200px" }}>Email</th>
+                        <th className="text-center" style={{ width: "80px" }}>Số GD</th>
+                        <th className="text-end" style={{ width: "130px" }}>Doanh số trước CK</th>
+                        <th className="text-end" style={{ width: "130px" }}>Chiết khấu</th>
+                        <th className="text-end" style={{ width: "130px" }}>Doanh số sau CK</th>
+                        <th className="text-center" style={{ width: "100px" }}>First buy</th>
+                        <th className="text-center" style={{ width: "100px" }}>Last buy</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customerSales.rows && customerSales.rows.length > 0 ? (
+                        <>
+                          {customerSales.rows.map((cust, idx) => (
+                            <tr key={cust.userId}>
+                              <td className="text-center">{idx + 1}</td>
+                              <td><code className="bg-light px-2 py-1">{cust.userId}</code></td>
+                              <td>{cust.userName || "—"}</td>
+                              <td>{cust.phoneNumber || "—"}</td>
+                              <td><small>{cust.email || "—"}</small></td>
+                              <td className="text-center">{(cust.txCount || 0).toLocaleString("vi-VN")}</td>
+                              <td className="text-end">{(cust.totalOriginal || 0).toLocaleString("vi-VN")}</td>
+                              <td className="text-end text-danger">-{(cust.totalDiscount || 0).toLocaleString("vi-VN")}</td>
+                              <td className="text-end fw-bold text-success">{(cust.totalFinal || 0).toLocaleString("vi-VN")}</td>
+                              <td className="text-center"><small>{cust.firstDate || "—"}</small></td>
+                              <td className="text-center"><small>{cust.lastDate || "—"}</small></td>
+                            </tr>
+                          ))}
+                          {/* TOTAL */}
+                          <tr className="table-danger">
+                            <td colSpan="5" className="fw-bold text-end fs-5">TỔNG CỘNG</td>
+                            <td className="text-center fw-bold fs-6">
+                              {customerSales.rows.reduce((sum, c) => sum + (c.txCount || 0), 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="text-end fw-bold fs-6">
+                              {customerSales.rows.reduce((sum, c) => sum + (c.totalOriginal || 0), 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="text-end fw-bold fs-6 text-danger">
+                              -{customerSales.rows.reduce((sum, c) => sum + (c.totalDiscount || 0), 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="text-end fw-bold fs-5 text-success">
+                              {customerSales.rows.reduce((sum, c) => sum + (c.totalFinal || 0), 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td colSpan="2"></td>
+                          </tr>
+                        </>
+                      ) : (
+                        <tr>
+                          <td colSpan="11" className="text-center text-muted py-4">
+                            Không có dữ liệu khách hàng trong khoảng thời gian này
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="card-footer bg-light">
+                <div className="small">
+                  <strong>Ghi chú:</strong>
+                  <ul className="mb-0 ps-3">
+                    <li>Thông tin khách hàng</li>
+                    <li>Chiết khấu: bao gồm khuyến mãi % hoặc đơn và số tiền cụ thể.</li>
+                    <li>Doanh số trước chiết khấu: tổng tiền chưa trừ chiết khấu.</li>
+                    <li>Doanh số sau chiết khấu: tổng tiền đã trừ chiết khấu.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {mode === "CUSTOMERS" && viewMode === "DASHBOARD" && (
           <>
             {/* Customer Summary Cards */}
             <div className="row g-3 mb-3">
@@ -1767,7 +2109,219 @@ const clientExportPDF = async (isRevenue) => {
         )}
 
         {/* ===== MODE: MOVIES ===== */}
-        {mode === "MOVIES" && (
+        {mode === "MOVIES" && viewMode === "TABLE" && (
+          <>
+            {/* ===== BẢNG KÊ THỐNG KÊ PHIM (GIỐNG EXCEL) ===== */}
+            <div className="card mb-3">
+              <div className="card-header bg-white">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h4 className="mb-1 text-danger fw-bold">BÁO CÁO THỐNG KÊ PHIM</h4>
+                    <div className="text-muted small">
+                      Từ: {new Date(startDate).toLocaleDateString("vi-VN")} 
+                      {" • "}
+                      Đến: {new Date(endDate).toLocaleDateString("vi-VN")}
+                      {" • "}
+                      (Nhóm theo: {groupBy})
+                    </div>
+                  </div>
+                  <div className="text-end">
+                    <div className="small text-muted">Ngày in:</div>
+                    <div>{new Date().toLocaleDateString("vi-VN")}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="card-body">
+                {/* TỔNG QUAN */}
+                <div className="row">
+                  <div className="col-md-6">
+                    <table className="table table-bordered">
+                      <tbody>
+                        <tr>
+                          <td className="fw-bold bg-light">Tổng phim</td>
+                          <td className="text-end">{mvSummary.totalMovies?.toLocaleString("vi-VN")}</td>
+                        </tr>
+                        <tr>
+                          <td className="fw-bold bg-light">Single / Series</td>
+                          <td className="text-end">{mvSummary.totalSingle} / {mvSummary.totalSeries}</td>
+                        </tr>
+                        <tr>
+                          <td className="fw-bold bg-light">Completed / Upcoming</td>
+                          <td className="text-end">{mvSummary.completedCount} / {mvSummary.upcomingCount}</td>
+                        </tr>
+                        <tr>
+                          <td className="fw-bold bg-light">Seasons / Episodes</td>
+                          <td className="text-end">{mvSummary.totalSeasons} / {mvSummary.totalEpisodes}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="col-md-6">
+                    <table className="table table-bordered">
+                      <tbody>
+                        <tr>
+                          <td className="fw-bold bg-light">Thêm mới trong khoảng</td>
+                          <td className="text-end">{mvSummary.addedThisMonth?.toLocaleString("vi-VN")}</td>
+                        </tr>
+                        <tr>
+                          <td className="fw-bold bg-light">Điểm TB toàn hệ thống</td>
+                          <td className="text-end">{(mvSummary.avgRatingAll || 0).toFixed(1)}/5</td>
+                        </tr>
+                        <tr>
+                          <td className="fw-bold bg-light">Thể loại phổ biến</td>
+                          <td className="text-end">{mvSummary.topGenre}</td>
+                        </tr>
+                        <tr>
+                          <td className="fw-bold bg-light">Quốc gia hàng đầu</td>
+                          <td className="text-end">{mvSummary.topCountry}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* II. TOP THEO LƯỢT XEM */}
+            <div className="card mb-3">
+              <div className="card-header bg-light">
+                <h5 className="mb-0">II. TOP THEO LƯỢT XEM</h5>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-bordered table-hover mb-0">
+                    <thead className="table-secondary">
+                      <tr>
+                        <th className="text-center" style={{ width: "50px" }}>STT</th>
+                        <th style={{ width: "300px" }}>Tên phim</th>
+                        <th className="text-center" style={{ width: "120px" }}>Lượt xem</th>
+                        <th className="text-center" style={{ width: "100px" }}>Điểm TB</th>
+                        <th className="text-center" style={{ width: "80px" }}>Năm</th>
+                        <th style={{ width: "150px" }}>Quốc gia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topMoviesByViews && topMoviesByViews.length > 0 ? (
+                        topMoviesByViews.map((m, idx) => (
+                          <tr key={m.movieId}>
+                            <td className="text-center">{idx + 1}</td>
+                            <td>
+                              <div className="d-flex align-items-center">
+                                {m.thumbnailUrl && (
+                                  <img
+                                    src={m.thumbnailUrl}
+                                    alt={m.title}
+                                    className="me-2 rounded"
+                                    style={{ width: 40, height: 60, objectFit: "cover" }}
+                                  />
+                                )}
+                                <div>
+                                  <div className="fw-semibold">{m.title}</div>
+                                  <small className="text-muted">{m.country} • {m.releaseYear}</small>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="text-center text-success fw-bold">
+                              {(m.viewCount || 0).toLocaleString("vi-VN")}
+                            </td>
+                            <td className="text-center">
+                              <span className="text-warning">
+                                <i className="fas fa-star"></i> {(m.avgRating || 0).toFixed(1)}
+                              </span>
+                            </td>
+                            <td className="text-center">{m.releaseYear}</td>
+                            <td>{m.country}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="6" className="text-center text-muted py-4">
+                            Chưa có dữ liệu
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* III. TOP THEO ĐÁNH GIÁ */}
+            <div className="card">
+              <div className="card-header bg-light">
+                <h5 className="mb-0">III. TOP THEO ĐÁNH GIÁ</h5>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-bordered table-hover mb-0">
+                    <thead className="table-secondary">
+                      <tr>
+                        <th className="text-center" style={{ width: "50px" }}>STT</th>
+                        <th style={{ width: "300px" }}>Tên phim</th>
+                        <th className="text-center" style={{ width: "100px" }}>Điểm TB</th>
+                        <th className="text-center" style={{ width: "120px" }}>Số đánh giá</th>
+                        <th className="text-center" style={{ width: "80px" }}>Năm</th>
+                        <th style={{ width: "150px" }}>Quốc gia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topMoviesByRating && topMoviesByRating.length > 0 ? (
+                        topMoviesByRating.map((m, idx) => (
+                          <tr key={m.movieId}>
+                            <td className="text-center">{idx + 1}</td>
+                            <td>
+                              <div className="d-flex align-items-center">
+                                {m.thumbnailUrl && (
+                                  <img
+                                    src={m.thumbnailUrl}
+                                    alt={m.title}
+                                    className="me-2 rounded"
+                                    style={{ width: 40, height: 60, objectFit: "cover" }}
+                                  />
+                                )}
+                                <div>
+                                  <div className="fw-semibold">{m.title}</div>
+                                  <small className="text-muted">{m.country} • {m.releaseYear}</small>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="text-center">
+                              <span className="text-warning fw-bold">
+                                <i className="fas fa-star"></i> {(m.avgRating || 0).toFixed(1)}
+                              </span>
+                            </td>
+                            <td className="text-center">{(m.ratingCount || 0).toLocaleString("vi-VN")}</td>
+                            <td className="text-center">{m.releaseYear}</td>
+                            <td>{m.country}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="6" className="text-center text-muted py-4">
+                            Chưa có dữ liệu
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="card-footer bg-light">
+                <div className="small">
+                  <strong>Ghi chú:</strong>
+                  <ul className="mb-0 ps-3">
+                    <li>Thống kê phim theo lượt xem và theo đánh giá.</li>
+                    <li>Bảng 'Top theo lượt xem' sắp theo view giảm dần.</li>
+                    <li>Bảng 'Top theo đánh giá' lọc theo ngưỡng số đánh giá tối thiểu, sắp theo điểm trung bình.</li>
+                    <li>Dữ liệu lấy từ danh sách phim trong hệ thống trong khoảng ngày đã chọn.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {mode === "MOVIES" && viewMode === "DASHBOARD" && (
           <>
             {/* Cards */}
             <div className="row g-3 mb-3">
@@ -1830,7 +2384,7 @@ const clientExportPDF = async (isRevenue) => {
                     <h5 className="mb-0">Phim mới</h5>
                   </div>
                   <div className="card-body">
-                    <Bar ref={mvBarRef} data={mvBar} options={baseBarOptions} />
+                    <Bar data={mvBar} options={baseBarOptions} />
                   </div>
                 </div>
               </div>

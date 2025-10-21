@@ -155,9 +155,9 @@ const DataAnalyzerService = {
       responseType: 'blob'
     }),
 
-  // Tải Excel báo cáo phim từ backend endpoint /export/movies.xlsx
+  // Tải Excel báo cáo phim từ backend endpoint
   downloadMoviesExcelRange: (startDate, endDate, groupBy = 'DAY', brand = {}) =>
-    axiosInstance.get(`${API_BASE_URL}/export/movies.xlsx`, {
+    axiosInstance.get(`http://localhost:8080/export/export/movies.xlsx`, {
       params: { 
         startDate, 
         endDate, 
