@@ -102,6 +102,20 @@ export default function RoomDetailPage() {
           {canStartNow && (
             <button className="btn btn-light" onClick={handleStartNow}>▶ Bắt đầu</button>
           )}
+          {MyUser?.my_user?.userId && (
+            <button 
+              className="btn btn-success" 
+              onClick={() => {
+                const userId = MyUser.my_user.userId;
+                const name = MyUser.my_user.fullname || MyUser.my_user.username || 'User';
+                const hostParam = isHost ? '&host=1' : '';
+                navigate(`/watch-together/${roomId}?userId=${userId}&name=${encodeURIComponent(name)}${hostParam}`);
+              }}
+              title="Xem video đồng bộ với các thành viên khác"
+            >
+              🎬 Xem cùng nhau
+            </button>
+          )}
         </div>
       </div>
 
