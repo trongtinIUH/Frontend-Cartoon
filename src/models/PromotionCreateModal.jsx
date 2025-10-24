@@ -22,7 +22,7 @@ export default function PromotionCreateModal({
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-
+  const isInitialInactive = isEdit && initialData?.status === "ACTIVE";
   // Hôm nay / ngày mai (YYYY-MM-DD)
   // YYYY-MM-DD hôm nay
   const today = new Date().toLocaleDateString("en-CA");
@@ -192,6 +192,7 @@ export default function PromotionCreateModal({
                     className={`text-black form-control ${errors.promotionName ? "is-invalid" : ""}`}
                     value={form.promotionName}
                     onChange={(e) => setField("promotionName", e.target.value)}
+                    disabled={isInitialInactive}
                     placeholder="Black Friday 2025"
                   />
                   {errors.promotionName && <div className="invalid-feedback">{errors.promotionName}</div>}
@@ -206,6 +207,7 @@ export default function PromotionCreateModal({
                     rows={3}
                     value={form.description}
                     onChange={(e) => setField("description", e.target.value)}
+                    disabled={isInitialInactive}
                     placeholder="Giảm giá cực sốc cho các gói thành viên"
                   />
                   {errors.description && <div className="invalid-feedback">{errors.description}</div>}
@@ -256,6 +258,7 @@ export default function PromotionCreateModal({
                       className={`text-black form-control ${errors.endDate ? "is-invalid" : ""}`}
                       value={form.endDate}
                       min={endMin}
+                      disabled={isInitialInactive}
                       onChange={(e) => setField("endDate", e.target.value)}
                     />
                     {errors.endDate && <div className="invalid-feedback">{errors.endDate}</div>}

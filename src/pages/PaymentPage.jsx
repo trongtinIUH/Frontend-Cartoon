@@ -417,10 +417,10 @@ const PaymentPage = () => {
                       <p className="fw-bold">{formatVND(pkgDiscount)}</p>
                     </div>
 
-                    <div className="d-flex justify-content-between bg-black">
+                    {/* <div className="d-flex justify-content-between bg-black">
                       <p>Tạm tính sau chiết khấu</p>
                       <p className="fw-bold">{formatVND(subTotalAfterPkg)}</p>
-                    </div>
+                    </div> */}
 
                     <div className="d-flex justify-content-between bg-black">
                       <p>Giảm mã voucher</p>

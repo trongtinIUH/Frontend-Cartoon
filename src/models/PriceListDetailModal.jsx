@@ -96,14 +96,46 @@ const PriceListDetailModal = ({ isOpen, onClose, priceList }) => {
       setErrors({});
     } catch (err) {
       console.error('Add item error:', err);
-      setErrors((prev) => ({
-        ...prev,
-        _global: 'Thêm thất bại. Gói đã tồn tại trong bảng giá khác.',
-      }));
+
+      // 1) Nếu BE trả 409 + JSON có conflict
+      const { status, data } = err?.response || {};
+      const other = data?.conflict?.other; // { priceListId, startDate, endDate }
+      if (status === 409 && other?.priceListId) {
+        setErrors({
+          _global: `Thêm thất bại. Gói ${form.packageId} đã tồn tại trong bảng giá ${other.priceListId} (${other.startDate} → ${other.endDate}).`,
+        });
+        return;
+      }
+
+      // 2) Fallback: parse chuỗi lỗi hiện tại của BE
+      const raw = String(err?.response?.data || err?.message || '');
+      const m = raw.match(
+        /between list (\S+) \[(\d{4}-\d{2}-\d{2}) ~ (\d{4}-\d{2}-\d{2})\]\s+and list (\S+) \[(\d{4}-\d{2}-\d{2}) ~ (\d{4}-\d{2}-\d{2})\]/
+      );
+
+      if (m) {
+        const [, listA, aStart, aEnd, listB, bStart, bEnd] = m;
+        // Xác định list "bị đụng" so với list hiện tại
+        const currentId = priceListId;
+        const otherInfo =
+          listA === currentId
+            ? { id: listB, start: bStart, end: bEnd }
+            : { id: listA, start: aStart, end: aEnd };
+
+        setErrors({
+          _global: `Thêm thất bại. Gói ${form.packageId} đã tồn tại trong bảng giá ${otherInfo.id} (${otherInfo.start} → ${otherInfo.end}).`,
+        });
+      } else {
+        // 3) Cuối cùng: thông báo chung
+        setErrors({
+          _global: `Thêm thất bại. Gói ${form.packageId} đã tồn tại trong một bảng giá trùng ngày.`,
+        });
+      }
     } finally {
       setAdding(false);
     }
   };
+
 
   return (
     <>

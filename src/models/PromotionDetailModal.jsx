@@ -540,10 +540,10 @@ const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode,
                               </>
                             ) : (
                               <>
-                                <button className="btn btn-sm btn-primary me-2" onClick={() => startEditVoucher(item)} disabled={line?.status === "EXPIRED"}>
+                                <button className="btn btn-sm btn-primary me-2" onClick={() => startEditVoucher(item)} disabled={line?.status !== "INACTIVE"}>
                                   <i className="fa fa-pencil" />
                                 </button>
-                                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteVoucher(item.voucherCode)} disabled={line?.status === "EXPIRED"}>
+                                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteVoucher(item.voucherCode)} disabled={line?.status !== "INACTIVE"}>
                                   <i className="fa fa-trash" />
                                 </button>
                               </>
@@ -559,7 +559,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode,
 
                 <div className="d-flex justify-content-between align-items-center">
                   {!picking ? (
-                    <button className="btn btn-secondary" onClick={startCreateVoucher} disabled={!canCreateVoucher || line?.status === "EXPIRED"}>
+                    <button className="btn btn-secondary" onClick={startCreateVoucher} disabled={!canCreateVoucher || line?.status !== "INACTIVE"}>
                       Tạo voucher mới
                     </button>
                   ) : (
@@ -682,10 +682,10 @@ const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode,
                               </>
                             ) : (
                               <>
-                                <button className="btn btn-sm btn-primary me-2" onClick={() => startEditPackage(item)} disabled={line?.status === "EXPIRED"}>
+                                <button className="btn btn-sm btn-primary me-2" onClick={() => startEditPackage(item)} disabled={line?.status !== "INACTIVE"}>
                                   <i className="fa fa-pencil" />
                                 </button>
-                                <button className="btn btn-sm btn-danger" onClick={() => handleDeletePromotionPackage(ids)} disabled={line?.status === "EXPIRED"}>
+                                <button className="btn btn-sm btn-danger" onClick={() => handleDeletePromotionPackage(ids)} disabled={line?.status !== "INACTIVE"}>
                                   <i className="fa fa-trash" />
                                 </button>
                               </>
@@ -701,7 +701,7 @@ const PromotionDetailModal = ({ open, onClose, promotion, line, onChanged, mode,
 
                 <div className="d-flex justify-content-between align-items-center">
                   {!picking ? (
-                    <button className="btn btn-secondary" onClick={startPick} disabled={!canCreatePackage || line?.status === "EXPIRED" || availableOptions.length === 0}>
+                    <button className="btn btn-secondary" onClick={startPick} disabled={!canCreatePackage || line?.status !== "INACTIVE" || availableOptions.length === 0}>
                       Thêm gói khuyến mãi
                     </button>
                   ) : (

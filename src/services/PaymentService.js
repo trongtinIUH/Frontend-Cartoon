@@ -40,16 +40,32 @@ const PaymentService = {
         }
     },
     // Get all payments (for admin purposes)
-    getAllPayments: async (page, size, keyword = "") => {
-        try {
-            const response = await axiosInstance.get(API_BASE_URL, {
-                params: { page: page - 1, size, keyword },
-            });
-            const total = Number(response.headers["x-total-count"] ?? 0);
-            return { items: response.data, total };
-        } catch (error) {
-            throw error.response ? error.response.data : error;
-        }
+    // getAllPayments: async (page, size, keyword = "") => {
+    //     try {
+    //         const response = await axiosInstance.get(API_BASE_URL, {
+    //             params: { page: page - 1, size, keyword },
+    //         });
+    //         const total = Number(response.headers["x-total-count"] ?? 0);
+    //         return { items: response.data, total };
+    //     } catch (error) {
+    //         throw error.response ? error.response.data : error;
+    //     }
+    // },
+    getAllPayments(page, size, keyword, status, range = {}) {
+        const params = new URLSearchParams({
+            page: String(page - 1),
+            size: String(size),
+        });
+        if (keyword) params.append("keyword", keyword);
+        if (status) params.append("status", status);
+        if (range.startDate) params.append("startDate", range.startDate); // YYYY-MM-DD
+        if (range.endDate) params.append("endDate", range.endDate);   // YYYY-MM-DD
+
+        return axiosInstance.get(`/payment?${params.toString()}`)
+            .then(res => ({
+                items: res.data,
+                total: Number(res.headers["x-total-count"] || 0),
+            }));
     },
     // Get payment by ID
     getPaymentById: async (paymentId) => {
@@ -70,7 +86,22 @@ const PaymentService = {
             throw error.response ? error.response.data : error;
         }
     },
-
+    requestRefund: async (refundData) => {
+        try {
+            const response = await axiosInstance.post(`${API_BASE_URL}/refund-request`, refundData);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+    approveRefund: async (paymentCode) => {
+        try {
+            const response = await axiosInstance.put(`${API_BASE_URL}/refund/${paymentCode}/approve`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
 };
 
 export default PaymentService;
