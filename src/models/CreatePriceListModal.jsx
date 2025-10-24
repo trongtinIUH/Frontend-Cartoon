@@ -34,6 +34,7 @@ const CreatePriceListModal = ({
   const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const isInitialInactive = isEdit && initialData?.status === "ACTIVE";
 
   // Hôm nay & ngày mai (YYYY-MM-DD)
   const today = new Date().toLocaleDateString("en-CA");
@@ -127,11 +128,11 @@ const CreatePriceListModal = ({
       formData.startDate &&
       !(toMidnight(formData.startDate) >= toMidnight(tomorrow))
     )
-    // ⛔ endDate ≥ startDate + 1 ngày
-    if (formData.startDate && formData.endDate) {
-      const dd = diffDays(formData.startDate, formData.endDate);
-      if (dd < 1) e.endDate = "Ngày kết thúc phải sau ngày bắt đầu ít nhất 1 ngày";
-    }
+      // ⛔ endDate ≥ startDate + 1 ngày
+      if (formData.startDate && formData.endDate) {
+        const dd = diffDays(formData.startDate, formData.endDate);
+        if (dd < 1) e.endDate = "Ngày kết thúc phải sau ngày bắt đầu ít nhất 1 ngày";
+      }
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -219,9 +220,8 @@ const CreatePriceListModal = ({
                     </label>
                     <input
                       type="text"
-                      className={`text-black form-control ${
-                        errors.id ? "is-invalid" : ""
-                      }`}
+                      className={`text-black form-control ${errors.id ? "is-invalid" : ""
+                        }`}
                       value={formData.id}
                       onChange={(e) => setField("id", e.target.value)}
                       placeholder="Ví dụ: price-list-sep-2025"
@@ -238,11 +238,11 @@ const CreatePriceListModal = ({
                   </label>
                   <input
                     type="text"
-                    className={`text-black form-control ${
-                      errors.name ? "is-invalid" : ""
-                    }`}
+                    className={`text-black form-control ${errors.name ? "is-invalid" : ""
+                      }`}
                     value={formData.name}
                     onChange={(e) => setField("name", e.target.value)}
+                    disabled={isInitialInactive}
                     placeholder="Ví dụ: Bảng giá tháng 9"
                   />
                   {errors.name && (
@@ -255,9 +255,8 @@ const CreatePriceListModal = ({
                     Trạng thái <span className="text-danger">*</span>
                   </label>
                   <select
-                    className={`text-black form-select ${
-                      errors.status ? "is-invalid" : ""
-                    }`}
+                    className={`text-black form-select ${errors.status ? "is-invalid" : ""
+                      }`}
                     value={formData.status}
                     onChange={handleStatusChange}
                   >
@@ -279,13 +278,12 @@ const CreatePriceListModal = ({
                     </label>
                     <input
                       type="date"
-                      className={`text-black form-control ${
-                        errors.startDate ? "is-invalid" : ""
-                      }`}
+                      className={`text-black form-control ${errors.startDate ? "is-invalid" : ""
+                        }`}
                       value={formData.startDate}
                       min={startMin}
                       onChange={(e) => setField("startDate", e.target.value)}
-                      disabled={isEdit && !canEditStart} 
+                      disabled={isEdit && !canEditStart }
                     />
                     {errors.startDate && (
                       <div className="invalid-feedback">{errors.startDate}</div>
@@ -298,11 +296,11 @@ const CreatePriceListModal = ({
                     </label>
                     <input
                       type="date"
-                      className={`text-black form-control ${
-                        errors.endDate ? "is-invalid" : ""
-                      }`}
+                      className={`text-black form-control ${errors.endDate ? "is-invalid" : ""
+                        }`}
                       value={formData.endDate}
                       min={endMin}
+                      disabled={isInitialInactive}
                       onChange={(e) => setField("endDate", e.target.value)}
                     />
                     {errors.endDate && (

@@ -23,14 +23,14 @@ export default function PromotionLineCreateModal({
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-
+  const isInitialInactive = isEdit && initialData?.status === "ACTIVE";
   // Hôm nay / ngày mai (YYYY-MM-DD)
   const today = new Date().toLocaleDateString("en-CA");
   const tomorrow = addDays(today, 1);
 
   // Phạm vi của Promotion cha
   const promoStart = promotion?.startDate || "";
-  const promoEnd   = promotion?.endDate || "";
+  const promoEnd = promotion?.endDate || "";
 
   // Khi EDIT: khoá startDate nếu start đã đến/qua hôm nay
   const startLocked = isEdit && initialData?.startDate && (new Date(initialData.startDate) <= new Date(today));
@@ -234,6 +234,7 @@ export default function PromotionLineCreateModal({
                     className={`text-black form-control ${errors.promotionLineName ? "is-invalid" : ""}`}
                     value={form.promotionLineName}
                     onChange={(e) => setField("promotionLineName", e.target.value)}
+                    disabled={isInitialInactive}
                     placeholder="VD: Halloween 2025"
                   />
                   {errors.promotionLineName && <div className="invalid-feedback">{errors.promotionLineName}</div>}
@@ -249,6 +250,7 @@ export default function PromotionLineCreateModal({
                       className={`text-black form-control ${errors.promotionLineType ? "is-invalid" : ""}`}
                       value={form.promotionLineType}
                       onChange={(e) => setField("promotionLineType", e.target.value)}
+                      disabled={isInitialInactive}
                     >
                       <option value="VOUCHER">VOUCHER</option>
                       <option value="PACKAGE">PACKAGE</option>
@@ -305,6 +307,7 @@ export default function PromotionLineCreateModal({
                       min={endMin}
                       max={endMax}
                       onChange={(e) => setField("endDate", e.target.value)}
+                      disabled={isInitialInactive}
                     />
                     {errors.endDate && <div className="invalid-feedback">{errors.endDate}</div>}
                   </div>
