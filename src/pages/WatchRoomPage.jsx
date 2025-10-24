@@ -1,11 +1,11 @@
 /**
  * WatchRoomPage - Main page for Watch Together feature
  * @author Senior FE Developer
- * @version 1.0
+ * @version 2.0 - Redesigned UI
  */
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { WatchPlayer } from '../components/WatchPlayer';
 import { WatchChat } from '../components/WatchChat';
 import { MemberList } from '../components/MemberList';
@@ -13,11 +13,13 @@ import { SyncDebug } from '../components/SyncDebug';
 import { useWatchRoom } from '../hooks/useWatchRoom';
 import { WatchRoomProvider } from '../context/WatchRoomContext';
 import { useAuth } from '../context/AuthContext';
+import WatchRoomService from '../services/WatchRoomService';
 import '../css/WatchRoomPage.css';
 
 export const WatchRoomPage = () => {
   const { roomId } = useParams();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { MyUser } = useAuth();
 
   // Get user info from AuthContext (if logged in) or query params (if not logged in)
@@ -93,18 +95,35 @@ export const WatchRoomPage = () => {
    * Fetch room info and video URL
    */
   useEffect(() => {
-    // TODO: Fetch room info from API
-    // const fetchRoomInfo = async () => {
-    //   const roomInfo = await watchRoomApi.getRoomInfo(roomId);
-    //   setVideoUrl(roomInfo.videoUrl);
-    // };
-    // fetchRoomInfo();
+    const fetchRoomInfo = async () => {
+      try {
+        // Try to get video URL from query params first (for creator)
+        const videoFromParams = searchParams.get('video');
+        
+        if (videoFromParams) {
+          console.log('[WatchRoomPage] Using video URL from params:', videoFromParams);
+          setVideoUrl(videoFromParams);
+          return;
+        }
 
-    // Mock video URL (HLS stream) - override from query param for testing
-    setVideoUrl(
-      searchParams.get('video') ||
-        'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
-    );
+        // If no video URL in params, fetch from API (for non-creators)
+        console.log('[WatchRoomPage] No video URL in params, fetching from API...');
+        const roomInfo = await WatchRoomService.getWatchRoomById(roomId);
+        
+        if (roomInfo && roomInfo.videoUrl) {
+          console.log('[WatchRoomPage] Fetched video URL from API:', roomInfo.videoUrl);
+          setVideoUrl(roomInfo.videoUrl);
+        } else {
+          console.warn('[WatchRoomPage] No video URL in room info, using demo');
+          setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+        }
+      } catch (error) {
+        console.error('[WatchRoomPage] Error fetching room info:', error);
+        setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+      }
+    };
+
+    fetchRoomInfo();
   }, [roomId, searchParams]);
 
   /**
@@ -124,9 +143,16 @@ export const WatchRoomPage = () => {
    * Copy invite link
    */
   const handleCopyInviteLink = () => {
-    const inviteLink = `${window.location.origin}/watch/${roomId}${
-      inviteCode ? `?invite=${inviteCode}` : ''
-    }`;
+    // Build invite link with video URL
+    const params = new URLSearchParams();
+    if (videoUrl) {
+      params.append('video', videoUrl);
+    }
+    if (inviteCode) {
+      params.append('invite', inviteCode);
+    }
+    
+    const inviteLink = `${window.location.origin}/watch-together/${roomId}?${params.toString()}`;
 
     navigator.clipboard.writeText(inviteLink);
     alert('✓ Đã sao chép link mời vào clipboard!');
@@ -151,7 +177,7 @@ export const WatchRoomPage = () => {
   if (!videoUrl) {
     return (
       <div className="watch-room-loading">
-        <div className="watch-room-loading-icon">🎬</div>
+        <div className="loading-spinner"></div>
         <div className="watch-room-loading-text">Đang tải phòng xem...</div>
       </div>
     );
@@ -174,32 +200,51 @@ export const WatchRoomPage = () => {
     >
       <div className="watch-room-page">
         {/* Reconnecting banner */}
-        {renderReconnectingBanner()}
+        {isReconnecting && (
+          <div className="watch-room-reconnecting-banner">
+            <div className="reconnecting-spinner"></div>
+            <span>Đang kết nối lại...</span>
+          </div>
+        )}
 
         {/* Header */}
         <div className="watch-room-header">
           <div className="watch-room-header-left">
-            <h1 className="watch-room-title">🎬 Watch Together</h1>
-            <span className="watch-room-subtitle">
-              {isConnected ? '🟢 Đã kết nối' : '🔴 Mất kết nối'}
-            </span>
+            <button 
+              onClick={() => navigate(-1)}
+              className="btn-back"
+              title="Quay lại"
+            >
+              <i className="fa-solid fa-arrow-left"></i>
+            </button>
+            <div className="header-info">
+              <h1 className="watch-room-title">Watch Together</h1>
+              <div className="connection-status">
+                <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
+                <span className="status-text">
+                  {isConnected ? 'Đã kết nối' : 'Mất kết nối'}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="watch-room-header-right">
             <button
               onClick={handleCopyInviteLink}
-              className="watch-room-btn"
+              className="btn-header btn-invite"
               title="Sao chép link mời bạn bè"
             >
-              📋 Copy Link Mời
+              <i className="fa-solid fa-link"></i>
+              <span className="btn-text">Copy Link</span>
             </button>
 
             <button
               onClick={() => setShowSidebar(!showSidebar)}
-              className="watch-room-btn watch-room-btn-secondary"
+              className="btn-header btn-toggle-sidebar"
               title={showSidebar ? 'Ẩn sidebar' : 'Hiện sidebar'}
             >
-              {showSidebar ? '→ Ẩn' : '← Hiện'} Sidebar
+              <i className={`fa-solid ${showSidebar ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
+              <span className="btn-text">{showSidebar ? 'Ẩn' : 'Hiện'}</span>
             </button>
           </div>
         </div>

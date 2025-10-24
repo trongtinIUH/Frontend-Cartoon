@@ -19,6 +19,7 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
   const playerRef = useRef(null);
   const [isReady, setIsReady] = useState(false);
   const [showAutoplayWarning, setShowAutoplayWarning] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   /**
    * Initialize video.js player
@@ -50,6 +51,15 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
     player.ready(() => {
       console.log('[WatchPlayer] Player ready');
       setIsReady(true);
+    });
+
+    // Track play/pause state
+    player.on('play', () => {
+      setIsPlaying(true);
+    });
+
+    player.on('pause', () => {
+      setIsPlaying(false);
     });
 
     // Cleanup
@@ -128,10 +138,11 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
   };
 
   /**
-   * Show non-host warning
+   * Show non-host warning (only when video is paused)
    */
   const renderNonHostWarning = () => {
     if (isHost) return null;
+    if (isPlaying) return null; // Hide when video is playing
 
     return (
       <div className="watch-player-warning">

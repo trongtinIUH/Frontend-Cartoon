@@ -43,6 +43,7 @@ import CreateMovieRoom from './pages/CreateMovieRoom';
 import RoomDetailPage from './pages/RoomDetailPage';
 import RoomsListPage from './pages/RoomsListPage';
 import WatchRoomPage from './pages/WatchRoomPage';
+import TestWatchTogether from './pages/TestWatchTogether';
 
 function App() {
   const navigate = useNavigate();
@@ -100,6 +101,9 @@ function App() {
             
             {/* Watch Together - Xem phim cùng nhau */}
             <Route path="/watch-together/:roomId" element={<WatchRoomPage />} />
+            
+            {/* Test Watch Together - Debug & Demo */}
+            <Route path="/test-watch" element={<TestWatchTogether />} />
           </Route>
           <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
             <Route path="/admin-dashboard" element={<DashboardPage />} />

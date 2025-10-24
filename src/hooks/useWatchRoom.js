@@ -70,13 +70,18 @@ export function useWatchRoom({
 
       switch (event.type) {
         case WS_TYPES.JOIN: {
+          console.log('[useWatchRoom] JOIN event - senderId:', event.senderId, 'currentUserId:', userId);
+          
           // Add member to list
           setState((prev) => {
             // Check if member already exists
             const exists = prev.members.find((m) => m.userId === event.senderId);
             
+            console.log('[useWatchRoom] JOIN - Member exists?', exists, 'Current members:', prev.members.length);
+            
             // If exists, update lastSeenAt
             if (exists) {
+              console.log('[useWatchRoom] JOIN - Updating existing member');
               return {
                 ...prev,
                 members: prev.members.map((m) =>
@@ -96,7 +101,8 @@ export function useWatchRoom({
               lastSeenAt: event.createdAt,
             };
 
-            console.log('[useWatchRoom] Member joined', newMember);
+            console.log('[useWatchRoom] JOIN - Adding new member:', newMember);
+            console.log('[useWatchRoom] JOIN - New member count will be:', prev.members.length + 1);
 
             return {
               ...prev,
@@ -138,18 +144,27 @@ export function useWatchRoom({
           // Backend sends full member list (usually after JOIN)
           const members = event.payload?.members || [];
           
-          console.log('[useWatchRoom] MEMBER_LIST received', members);
+          console.log('[useWatchRoom] ===== MEMBER_LIST EVENT =====');
+          console.log('[useWatchRoom] MEMBER_LIST - Current userId:', userId);
+          console.log('[useWatchRoom] MEMBER_LIST - Members count:', members.length);
+          console.log('[useWatchRoom] MEMBER_LIST - Members:', JSON.stringify(members, null, 2));
+          console.log('[useWatchRoom] ================================');
 
-          setState((prev) => ({
-            ...prev,
-            members: members.map((m) => ({
-              userId: m.userId,
-              userName: m.userName || m.name || 'Unknown',
-              avatarUrl: m.avatarUrl || m.avatar,
-              role: m.role || 'MEMBER',
-              lastSeenAt: m.lastSeenAt || new Date().toISOString(),
-            })),
-          }));
+          setState((prev) => {
+            console.log('[useWatchRoom] MEMBER_LIST - Previous members count:', prev.members.length);
+            console.log('[useWatchRoom] MEMBER_LIST - Setting new members count:', members.length);
+            
+            return {
+              ...prev,
+              members: members.map((m) => ({
+                userId: m.userId,
+                userName: m.userName || m.name || 'Unknown',
+                avatarUrl: m.avatarUrl || m.avatar,
+                role: m.role || 'MEMBER',
+                lastSeenAt: m.lastSeenAt || new Date().toISOString(),
+              })),
+            };
+          });
           break;
         }
 

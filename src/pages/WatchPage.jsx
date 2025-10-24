@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import RatingModal from "../components/RatingModal";
 import UpgradeModal from "../components/UpgradeModal";
 import ReportIssueModal from "../models/ReportIssueModal";
+import CreateWatchRoomModal from "../models/CreateWatchRoomModal";
 import AuthorService from "../services/AuthorService";
 import EpisodeService from "../services/EpisodeService";
 import MovieService from "../services/MovieService";
@@ -75,6 +76,7 @@ export default function WatchPage() {
 
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
   const [ratings, setRatings] = useState([]);
 
   // current movie/episode (nguồn sự thật)
@@ -1857,9 +1859,7 @@ export default function WatchPage() {
               </button>
               <button
                 className="at-item"
-                onClick={() =>
-                  navigate("/create-movie-room", { state: { movie: currentMov, episode: currentEp } })
-                }
+                onClick={() => setShowCreateRoomModal(true)}
               >
                 <i className="fa-brands fa-forumbee"></i> <span>Xem chung</span>
               </button>
@@ -2232,6 +2232,14 @@ export default function WatchPage() {
         episodeId={currentEpisode?.episodeId}
         episodeTitle={currentEpisode?.title}
         currentTime={currentTime}
+      />
+
+      <CreateWatchRoomModal
+        show={showCreateRoomModal}
+        onClose={() => setShowCreateRoomModal(false)}
+        movie={currentMov}
+        episode={currentEpisode}
+        currentVideoUrl={optimizedUrl}
       />
     </div>
   );
