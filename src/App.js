@@ -40,10 +40,8 @@ import SubscriptionPackageManagementPage from './pages/admin/SubscriptionPackage
 import PriceListManagementPage from './pages/admin/PriceListManagementPage';
 import PaymentManagementPage from './pages/admin/PaymentManagementPage';
 import CreateMovieRoom from './pages/CreateMovieRoom';
-import RoomDetailPage from './pages/RoomDetailPage';
 import RoomsListPage from './pages/RoomsListPage';
 import WatchRoomPage from './pages/WatchRoomPage';
-import TestWatchTogether from './pages/TestWatchTogether';
 
 function App() {
   const navigate = useNavigate();
@@ -97,13 +95,9 @@ function App() {
             <Route path="/all-topics" element={<AllTopicsPage />} />
             <Route path="/create-movie-room" element={<CreateMovieRoom />} />
             <Route path="/rooms" element={<RoomsListPage />} />
-            <Route path="/room/:roomId" element={<RoomDetailPage />} />
             
             {/* Watch Together - Xem phim cùng nhau */}
             <Route path="/watch-together/:roomId" element={<WatchRoomPage />} />
-            
-            {/* Test Watch Together - Debug & Demo */}
-            <Route path="/test-watch" element={<TestWatchTogether />} />
           </Route>
           <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
             <Route path="/admin-dashboard" element={<DashboardPage />} />

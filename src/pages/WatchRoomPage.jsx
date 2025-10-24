@@ -31,6 +31,7 @@ export const WatchRoomPage = () => {
   const isHostFromUrl = searchParams.get('host') === '1'; // Force host mode from URL
 
   const [videoUrl, setVideoUrl] = useState('');
+  const [initialVideoState, setInitialVideoState] = useState(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [activeTab, setActiveTab] = useState('chat');
   const controlEventRef = useRef(null);
@@ -92,7 +93,7 @@ export const WatchRoomPage = () => {
   );
 
   /**
-   * Fetch room info and video URL
+   * Fetch room info, video URL, and initial video state
    */
   useEffect(() => {
     const fetchRoomInfo = async () => {
@@ -103,28 +104,63 @@ export const WatchRoomPage = () => {
         if (videoFromParams) {
           console.log('[WatchRoomPage] Using video URL from params:', videoFromParams);
           setVideoUrl(videoFromParams);
-          return;
+          // Creator still fetches video state from API (for persistence after refresh)
         }
 
-        // If no video URL in params, fetch from API (for non-creators)
-        console.log('[WatchRoomPage] No video URL in params, fetching from API...');
+        // Fetch room info from API (for video URL + video state)
+        console.log('[WatchRoomPage] Fetching room info from API...');
         const roomInfo = await WatchRoomService.getWatchRoomById(roomId);
         
-        if (roomInfo && roomInfo.videoUrl) {
-          console.log('[WatchRoomPage] Fetched video URL from API:', roomInfo.videoUrl);
-          setVideoUrl(roomInfo.videoUrl);
+        if (roomInfo) {
+          // Set video URL if not from params
+          if (!videoFromParams && roomInfo.videoUrl) {
+            console.log('[WatchRoomPage] Fetched video URL from API:', roomInfo.videoUrl);
+            setVideoUrl(roomInfo.videoUrl);
+          }
+          
+          // Set initial video state (for persistence)
+          if (roomInfo.videoState) {
+            console.log('[WatchRoomPage] Fetched video state from API:', roomInfo.videoState);
+            setInitialVideoState(roomInfo.videoState);
+          }
         } else {
-          console.warn('[WatchRoomPage] No video URL in room info, using demo');
-          setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+          console.warn('[WatchRoomPage] No room info, using demo');
+          if (!videoFromParams) {
+            setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+          }
         }
       } catch (error) {
         console.error('[WatchRoomPage] Error fetching room info:', error);
-        setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+        if (!searchParams.get('video')) {
+          setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+        }
       }
     };
 
     fetchRoomInfo();
   }, [roomId, searchParams]);
+
+  /**
+   * Apply initial video state (after fetching from API)
+   */
+  useEffect(() => {
+    if (!initialVideoState || !isConnected) return;
+
+    console.log('[WatchRoomPage] Applying initial video state:', initialVideoState);
+
+    // Create SYNC_STATE event from initial state
+    const syncEvent = {
+      type: 'SYNC_STATE',
+      payload: initialVideoState,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Apply to player via controlEvent
+    handleControlEvent(syncEvent);
+
+    // Only apply once
+    setInitialVideoState(null);
+  }, [initialVideoState, isConnected, handleControlEvent]);
 
   /**
    * Connect to room on mount
@@ -134,7 +170,16 @@ export const WatchRoomPage = () => {
 
     connect();
 
+    // Handle page close/refresh - send LEAVE before unload
+    const handleBeforeUnload = () => {
+      console.log('[WatchRoomPage] Page closing - sending LEAVE');
+      disconnect();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       disconnect();
     };
   }, [roomId, connect, disconnect]);

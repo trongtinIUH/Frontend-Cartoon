@@ -197,9 +197,11 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
       console.log('[useVideoSync] Player play event');
 
       if (!isHost) {
-        // Non-host should not control - revert to pause
-        console.warn('[useVideoSync] Non-host attempted play - reverting');
-        player.pause();
+        // Non-host can play locally, but request sync from host
+        console.log('[useVideoSync] Non-host play - requesting sync from host');
+        
+        // Request current state from host (backend should send SYNC_STATE)
+        // For now, just allow local play - will sync on next remote event
         return;
       }
 
@@ -219,7 +221,8 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
       console.log('[useVideoSync] Player pause event');
 
       if (!isHost) {
-        console.log('[useVideoSync] Non-host pause - not sending control');
+        // Non-host can pause locally (catch up later)
+        console.log('[useVideoSync] Non-host pause - allowed locally');
         return;
       }
 

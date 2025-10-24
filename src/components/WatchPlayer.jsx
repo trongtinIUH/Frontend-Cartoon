@@ -97,7 +97,7 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
   });
 
   /**
-   * Disable controls for non-host
+   * Configure controls for host vs non-host
    */
   useEffect(() => {
     if (!playerRef.current) return;
@@ -107,20 +107,27 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
 
     if (!controlBar) return;
 
+    // Get control elements
+    const playToggle = controlBar.querySelector('.vjs-play-control');
+    const progressControl = controlBar.querySelector('.vjs-progress-control');
+    const playbackRateMenu = controlBar.querySelector('.vjs-playback-rate');
+
     if (isHost) {
-      // Enable controls
+      // Enable ALL controls for host
       controlBar.style.pointerEvents = 'auto';
       controlBar.style.opacity = '1';
+      
+      if (playToggle) playToggle.style.pointerEvents = 'auto';
+      if (progressControl) progressControl.style.pointerEvents = 'auto';
+      if (playbackRateMenu) playbackRateMenu.style.pointerEvents = 'auto';
     } else {
-      // Keep controls visible but disable play/pause/seek buttons
-      // User can still adjust volume
-      const playToggle = controlBar.querySelector('.vjs-play-control');
-      const progressControl = controlBar.querySelector('.vjs-progress-control');
-      const playbackRateMenu = controlBar.querySelector('.vjs-playback-rate');
-
-      if (playToggle) playToggle.style.pointerEvents = 'none';
-      if (progressControl) progressControl.style.pointerEvents = 'none';
-      if (playbackRateMenu) playbackRateMenu.style.pointerEvents = 'none';
+      // Non-host: Allow play/pause (for local control), disable seek
+      controlBar.style.pointerEvents = 'auto';
+      controlBar.style.opacity = '1';
+      
+      if (playToggle) playToggle.style.pointerEvents = 'auto'; // Allow pause/play
+      if (progressControl) progressControl.style.pointerEvents = 'none'; // Disable seek
+      if (playbackRateMenu) playbackRateMenu.style.pointerEvents = 'none'; // Disable speed
     }
   }, [isHost, isReady]);
 
@@ -138,17 +145,11 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
   };
 
   /**
-   * Show non-host warning (only when video is paused)
+   * Show non-host warning (DISABLED - no longer needed)
    */
   const renderNonHostWarning = () => {
-    if (isHost) return null;
-    if (isPlaying) return null; // Hide when video is playing
-
-    return (
-      <div className="watch-player-warning">
-        ℹ️ Chỉ host mới có thể điều khiển video
-      </div>
-    );
+    // Don't show warning at all - users understand host controls
+    return null;
   };
 
   /**

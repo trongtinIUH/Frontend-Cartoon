@@ -447,10 +447,35 @@ export function useWatchRoom({
 
     // Send LEAVE event
     if (stompRef.current?.connected) {
-      stompRef.current.send(`/app/rooms/${roomId}/leave`, {
-        senderId: userId,
-        senderName: userName,
-      });
+      try {
+        stompRef.current.send(`/app/rooms/${roomId}/leave`, {
+          senderId: userId,
+          senderName: userName,
+        });
+        console.log('[useWatchRoom] LEAVE event sent');
+      } catch (error) {
+        console.error('[useWatchRoom] Failed to send LEAVE:', error);
+        
+        // Fallback: Use Beacon API for reliable delivery on page close
+        try {
+          const leavePayload = JSON.stringify({
+            type: 'LEAVE',
+            roomId,
+            senderId: userId,
+            senderName: userName,
+            createdAt: new Date().toISOString(),
+          });
+          
+          // Send via Beacon (survives page unload)
+          navigator.sendBeacon(
+            `${process.env.REACT_APP_API_BASE || 'http://localhost:8080'}/watchrooms/${roomId}/leave`,
+            new Blob([leavePayload], { type: 'application/json' })
+          );
+          console.log('[useWatchRoom] LEAVE sent via Beacon API');
+        } catch (beaconError) {
+          console.error('[useWatchRoom] Beacon API failed:', beaconError);
+        }
+      }
     }
 
     // Stop heartbeat

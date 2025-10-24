@@ -94,7 +94,7 @@ export default function RoomsListPage() {
               <div
                 key={room.roomId}
                 className="room-card"
-                onClick={() => navigate(`/room/${encodeURIComponent(room.roomId)}`)}
+                onClick={() => navigate(`/watch-together/${encodeURIComponent(room.roomId)}`)}
               >
                 <div className="room-wrap">
                   <img
