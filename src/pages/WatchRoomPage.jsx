@@ -4,7 +4,7 @@
  * @version 2.0 - Redesigned UI
  */
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { WatchPlayer } from '../components/WatchPlayer';
 import { WatchChat } from '../components/WatchChat';
@@ -163,49 +163,16 @@ export const WatchRoomPage = () => {
   }, [initialVideoState, isConnected, handleControlEvent]);
 
   /**
-   * Scroll to top on mount - MULTIPLE TIMES to ensure it works
+   * Prevent scroll restoration and lock scroll to top - runs before paint
    */
-  useEffect(() => {
-    // Scroll immediately
-    window.scrollTo(0, 0);
-    
-    // Scroll after short delay
-    const timer1 = setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 50);
-    
-    // Scroll after component fully rendered
-    const timer2 = setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 150);
-    
-    // Final scroll to be sure
-    const timer3 = setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 300);
-
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-    };
-  }, []);
-
-  /**
-   * Scroll to top when video URL is loaded
-   */
-  useEffect(() => {
-    if (videoUrl) {
-      window.scrollTo(0, 0);
-      
-      // Also scroll after video player renders
-      const timer = setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 100);
-      
-      return () => clearTimeout(timer);
+  useLayoutEffect(() => {
+    // Disable browser scroll restoration
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
     }
-  }, [videoUrl]);
+    // Scroll to top immediately
+    window.scrollTo(0, 0);
+  }, []);
 
   /**
    * Connect to room on mount

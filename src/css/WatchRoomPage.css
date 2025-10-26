@@ -1,9 +1,10 @@
 /* WatchRoomPage.css - Modern Redesign v2.0 */
 
+/* Prevent scroll restoration and smooth scrolling */
 html:has(.watch-room-page),
 body:has(.watch-room-page) {
   overflow-x: hidden;
-  scroll-behavior: auto;
+  scroll-behavior: auto !important;
 }
 
 .watch-room-page {
@@ -15,12 +16,13 @@ body:has(.watch-room-page) {
   margin-top: 50px;
   overflow: hidden;
   position: relative;
-  scroll-behavior: auto;
+  scroll-behavior: auto !important;
 }
 
 /* Prevent auto-scrolling */
 .watch-room-page * {
   scroll-margin-top: 0 !important;
+  scroll-behavior: auto !important;
 }
 
 /* Loading State */
@@ -226,6 +228,7 @@ body:has(.watch-room-page) {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  align-self: flex-start; /* Prevent player from stretching */
 }
 
 .watch-room-sidebar {
@@ -238,6 +241,7 @@ body:has(.watch-room-page) {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-height: calc(100vh - 200px); /* Limit sidebar height */
 }
 
 /* Tabs */
@@ -245,6 +249,7 @@ body:has(.watch-room-page) {
   display: flex;
   background: rgba(0, 0, 0, 0.2);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex: 0 0 auto; /* Don't grow or shrink */
 }
 
 .watch-room-tab {
@@ -285,6 +290,7 @@ body:has(.watch-room-page) {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0; /* Allow flex children to shrink */
 }
 
 /* Responsive */

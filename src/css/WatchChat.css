@@ -19,7 +19,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  scroll-behavior: smooth;
+  height: 100%;
+  max-height: calc(100vh - 220px); /* Prevent messages from growing beyond viewport */
+  scroll-behavior: auto; /* Disable smooth scroll to prevent page jump */
 }
 
 /* Custom Scrollbar */

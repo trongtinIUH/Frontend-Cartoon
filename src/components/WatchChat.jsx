@@ -24,23 +24,41 @@ export function WatchChat({
   currentUserId,
 }) {
   const [inputText, setInputText] = useState('');
+  const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
 
   /**
-   * Scroll to bottom
+   * Focus input without scrolling the page
+   */
+  useEffect(() => {
+    inputRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  /**
+   * Scroll to bottom (within container, not window)
    */
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    
+    // Scroll the container, not the window
+    container.scrollTop = container.scrollHeight;
   };
 
   /**
-   * Auto scroll when new messages arrive
+   * Auto scroll when new messages arrive - only if user is near bottom
    */
   useEffect(() => {
-    if (autoScroll) {
-      scrollToBottom();
+    const container = messagesContainerRef.current;
+    if (!container || !autoScroll) return;
+
+    // Check if user is near bottom
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+    
+    if (isNearBottom) {
+      container.scrollTop = container.scrollHeight;
     }
   }, [messages, autoScroll]);
 
@@ -153,6 +171,7 @@ export function WatchChat({
       <div className="chat-input-container">
         <form onSubmit={handleSend} className="chat-input-form">
           <input
+            ref={inputRef}
             type="text"
             className="chat-input"
             placeholder="Nhập tin nhắn..."
