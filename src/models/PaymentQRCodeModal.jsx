@@ -53,7 +53,7 @@ const PaymentQRCodeModal = ({ show, onClose, qrData }) => {
             } catch (err) {
                 console.error("Error fetching payment status:", err);
             }
-        }, 5000); // Polling mỗi 5 giây
+        }, 3000); // Polling mỗi 3 giây
 
         return () => clearInterval(interval); // Dọn dẹp
     }, [show, qrData?.orderCode, onClose]);
