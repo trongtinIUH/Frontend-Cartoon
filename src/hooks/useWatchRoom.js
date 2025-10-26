@@ -320,9 +320,16 @@ export function useWatchRoom({
   const fetchInitialData = useCallback(async () => {
     try {
       // Try to fetch members from API (if backend supports REST API)
-      const members = await watchRoomApi.getMembers(roomId);
+      const membersResponse = await watchRoomApi.getMembers(roomId);
       
-      console.log('[useWatchRoom] Fetched initial members from API:', members);
+      console.log('[useWatchRoom] Fetched initial members from API:', membersResponse);
+      
+      // Backend returns {members: Array, count: number, roomId: string}
+      const members = Array.isArray(membersResponse) 
+        ? membersResponse 
+        : (membersResponse?.members || []);
+      
+      console.log('[useWatchRoom] Extracted members array:', members);
       
       // Fetch recent messages
       const { messages, nextCursor } = await watchRoomApi.searchMessages(
@@ -343,10 +350,10 @@ export function useWatchRoom({
         return {
           ...prev,
           members: members, // Use API data as source of truth
-          messages: messages.map((msg) => ({
+          messages: Array.isArray(messages) ? messages.map((msg) => ({
             ...msg,
             type: MESSAGE_TYPES.CHAT,
-          })),
+          })) : [],
           isHost,
         };
       });

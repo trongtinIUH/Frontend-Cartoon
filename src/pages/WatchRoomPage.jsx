@@ -163,6 +163,51 @@ export const WatchRoomPage = () => {
   }, [initialVideoState, isConnected, handleControlEvent]);
 
   /**
+   * Scroll to top on mount - MULTIPLE TIMES to ensure it works
+   */
+  useEffect(() => {
+    // Scroll immediately
+    window.scrollTo(0, 0);
+    
+    // Scroll after short delay
+    const timer1 = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 50);
+    
+    // Scroll after component fully rendered
+    const timer2 = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 150);
+    
+    // Final scroll to be sure
+    const timer3 = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, []);
+
+  /**
+   * Scroll to top when video URL is loaded
+   */
+  useEffect(() => {
+    if (videoUrl) {
+      window.scrollTo(0, 0);
+      
+      // Also scroll after video player renders
+      const timer = setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [videoUrl]);
+
+  /**
    * Connect to room on mount
    */
   useEffect(() => {
