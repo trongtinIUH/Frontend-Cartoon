@@ -1,3 +1,4 @@
+import { join } from "lodash";
 import axiosInstance from "../api/axiosInstance";
 
 const API_BASE_URL = 'http://localhost:8080/watchrooms';
@@ -26,6 +27,15 @@ const WatchRoomService = {
     getWatchRoomById: async (roomId) => {
         try {
             const response = await axiosInstance.get(`${API_BASE_URL}/${encodeURIComponent(roomId)}`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
+
+    joinWatchRoom: async (data) => {
+        try {
+            const response = await axiosInstance.post(`${API_BASE_URL}/watch-rooms/join`, data);
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;

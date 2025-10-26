@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/RoomsListPage.css";
 import avatar_default from "../image/default_avatar.jpg";
+import WatchRoomService from "../services/WatchRoomService";
 
 // Đếm ngược từ startAt (ISO) -> "HH:MM:SS"
 const fmtCountdown = (startAt) => {
@@ -24,8 +25,6 @@ export default function RoomsListPage() {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // tick mỗi giây để cập nhật countdown
   const [, forceTick] = useState(0);
   useEffect(() => {
     const t = setInterval(() => forceTick((n) => n + 1), 1000);
@@ -35,7 +34,7 @@ export default function RoomsListPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await (await import("../services/WatchRoomService")).default.getWatchRooms();
+        const res = await WatchRoomService.getWatchRooms();
         setRooms(Array.isArray(res) ? res : []);
       } catch (e) {
         console.error("Error fetching rooms:", e);
@@ -54,8 +53,8 @@ export default function RoomsListPage() {
         _status,
         _poster: r.posterUrl || "/fallback-poster.jpg",
         _title: r.roomName || "Phòng xem chung",
+        _movieTitle: r.movieTitle || "Phim không xác định",
         _countdownText: _status === "SCHEDULED" ? fmtCountdown(r.startAt) : null,
-        _viewers: _status === "ACTIVE" ? Math.ceil(Math.random() * 3) : 0, // demo
         _hostName: r.userName || "Host",
         _avatar: r.avatarUrl || avatar_default,
         _privacy: r.isPrivate ? "Riêng tư" : "Công khai",
@@ -121,22 +120,19 @@ export default function RoomsListPage() {
                     </span>
                   )}
 
-                  {/* Lượt xem (demo) */}
                   <div className="room-viewers">
-                    <i className="fas fa-eye" /> {room._viewers} đang xem
+                    <i className="fas fa-eye" /> {room._privacy}
                   </div>
                 </div>
 
                 <div className="room-meta">
-                  <div className="d-flex align-items-start gap-2">
+                  <div className="room-meta-content">
                     <img src={room._avatar} alt="host" className="room-avatar" />
                     <div className="flex-grow-1 min-w-0">
                       <h3 className="room-title">{room._title}</h3>
                       <p className="room-subtitle">
-                        {room._hostName} • {room._privacy}
-                        {room._movieShort ? ` • #${room._movieShort}` : ""}
+                        {room._hostName} • {room._movieTitle}
                       </p>
-                      {/* Không còn createdAt để “fromNow” nên bỏ dòng time */}
                     </div>
                   </div>
                 </div>
