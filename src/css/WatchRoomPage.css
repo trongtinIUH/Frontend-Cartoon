@@ -209,6 +209,39 @@ body:has(.watch-room-page) {
   background: rgba(255, 255, 255, 0.15);
 }
 
+/* Notification Badge - For Toggle Sidebar Button */
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5), 0 0 0 3px rgba(15, 15, 30, 0.8);
+  animation: badgePulse 2s ease-in-out infinite;
+  z-index: 10;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5), 0 0 0 3px rgba(15, 15, 30, 0.8);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.8), 0 0 0 3px rgba(15, 15, 30, 0.8);
+  }
+}
+
+.btn-header {
+  position: relative; /* For badge positioning */
+}
+
 /* Main Content */
 .watch-room-main {
   display: flex;
@@ -263,6 +296,23 @@ body:has(.watch-room-page) {
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
+}
+
+/* Tab Notification Badge - For Chat Tab */
+.tab-notification-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  animation: badgePulse 2s ease-in-out infinite;
 }
 
 .watch-room-tab:hover {

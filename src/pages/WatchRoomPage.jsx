@@ -34,7 +34,9 @@ export const WatchRoomPage = () => {
   const [initialVideoState, setInitialVideoState] = useState(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [activeTab, setActiveTab] = useState('chat');
+  const [unreadCount, setUnreadCount] = useState(0);
   const controlEventRef = useRef(null);
+  const prevMessagesLengthRef = useRef(0);
 
   /**
    * Handle control events from WS to forward to player
@@ -175,6 +177,36 @@ export const WatchRoomPage = () => {
   }, []);
 
   /**
+   * Track new messages and update unread count
+   */
+  useEffect(() => {
+    const currentLength = state.messages.length;
+    const prevLength = prevMessagesLengthRef.current;
+
+    // If messages increased and (sidebar hidden OR chat tab not active)
+    if (currentLength > prevLength) {
+      const newMessagesCount = currentLength - prevLength;
+      const shouldIncreaseUnread = !showSidebar || activeTab !== 'chat';
+
+      if (shouldIncreaseUnread) {
+        setUnreadCount(prev => prev + newMessagesCount);
+      }
+    }
+
+    // Update ref for next check
+    prevMessagesLengthRef.current = currentLength;
+  }, [state.messages.length, showSidebar, activeTab]);
+
+  /**
+   * Reset unread count when user opens chat tab
+   */
+  useEffect(() => {
+    if (showSidebar && activeTab === 'chat') {
+      setUnreadCount(0);
+    }
+  }, [showSidebar, activeTab]);
+
+  /**
    * Connect to room on mount
    */
   useEffect(() => {
@@ -302,6 +334,9 @@ export const WatchRoomPage = () => {
             >
               <i className={`fa-solid ${showSidebar ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
               <span className="btn-text">{showSidebar ? 'Ẩn' : 'Hiện'}</span>
+              {unreadCount > 0 && !showSidebar && (
+                <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+              )}
             </button>
           </div>
         </div>
@@ -331,6 +366,9 @@ export const WatchRoomPage = () => {
                   }`}
                 >
                   💬 Chat
+                  {unreadCount > 0 && activeTab !== 'chat' && (
+                    <span className="tab-notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                  )}
                 </button>
                 <button
                   onClick={() => setActiveTab('members')}
