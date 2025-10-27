@@ -41,5 +41,17 @@ const WatchRoomService = {
             throw error.response ? error.response.data : error;
         }
     },
+
+    // Xác thực invite code cho phòng private
+    verifyInviteCode: async (roomId, inviteCode) => {
+        try {
+            const response = await axiosInstance.post(`${API_BASE_URL}/${encodeURIComponent(roomId)}/verify-invite`, {
+                inviteCode: inviteCode
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
 };
 export default WatchRoomService;

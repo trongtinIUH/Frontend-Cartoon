@@ -219,7 +219,8 @@ const PaymentManagementPage = () => {
                                                     >
                                                         <i className="fa fa-eye" /> Xem chi tiết
                                                     </span>
-                                                    {String(payment.status).toUpperCase() === 'SUCCESS' && (
+                                                    {String(payment.status).toUpperCase() === 'SUCCESS' && 
+                                                     payment.refundRequested === true && (
                                                         <span
                                                             className="btn btn-sm btn-outline-danger mt-2"
                                                             onClick={async () => {

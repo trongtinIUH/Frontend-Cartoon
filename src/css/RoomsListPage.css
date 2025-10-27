@@ -187,6 +187,14 @@
   z-index: 2;
 }
 
+.room-list .room-viewers i.fa-lock {
+  color: #fbbf24;
+}
+
+.room-list .room-viewers i.fa-eye {
+  color: #60a5fa;
+}
+
 /* Meta: avatar + text dưới poster */
 .room-list .room-meta {
   padding: 0 2px;

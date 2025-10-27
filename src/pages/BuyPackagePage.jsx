@@ -80,9 +80,8 @@ const BuyPackagePage = () => {
                         }}
                       />
                       <div className="fw-bold text-white">
-                        {pkg.amount?.toLocaleString('vi-VN')}vnđ
+                        {pkg.amount?.toLocaleString('vi-VN')}vnđ / tháng
                       </div>
-                      <div className="text-secondary small">1 tháng</div>
                     </th>
                   ))}
                 </tr>

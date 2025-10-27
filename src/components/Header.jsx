@@ -389,10 +389,10 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                           <FontAwesomeIcon icon={faHistory} />{" "}
                           <span>Lịch sử thanh toán</span>
                         </li>
-                        <li onClick={() => go("/continue")}>
+                        {/* <li onClick={() => go("/continue")}>
                           <FontAwesomeIcon icon={faClock} />{" "}
                           <span>Xem tiếp</span>
-                        </li>
+                        </li> */}
                         <li onClick={() => go("/profile")}>
                           <FontAwesomeIcon icon={faUser} />{" "}
                           <span>Tài khoản</span>
@@ -407,7 +407,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                         {isAdmin && (
                           <>
                             
-                            <li onClick={() => go('/admin-dashboard')}>
+                            <li onClick={() => go('/admin-movie')}>
                               Bảng điều khiển
                             </li>
                           </>

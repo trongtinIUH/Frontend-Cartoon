@@ -14,6 +14,7 @@ import { useWatchRoom } from '../hooks/useWatchRoom';
 import { WatchRoomProvider } from '../context/WatchRoomContext';
 import { useAuth } from '../context/AuthContext';
 import WatchRoomService from '../services/WatchRoomService';
+import InviteCodeModal from '../components/InviteCodeModal';
 import '../css/WatchRoomPage.css';
 
 export const WatchRoomPage = () => {
@@ -35,6 +36,12 @@ export const WatchRoomPage = () => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [activeTab, setActiveTab] = useState('chat');
   const controlEventRef = useRef(null);
+  
+  // States for invite code verification
+  const [isVerifyingAccess, setIsVerifyingAccess] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [roomInfo, setRoomInfo] = useState(null);
 
   /**
    * Handle control events from WS to forward to player
@@ -94,43 +101,85 @@ export const WatchRoomPage = () => {
 
   /**
    * Fetch room info, video URL, and initial video state
+   * Also verify access for private rooms
    */
   useEffect(() => {
     const fetchRoomInfo = async () => {
       try {
-        // Try to get video URL from query params first (for creator)
+        setIsVerifyingAccess(true);
+        
+        // Fetch room info from API
+        console.log('[WatchRoomPage] Fetching room info from API...');
+        const roomData = await WatchRoomService.getWatchRoomById(roomId);
+        
+        if (!roomData) {
+          console.warn('[WatchRoomPage] No room info found');
+          setAccessDenied(true);
+          setIsVerifyingAccess(false);
+          return;
+        }
+
+        setRoomInfo(roomData);
+
+        // Check if room is private and requires invite code
+        if (roomData.isPrivate) {
+          console.log('[WatchRoomPage] Room is private, checking invite code...');
+          
+          // If no invite code in URL, show modal
+          if (!inviteCode) {
+            console.log('[WatchRoomPage] No invite code provided, showing modal');
+            setShowInviteModal(true);
+            setIsVerifyingAccess(false);
+            return;
+          }
+
+          // Verify invite code
+          try {
+            const verifyResponse = await WatchRoomService.verifyInviteCode(roomId, inviteCode);
+            
+            if (!verifyResponse || !verifyResponse.valid) {
+              console.log('[WatchRoomPage] Invalid invite code');
+              setShowInviteModal(true);
+              setIsVerifyingAccess(false);
+              return;
+            }
+            
+            console.log('[WatchRoomPage] Invite code verified successfully');
+          } catch (error) {
+            console.error('[WatchRoomPage] Error verifying invite code:', error);
+            setShowInviteModal(true);
+            setIsVerifyingAccess(false);
+            return;
+          }
+        }
+
+        // Access granted, proceed with loading video
         const videoFromParams = searchParams.get('video');
         
         if (videoFromParams) {
           console.log('[WatchRoomPage] Using video URL from params:', videoFromParams);
           setVideoUrl(videoFromParams);
-          // Creator still fetches video state from API (for persistence after refresh)
+        } else if (roomData.videoUrl) {
+          console.log('[WatchRoomPage] Fetched video URL from API:', roomData.videoUrl);
+          setVideoUrl(roomData.videoUrl);
+        } else {
+          console.warn('[WatchRoomPage] No video URL, using demo');
+          setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+        }
+        
+        // Set initial video state (for persistence)
+        if (roomData.videoState) {
+          console.log('[WatchRoomPage] Fetched video state from API:', roomData.videoState);
+          setInitialVideoState(roomData.videoState);
         }
 
-        // Fetch room info from API (for video URL + video state)
-        console.log('[WatchRoomPage] Fetching room info from API...');
-        const roomInfo = await WatchRoomService.getWatchRoomById(roomId);
-        
-        if (roomInfo) {
-          // Set video URL if not from params
-          if (!videoFromParams && roomInfo.videoUrl) {
-            console.log('[WatchRoomPage] Fetched video URL from API:', roomInfo.videoUrl);
-            setVideoUrl(roomInfo.videoUrl);
-          }
-          
-          // Set initial video state (for persistence)
-          if (roomInfo.videoState) {
-            console.log('[WatchRoomPage] Fetched video state from API:', roomInfo.videoState);
-            setInitialVideoState(roomInfo.videoState);
-          }
-        } else {
-          console.warn('[WatchRoomPage] No room info, using demo');
-          if (!videoFromParams) {
-            setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
-          }
-        }
+        setIsVerifyingAccess(false);
       } catch (error) {
         console.error('[WatchRoomPage] Error fetching room info:', error);
+        setAccessDenied(true);
+        setIsVerifyingAccess(false);
+        
+        // Fallback for demo
         if (!searchParams.get('video')) {
           setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
         }
@@ -138,7 +187,7 @@ export const WatchRoomPage = () => {
     };
 
     fetchRoomInfo();
-  }, [roomId, searchParams]);
+  }, [roomId, searchParams, inviteCode]);
 
   /**
    * Apply initial video state (after fetching from API)
@@ -230,22 +279,57 @@ export const WatchRoomPage = () => {
   }, [roomId, connect, disconnect]);
 
   /**
-   * Copy invite link
+   * Copy invite code
    */
-  const handleCopyInviteLink = () => {
-    // Build invite link with video URL
-    const params = new URLSearchParams();
-    if (videoUrl) {
-      params.append('video', videoUrl);
-    }
-    if (inviteCode) {
-      params.append('invite', inviteCode);
-    }
+  const handleCopyInviteCode = () => {
+    // Get invite code from roomInfo or URL
+    const code = roomInfo?.inviteCode || inviteCode;
     
-    const inviteLink = `${window.location.origin}/watch-together/${roomId}?${params.toString()}`;
+    if (!code) {
+      alert('❌ Phòng này không có mã mời');
+      return;
+    }
 
-    navigator.clipboard.writeText(inviteLink);
-    alert('✓ Đã sao chép link mời vào clipboard!');
+    // Copy invite code to clipboard
+    navigator.clipboard.writeText(code)
+      .then(() => {
+        alert(`✓ Đã sao chép mã mời: ${code}`);
+      })
+      .catch((err) => {
+        console.error('Failed to copy:', err);
+        // Fallback: show alert with code
+        alert(`Mã mời: ${code}\n\n(Vui lòng copy thủ công)`);
+      });
+  };
+
+  /**
+   * Handle invite code submit from modal
+   */
+  const handleInviteCodeSubmit = async (code) => {
+    try {
+      // Verify invite code
+      const verifyResponse = await WatchRoomService.verifyInviteCode(roomId, code);
+      
+      if (!verifyResponse || !verifyResponse.valid) {
+        throw new Error('Mã mời không đúng');
+      }
+
+      // Valid code, update URL and reload
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('invite', code);
+      window.location.href = newUrl.toString();
+    } catch (error) {
+      console.error('[WatchRoomPage] Error verifying invite code:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Handle modal cancel - go back
+   */
+  const handleModalCancel = () => {
+    setShowInviteModal(false);
+    navigate(-1);
   };
 
   /**
@@ -263,6 +347,52 @@ export const WatchRoomPage = () => {
 
   /**
    * Loading state
+   */
+  if (isVerifyingAccess) {
+    return (
+      <div className="watch-room-loading">
+        <div className="loading-spinner"></div>
+        <div className="watch-room-loading-text">Đang xác thực quyền truy cập...</div>
+      </div>
+    );
+  }
+
+  /**
+   * Access denied state
+   */
+  if (accessDenied && !showInviteModal) {
+    return (
+      <div className="watch-room-loading">
+        <div className="watch-room-error">
+          <i className="fas fa-lock" style={{ fontSize: '3rem', marginBottom: '1rem' }}></i>
+          <h2>Không thể truy cập phòng</h2>
+          <p>Phòng này không tồn tại hoặc bạn không có quyền truy cập.</p>
+          <button onClick={() => navigate(-1)} className="btn-back-error">
+            Quay lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * Show invite modal if needed
+   */
+  if (showInviteModal) {
+    return (
+      <div className="watch-room-page">
+        <InviteCodeModal
+          isOpen={showInviteModal}
+          onSubmit={handleInviteCodeSubmit}
+          onCancel={handleModalCancel}
+          roomName={roomInfo?.roomName || 'Phòng xem chung'}
+        />
+      </div>
+    );
+  }
+
+  /**
+   * Loading video state
    */
   if (!videoUrl) {
     return (
@@ -319,14 +449,17 @@ export const WatchRoomPage = () => {
           </div>
 
           <div className="watch-room-header-right">
-            <button
-              onClick={handleCopyInviteLink}
-              className="btn-header btn-invite"
-              title="Sao chép link mời bạn bè"
-            >
-              <i className="fa-solid fa-link"></i>
-              <span className="btn-text">Copy Link</span>
-            </button>
+            {/* Show copy invite code button only for private rooms */}
+            {roomInfo?.isPrivate && (
+              <button
+                onClick={handleCopyInviteCode}
+                className="btn-header btn-invite"
+                title="Sao chép mã mời"
+              >
+                <i className="fa-solid fa-key"></i>
+                <span className="btn-text">Copy Mã</span>
+              </button>
+            )}
 
             <button
               onClick={() => setShowSidebar(!showSidebar)}
