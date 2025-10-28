@@ -45,6 +45,7 @@ export function useWatchRoom({
   const unsubscribePersonalRef = useRef(null);
   const heartbeatTimerRef = useRef(null);
   const lastPingTimeRef = useRef(0);
+  const hasJoinedRef = useRef(false); // ✅ Prevent duplicate JOIN
 
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -275,6 +276,9 @@ export function useWatchRoom({
           const reason = event.payload?.reason || 'UNKNOWN';
           const reasonText = reason === 'EXPIRED' ? 'đã hết hạn' : 'đã bị xóa';
           
+          // Reset joined flag
+          hasJoinedRef.current = false;
+          
           // Show system message
           setState((prev) => ({
             ...prev,
@@ -293,6 +297,55 @@ export function useWatchRoom({
             onRoomDeleted({ reason, reasonText });
           }
 
+          break;
+        }
+
+        case 'ERROR': {
+          // Handle error event (room deleted/expired when joining)
+          const errorMessage = event.payload?.message || 'Unknown error';
+          
+          console.error('[useWatchRoom] ERROR event received:', errorMessage);
+          
+          // Reset joined flag on error
+          hasJoinedRef.current = false;
+          
+          // Check if room deleted/expired error
+          if (errorMessage.includes('deleted') || errorMessage.includes('expired')) {
+            const reasonText = errorMessage.includes('expired') ? 'đã hết hạn' : 'đã bị xóa';
+            
+            // Show system message
+            setState((prev) => ({
+              ...prev,
+              messages: [
+                ...prev.messages,
+                {
+                  type: MESSAGE_TYPES.SYSTEM,
+                  content: `⚠️ Lỗi: Phòng ${reasonText}`,
+                  createdAt: event.createdAt || new Date().toISOString(),
+                },
+              ],
+            }));
+
+            // Call callback if provided (reuse onRoomDeleted for consistency)
+            if (onRoomDeleted) {
+              const reason = errorMessage.includes('expired') ? 'EXPIRED' : 'DELETED';
+              onRoomDeleted({ reason, reasonText });
+            }
+          } else {
+            // Other errors - show in system message
+            setState((prev) => ({
+              ...prev,
+              messages: [
+                ...prev.messages,
+                {
+                  type: MESSAGE_TYPES.SYSTEM,
+                  content: `⚠️ Lỗi: ${errorMessage}`,
+                  createdAt: event.createdAt || new Date().toISOString(),
+                },
+              ],
+            }));
+          }
+          
           break;
         }
 
@@ -428,11 +481,23 @@ export function useWatchRoom({
         // Subscribe to personal queue for SYNC_STATE and PONG
         unsubscribePersonalRef.current = stomp.subscribe('/user/queue/reply', handleEvent);
 
+        // ✅ Prevent duplicate JOIN (especially on reconnect)
+        if (hasJoinedRef.current) {
+          console.warn('[useWatchRoom] ⚠️ Already joined room, skipping JOIN event');
+          // Just request sync state instead
+          DEBUG_ENABLED && console.log('[useWatchRoom] Requesting sync state after reconnect...');
+          stomp.send(`/app/rooms/${roomId}/sync`, {
+            senderId: userId,
+          });
+          return;
+        }
+
         // ⚠️ CRITICAL: Fetch initial data BEFORE sending JOIN
         // This ensures we have the member list before JOIN events arrive
         await fetchInitialData();
 
-        // Send JOIN event AFTER fetching data
+        // Send JOIN event AFTER fetching data (first time only)
+        console.log('[useWatchRoom] 🔵 Sending JOIN event to room:', roomId);
         stomp.send(`/app/rooms/${roomId}/join`, {
           senderId: userId,
           senderName: userName,
@@ -441,6 +506,9 @@ export function useWatchRoom({
             inviteCode,
           },
         });
+        
+        // Mark as joined
+        hasJoinedRef.current = true;
 
         // Start heartbeat
         startHeartbeat();
@@ -518,6 +586,9 @@ export function useWatchRoom({
 
     // Stop heartbeat
     stopHeartbeat();
+
+    // Reset joined flag
+    hasJoinedRef.current = false;
 
     // Unsubscribe room broadcast
     if (unsubscribeRef.current) {

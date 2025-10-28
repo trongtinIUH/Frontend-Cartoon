@@ -6,6 +6,7 @@
 
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { WatchPlayer } from '../components/WatchPlayer';
 import { WatchChat } from '../components/WatchChat';
 import { MemberList } from '../components/MemberList';
@@ -58,6 +59,16 @@ export const WatchRoomPage = () => {
   const handleRoomDeleted = useCallback(({ reason, reasonText }) => {
     console.log('[WatchRoomPage] Room deleted/expired:', reason);
     console.log('[WatchRoomPage] Backend cascade deleted: messages + members');
+    
+    // Show toast notification
+    toast.error(`⚠️ Phòng ${reasonText}. Đang chuyển về danh sách...`, {
+      position: 'top-center',
+      autoClose: 4000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
     
     // Show blocking dialog
     setRoomDeletedReason(reasonText);
