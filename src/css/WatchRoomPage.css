@@ -64,6 +64,50 @@ body:fullscreen {
 }
 
 .watch-room-loading-text {
+  font-size: 1.1rem;
+  color: #9fb3c8;
+  font-weight: 500;
+}
+
+/* Error/Access Denied State */
+.watch-room-error {
+  text-align: center;
+  padding: 2rem;
+  max-width: 500px;
+}
+
+.watch-room-error h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.watch-room-error p {
+  font-size: 1rem;
+  color: #9fb3c8;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.btn-back-error {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-back-error:hover {
+  background: linear-gradient(135deg, #764ba2, #667eea);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.watch-room-loading-text {
   color: rgba(255, 255, 255, 0.8);
   font-size: 1.1rem;
   font-weight: 500;

@@ -16,7 +16,6 @@ import Layout from "./layout/Layout";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import DashboardPage from './pages/admin/DashboardPage';
 import MovieManagementPage from './pages/admin/MovieManagementPage';
 // Cleanup auth data cũ
 import './utils/authCleanup';
@@ -100,7 +99,6 @@ function App() {
             <Route path="/watch-together/:roomId" element={<WatchRoomPage />} />
           </Route>
           <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
-            <Route path="/admin-dashboard" element={<DashboardPage />} />
             <Route path="/admin-movie" element={<MovieManagementPage />} />
             <Route path="/admin-promotion" element={<PromotionManagementPage />} />
             <Route path="/admin-author" element={<AuthorManagementPage />} />

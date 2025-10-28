@@ -3,7 +3,8 @@ import axios from "axios";
 import AuthService from "../services/AuthService";
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080'
+  baseURL: 'http://localhost:8080',
+  timeout: 10000, // 10 seconds timeout
 });
 
 axiosInstance.interceptors.request.use((config) => {

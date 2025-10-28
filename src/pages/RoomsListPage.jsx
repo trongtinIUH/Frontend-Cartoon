@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import "../css/RoomsListPage.css";
 import avatar_default from "../image/default_avatar.jpg";
 import WatchRoomService from "../services/WatchRoomService";
+import InviteCodeModal from "../components/InviteCodeModal";
+import { faL } from "@fortawesome/free-solid-svg-icons";
 
 // Đếm ngược từ startAt (ISO) -> "HH:MM:SS"
 const fmtCountdown = (startAt) => {
@@ -31,6 +33,9 @@ export default function RoomsListPage() {
   
   // Check if user is logged in
   const isLoggedIn = MyUser?.my_user?.userId;
+  // Modal state
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
   useEffect(() => {
     const t = setInterval(() => forceTick((n) => n + 1), 1000);
@@ -110,13 +115,65 @@ export default function RoomsListPage() {
     return filtered;
   }, [rooms]);
 
-  // Handle room click - check login first
-  const handleRoomClick = (roomId) => {
-    if (!isLoggedIn) {
+  /**
+   * Handle room card click
+   */
+  const handleRoomClick = (room) => {
+    //user không đăng nhập không vào được
+     if (!isLoggedIn) {
       alert('⚠️ Bạn cần phải đăng nhập để sử dụng chức năng này!');
       return;
     }
-    navigate(`/watch-together/${encodeURIComponent(roomId)}`);
+    
+    //admin or chủ phòng có quyền vào luôn (bypass invite code check)
+    // if (MyUser?.my_user?.role === 'ADMIN' || MyUser?.my_user?.userId === room.userId) {
+    //   // Add ?host=1 for room creator to enable host controls
+    //   const isHost = MyUser?.my_user?.userId === room.userId;
+    //   const hostParam = isHost ? '?host=1' : '';
+    //   navigate(`/watch-together/${encodeURIComponent(room.roomId)}${hostParam}`);
+    //   return; // ✅ IMPORTANT: Stop here, don't check isPrivate
+    // }
+    
+    // Nếu phòng private, hiển thị modal nhập invite code
+    if (room.isPrivate) {
+      setSelectedRoom(room);
+      setShowInviteModal(true);
+    } else {
+      // Phòng public, vào trực tiếp
+      navigate(`/watch-together/${encodeURIComponent(room.roomId)}`);
+    }
+  };
+
+  /**
+   * Handle invite code submit
+   */
+  const handleInviteCodeSubmit = async (inviteCode) => {
+    if (!selectedRoom) return;
+
+    try {
+      // Verify invite code với backend
+      const response = await WatchRoomService.verifyInviteCode(selectedRoom.roomId, inviteCode);
+    
+      if (response && response.valid) {
+        // Mã đúng, điều hướng với invite code trong URL
+        navigate(`/watch-together/${encodeURIComponent(selectedRoom.roomId)}?invite=${encodeURIComponent(inviteCode)}`);
+        setShowInviteModal(false);
+        setSelectedRoom(null);
+      } else {
+        throw new Error('Mã mời không đúng');
+      }
+    } catch (error) {
+      console.error('Error verifying invite code:', error);
+      throw new Error(error.message || 'Mã mời không đúng. Vui lòng thử lại.');
+    }
+  };
+
+  /**
+   * Handle modal cancel
+   */
+  const handleModalCancel = () => {
+    setShowInviteModal(false);
+    setSelectedRoom(null);
   };
 
   if (loading) return <div className="container text-white py-4">Đang tải…</div>;
@@ -134,7 +191,7 @@ export default function RoomsListPage() {
               <div
                 key={room.roomId}
                 className="room-card"
-                onClick={() => handleRoomClick(room.roomId)}
+                onClick={() => handleRoomClick(room)}
               >
                 <div className="room-wrap">
                   <img
@@ -169,6 +226,7 @@ export default function RoomsListPage() {
                   {/* Viewer count - Real-time from backend */}
                   <div className="room-viewers">
                     <i className="fas fa-eye" /> {room.viewerCount ?? 0}
+                    <i className={`fas ${room.isPrivate ? 'fa-lock' : 'fa-eye'}`} /> {room._privacy}
                   </div>
                 </div>
 
@@ -188,6 +246,14 @@ export default function RoomsListPage() {
           </div>
         </div>
       )}
+
+      {/* Invite Code Modal */}
+      <InviteCodeModal
+        isOpen={showInviteModal}
+        onSubmit={handleInviteCodeSubmit}
+        onCancel={handleModalCancel}
+        roomName={selectedRoom?._title}
+      />
     </div>
   );
 }

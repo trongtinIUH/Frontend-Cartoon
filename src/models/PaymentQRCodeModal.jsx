@@ -47,7 +47,7 @@ const PaymentQRCodeModal = ({ show, onClose, qrData }) => {
                         orderCode: qrData.orderCode,
                         status: "PAID"
                     });
-                    window.location.href = "/main#/main"; // Chuyển hướng về trang chính
+                    window.location.href = "/main#/purchase-history"; // Chuyển hướng về trang chính
                     toast.success("Thanh toán thành công!");
                 }
             } catch (err) {

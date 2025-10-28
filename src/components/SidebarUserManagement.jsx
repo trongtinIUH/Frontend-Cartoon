@@ -37,7 +37,7 @@ const SidebarUserManagement = () => {
               <i className="fas fa-history me-2"></i> Lịch sử thanh toán
             </Link>
           </li>
-          <hr />
+          {/* <hr />
           <li className="nav-item">
             <Link
               to="/notifications"
@@ -47,7 +47,7 @@ const SidebarUserManagement = () => {
             >
               <i className="fas fa-clock me-2"></i> Xem tiếp
             </Link>
-          </li>
+          </li> */}
           <hr />
           <li className="nav-item">
             <Link
