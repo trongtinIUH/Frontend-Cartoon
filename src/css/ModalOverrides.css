@@ -1,0 +1,45 @@
+/**
+ * Modal Z-Index Overrides
+ * Ensure all modals appear above video players
+ * 
+ * Z-Index Hierarchy:
+ * - Video Player: auto (default, not forced)
+ * - Header: 100
+ * - Modals: 999999+
+ */
+
+/* Delete Room Modal - Highest Priority */
+.delete-room-modal-overlay {
+  z-index: 999999 !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+.delete-room-modal {
+  z-index: 1000000 !important;
+  position: relative !important;
+}
+
+/* Room Deleted Dialog */
+.room-deleted-overlay {
+  z-index: 999999 !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+.room-deleted-dialog {
+  z-index: 1000000 !important;
+  position: relative !important;
+}
+
+/* Header should be below modals but visible */
+.watch-room-header {
+  z-index: 100;
+  position: relative;
+}
+
+/* Sidebar should be below modals */
+.watch-room-sidebar {
+  z-index: 50;
+  position: relative;
+}

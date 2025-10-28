@@ -170,6 +170,24 @@
   color: #ddd;
 }
 
+/* ✅ Expiring Soon Badge */
+.room-list .expiring-badge {
+  background: linear-gradient(45deg, #f59e0b, #d97706);
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.6);
+  animation: expiringPulse 2s ease-in-out infinite;
+}
+
+@keyframes expiringPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
 /* Viewers */
 .room-list .room-viewers {
   position: absolute;

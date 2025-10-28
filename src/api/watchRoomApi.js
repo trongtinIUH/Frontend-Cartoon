@@ -114,4 +114,58 @@ export const watchRoomApi = {
   async getRoomInfo(roomId) {
     return fetchJSON(`${API_BASE}/watchrooms/${roomId}`);
   },
+
+  /**
+   * Delete watch room (soft delete)
+   * @param {string} roomId
+   * @param {boolean} [force=false] - Force delete even if room has viewers
+   * @returns {Promise<{ok: boolean}>}
+   */
+  async deleteRoom(roomId, force = false) {
+    const url = `${API_BASE}/api/watchrooms/${roomId}${force ? '?force=true' : ''}`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('idToken')}`,
+          'X-User-Id': (() => {
+            try {
+              const myUser = JSON.parse(localStorage.getItem('my_user') || '{}');
+              return myUser?.my_user?.userId || myUser?.userId || '';
+            } catch {
+              return '';
+            }
+          })(),
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({
+          code: 'UNKNOWN_ERROR',
+          message: response.statusText,
+        }));
+
+        // Map error codes to user-friendly messages
+        switch (error.code) {
+          case 'UNAUTHORIZED':
+            throw new Error('Bạn cần đăng nhập để thực hiện thao tác này');
+          case 'FORBIDDEN':
+            throw new Error('Bạn không có quyền xóa phòng này. Chỉ ADMIN hoặc chủ phòng mới có thể xóa.');
+          case 'ROOM_GONE':
+            throw new Error('Phòng không tồn tại hoặc đã bị xóa');
+          case 'ROOM_HAS_VIEWERS':
+            throw new Error('Phòng đang có người xem. Vui lòng tick "Xóa ngay lập tức" để xóa cưỡng bức.');
+          default:
+            throw new Error(error.message || 'Không thể xóa phòng');
+        }
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('[API Error] deleteRoom:', error);
+      throw error;
+    }
+  },
 };

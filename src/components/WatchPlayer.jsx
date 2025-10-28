@@ -10,6 +10,9 @@ import 'video.js/dist/video-js.css';
 import { useVideoSync } from '../hooks/useVideoSync';
 import '../css/WatchPlayer.css';
 
+// Debug logging (set to false to disable verbose logs)
+const DEBUG_ENABLED = false;
+
 /**
  * @typedef {import('../types/watch').WsEvent} WsEvent
  */
@@ -49,17 +52,63 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
 
     // Player ready
     player.ready(() => {
-      console.log('[WatchPlayer] Player ready');
+      DEBUG_ENABLED && console.log('[WatchPlayer] Player ready');
       setIsReady(true);
+      
+      // Log player info
+      DEBUG_ENABLED && console.log('[WatchPlayer] Player version:', videojs.VERSION);
+      DEBUG_ENABLED && console.log('[WatchPlayer] Player tech:', player.currentTechOrder_);
     });
 
     // Track play/pause state
     player.on('play', () => {
+      DEBUG_ENABLED && console.log('[WatchPlayer] Video playing');
       setIsPlaying(true);
     });
 
     player.on('pause', () => {
+      DEBUG_ENABLED && console.log('[WatchPlayer] Video paused');
       setIsPlaying(false);
+    });
+
+    // Track loading
+    player.on('loadstart', () => {
+      DEBUG_ENABLED && console.log('[WatchPlayer] Load started');
+    });
+
+    player.on('loadedmetadata', () => {
+      DEBUG_ENABLED && console.log('[WatchPlayer] Metadata loaded');
+      DEBUG_ENABLED && console.log('[WatchPlayer] Video duration:', player.duration());
+    });
+
+    player.on('loadeddata', () => {
+      DEBUG_ENABLED && console.log('[WatchPlayer] Data loaded');
+    });
+
+    player.on('canplay', () => {
+      DEBUG_ENABLED && console.log('[WatchPlayer] Can play');
+    });
+
+    player.on('canplaythrough', () => {
+      DEBUG_ENABLED && console.log('[WatchPlayer] Can play through');
+    });
+
+    // Track errors
+    player.on('error', () => {
+      const error = player.error();
+      console.error('[WatchPlayer] Player error:', error);
+      
+      if (error) {
+        console.error('[WatchPlayer] Error code:', error.code);
+        console.error('[WatchPlayer] Error message:', error.message);
+        
+        // Show user-friendly error
+        if (error.code === 4) {
+          console.error('[WatchPlayer] Media not supported or not found');
+        } else if (error.code === 2) {
+          console.error('[WatchPlayer] Network error');
+        }
+      }
     });
 
     // Cleanup
@@ -77,12 +126,41 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
   useEffect(() => {
     if (!playerRef.current || !videoUrl) return;
 
-    console.log('[WatchPlayer] Setting video source', videoUrl);
+    DEBUG_ENABLED && console.log('[WatchPlayer] Setting video source', videoUrl);
 
-    playerRef.current.src({
-      src: videoUrl,
-      type: 'application/x-mpegURL', // HLS
-    });
+    try {
+      // Detect video type from URL
+      let videoType = 'video/mp4'; // Default
+      
+      if (videoUrl.includes('.m3u8')) {
+        videoType = 'application/x-mpegURL'; // HLS
+      } else if (videoUrl.includes('.mpd')) {
+        videoType = 'application/dash+xml'; // DASH
+      } else if (videoUrl.includes('.mp4')) {
+        videoType = 'video/mp4';
+      } else if (videoUrl.includes('.webm')) {
+        videoType = 'video/webm';
+      }
+
+      DEBUG_ENABLED && console.log('[WatchPlayer] Detected video type:', videoType);
+
+      playerRef.current.src({
+        src: videoUrl,
+        type: videoType,
+      });
+
+      // Try to load the video
+      playerRef.current.load();
+
+      // Log any errors
+      playerRef.current.on('error', (error) => {
+        console.error('[WatchPlayer] Video error:', error);
+        console.error('[WatchPlayer] Player error details:', playerRef.current.error());
+      });
+
+    } catch (error) {
+      console.error('[WatchPlayer] Error setting video source:', error);
+    }
   }, [videoUrl]);
 
   /**

@@ -7,6 +7,9 @@
 import { useEffect, useRef } from 'react';
 import { WS_TYPES, WATCH_CONFIG } from '../types/watch';
 
+// Debug logging (set to false to disable verbose logs)
+const DEBUG_ENABLED = false;
+
 /**
  * @typedef {import('../types/watch').WsEvent} WsEvent
  */
@@ -50,7 +53,7 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
 
     // Skip if we just sent this control (echo suppression)
     if (suppressNextRef.current) {
-      console.log('[useVideoSync] Suppressing echo for', event.type);
+      DEBUG_ENABLED && console.log('[useVideoSync] Suppressing echo for', event.type);
       return;
     }
 
@@ -63,7 +66,7 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
       // Calculate network delay compensation
       const delta = atHostTimeMs ? Date.now() - atHostTimeMs : 0;
 
-      console.log('[useVideoSync] Applying remote control', {
+      DEBUG_ENABLED && console.log('[useVideoSync] Applying remote control', {
         type,
         positionMs,
         delta,
@@ -75,7 +78,7 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
           const adjustedPosition = positionMs + delta * playbackRate;
           const currentTime = adjustedPosition / 1000;
 
-          console.log('[useVideoSync] PLAY at', currentTime, 'seconds');
+          DEBUG_ENABLED && console.log('[useVideoSync] PLAY at', currentTime, 'seconds');
 
           player.currentTime(currentTime);
           player.playbackRate(playbackRate);
@@ -88,7 +91,7 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
         case WS_TYPES.PAUSE: {
           const currentTime = positionMs / 1000;
 
-          console.log('[useVideoSync] PAUSE at', currentTime, 'seconds');
+          DEBUG_ENABLED && console.log('[useVideoSync] PAUSE at', currentTime, 'seconds');
 
           player.currentTime(currentTime);
           player.pause();
@@ -99,7 +102,7 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
           const currentTime = positionMs / 1000;
           const wasPlaying = !player.paused();
 
-          console.log('[useVideoSync] SEEK to', currentTime, 'seconds', { wasPlaying });
+          DEBUG_ENABLED && console.log('[useVideoSync] SEEK to', currentTime, 'seconds', { wasPlaying });
 
           player.currentTime(currentTime);
 
@@ -126,7 +129,7 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
             : positionMs;
           const currentTime = adjustedPosition / 1000;
 
-          console.log('[useVideoSync] SYNC_STATE', {
+          DEBUG_ENABLED && console.log('[useVideoSync] SYNC_STATE', {
             playing,
             currentTime,
             delta,
@@ -139,7 +142,7 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
 
           // Then handle play/pause
           if (playing) {
-            console.log('[useVideoSync] Auto-playing video from SYNC_STATE');
+            DEBUG_ENABLED && console.log('[useVideoSync] Auto-playing video from SYNC_STATE');
             
             // Try to play with error handling for browser autoplay policy
             player.play().catch((err) => {
@@ -151,7 +154,7 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
                 player.muted(true);
                 player.play()
                   .then(() => {
-                    console.log('[useVideoSync] Autoplay succeeded with muted');
+                    DEBUG_ENABLED && console.log('[useVideoSync] Autoplay succeeded with muted');
                     onAutoplayBlocked?.(); // Notify parent component
                     // Unmute after 1 second
                     setTimeout(() => {
@@ -190,15 +193,15 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
     const handlePlay = () => {
       // Skip if we're applying remote control
       if (isApplyingRemoteRef.current) {
-        console.log('[useVideoSync] Skipping play - applying remote');
+        DEBUG_ENABLED && console.log('[useVideoSync] Skipping play - applying remote');
         return;
       }
 
-      console.log('[useVideoSync] Player play event');
+      DEBUG_ENABLED && console.log('[useVideoSync] Player play event');
 
       if (!isHost) {
         // Non-host can play locally, but request sync from host
-        console.log('[useVideoSync] Non-host play - requesting sync from host');
+        DEBUG_ENABLED && console.log('[useVideoSync] Non-host play - requesting sync from host');
         
         // Request current state from host (backend should send SYNC_STATE)
         // For now, just allow local play - will sync on next remote event
@@ -214,15 +217,15 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
     const handlePause = () => {
       // Skip if we're applying remote control
       if (isApplyingRemoteRef.current) {
-        console.log('[useVideoSync] Skipping pause - applying remote');
+        DEBUG_ENABLED && console.log('[useVideoSync] Skipping pause - applying remote');
         return;
       }
 
-      console.log('[useVideoSync] Player pause event');
+      DEBUG_ENABLED && console.log('[useVideoSync] Player pause event');
 
       if (!isHost) {
         // Non-host can pause locally (catch up later)
-        console.log('[useVideoSync] Non-host pause - allowed locally');
+        DEBUG_ENABLED && console.log('[useVideoSync] Non-host pause - allowed locally');
         return;
       }
 
@@ -235,14 +238,14 @@ export function useVideoSync({ player, isHost, onLocalControl, controlEvent, onA
     const handleSeeked = () => {
       // Skip if we're applying remote control
       if (isApplyingRemoteRef.current) {
-        console.log('[useVideoSync] Skipping seeked - applying remote');
+        DEBUG_ENABLED && console.log('[useVideoSync] Skipping seeked - applying remote');
         return;
       }
 
-      console.log('[useVideoSync] Player seeked event');
+      DEBUG_ENABLED && console.log('[useVideoSync] Player seeked event');
 
       if (!isHost) {
-        console.log('[useVideoSync] Non-host seeked - not sending control');
+        DEBUG_ENABLED && console.log('[useVideoSync] Non-host seeked - not sending control');
         return;
       }
 

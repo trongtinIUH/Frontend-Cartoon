@@ -4,17 +4,19 @@
  * @version 2.0 - Redesigned UI
  */
 
-import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { WatchPlayer } from '../components/WatchPlayer';
 import { WatchChat } from '../components/WatchChat';
 import { MemberList } from '../components/MemberList';
 import { SyncDebug } from '../components/SyncDebug';
+import { DeleteRoomButton } from '../components/DeleteRoomButton';
 import { useWatchRoom } from '../hooks/useWatchRoom';
 import { WatchRoomProvider } from '../context/WatchRoomContext';
 import { useAuth } from '../context/AuthContext';
 import WatchRoomService from '../services/WatchRoomService';
 import '../css/WatchRoomPage.css';
+import '../css/ModalOverrides.css'; // Ensure modals appear above video
 
 export const WatchRoomPage = () => {
   const { roomId } = useParams();
@@ -35,16 +37,52 @@ export const WatchRoomPage = () => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [activeTab, setActiveTab] = useState('chat');
   const [unreadCount, setUnreadCount] = useState(0);
+  const [roomInfo, setRoomInfo] = useState(null); // Store room info for permission check
+  const [showRoomDeletedDialog, setShowRoomDeletedDialog] = useState(false);
+  const [roomDeletedReason, setRoomDeletedReason] = useState('');
   const controlEventRef = useRef(null);
   const prevMessagesLengthRef = useRef(0);
+  const playerRef = useRef(null); // Reference to player for stopping on delete
+  const disconnectRef = useRef(null); // Store disconnect function
 
   /**
    * Handle control events from WS to forward to player
    */
   const handleControlEvent = useCallback((event) => {
-    console.log('[WatchRoomPage] Control event received', event);
     controlEventRef.current = event;
   }, []);
+
+  /**
+   * Handle room deleted/expired from WebSocket
+   */
+  const handleRoomDeleted = useCallback(({ reason, reasonText }) => {
+    console.log('[WatchRoomPage] Room deleted/expired:', reason);
+    console.log('[WatchRoomPage] Backend cascade deleted: messages + members');
+    
+    // Show blocking dialog
+    setRoomDeletedReason(reasonText);
+    setShowRoomDeletedDialog(true);
+
+    // Try to pause/stop player
+    if (playerRef.current?.pause) {
+      try {
+        playerRef.current.pause();
+      } catch (err) {
+        console.warn('[WatchRoomPage] Failed to pause player:', err);
+      }
+    }
+
+    // Disconnect WebSocket using ref
+    // This will automatically clear members/messages state in useWatchRoom
+    if (disconnectRef.current) {
+      disconnectRef.current();
+    }
+
+    // Redirect after 3 seconds
+    setTimeout(() => {
+      navigate('/rooms');
+    }, 3000);
+  }, [navigate]);
 
   /**
    * useWatchRoom hook
@@ -68,15 +106,19 @@ export const WatchRoomPage = () => {
     inviteCode,
     forceHost: isHostFromUrl,
     onControlEvent: handleControlEvent,
+    onRoomDeleted: handleRoomDeleted,
   });
+
+  // Store disconnect function in ref for handleRoomDeleted
+  useEffect(() => {
+    disconnectRef.current = disconnect;
+  }, [disconnect]);
 
   /**
    * Handle local control from player
    */
   const handleLocalControl = useCallback(
     (type, positionMs) => {
-      console.log('[WatchRoomPage] Local control', type, positionMs);
-
       switch (type) {
         case 'PLAY':
           play(positionMs);
@@ -104,26 +146,35 @@ export const WatchRoomPage = () => {
         const videoFromParams = searchParams.get('video');
         
         if (videoFromParams) {
-          console.log('[WatchRoomPage] Using video URL from params:', videoFromParams);
           setVideoUrl(videoFromParams);
           // Creator still fetches video state from API (for persistence after refresh)
         }
 
         // Fetch room info from API (for video URL + video state)
-        console.log('[WatchRoomPage] Fetching room info from API...');
-        const roomInfo = await WatchRoomService.getWatchRoomById(roomId);
+        const roomData = await WatchRoomService.getWatchRoomById(roomId);
         
-        if (roomInfo) {
+        if (roomData) {
+          // Store room info for permission check
+          setRoomInfo(roomData);
+          
           // Set video URL if not from params
-          if (!videoFromParams && roomInfo.videoUrl) {
-            console.log('[WatchRoomPage] Fetched video URL from API:', roomInfo.videoUrl);
-            setVideoUrl(roomInfo.videoUrl);
+          if (!videoFromParams && roomData.videoUrl) {
+            setVideoUrl(roomData.videoUrl);
           }
           
           // Set initial video state (for persistence)
-          if (roomInfo.videoState) {
-            console.log('[WatchRoomPage] Fetched video state from API:', roomInfo.videoState);
-            setInitialVideoState(roomInfo.videoState);
+          if (roomData.videoState) {
+            setInitialVideoState(roomData.videoState);
+          }
+
+          // ✅ Check if room is DELETED or EXPIRED
+          if (roomData.status === 'DELETED' || roomData.status === 'EXPIRED') {
+            const reason = roomData.status === 'EXPIRED' ? 'hết hạn' : 'đã bị xóa';
+            alert(`⚠️ Phòng này ${reason}. Bạn sẽ được chuyển về danh sách phòng.`);
+            setTimeout(() => {
+              navigate('/rooms');
+            }, 2000);
+            return;
           }
         } else {
           console.warn('[WatchRoomPage] No room info, using demo');
@@ -133,6 +184,16 @@ export const WatchRoomPage = () => {
         }
       } catch (error) {
         console.error('[WatchRoomPage] Error fetching room info:', error);
+        
+        // ✅ Check if error is ROOM_GONE (404)
+        if (error.response?.status === 404 || error.message?.includes('ROOM_GONE')) {
+          alert('⚠️ Phòng không tồn tại hoặc đã bị xóa. Bạn sẽ được chuyển về danh sách phòng.');
+          setTimeout(() => {
+            navigate('/rooms');
+          }, 2000);
+          return;
+        }
+        
         if (!searchParams.get('video')) {
           setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
         }
@@ -140,15 +201,13 @@ export const WatchRoomPage = () => {
     };
 
     fetchRoomInfo();
-  }, [roomId, searchParams]);
+  }, [roomId, searchParams, navigate]);
 
   /**
    * Apply initial video state (after fetching from API)
    */
   useEffect(() => {
     if (!initialVideoState || !isConnected) return;
-
-    console.log('[WatchRoomPage] Applying initial video state:', initialVideoState);
 
     // Create SYNC_STATE event from initial state
     const syncEvent = {
@@ -248,6 +307,38 @@ export const WatchRoomPage = () => {
   };
 
   /**
+   * Check if current user can delete room (memoized)
+   * User can delete if:
+   * 1. User is ADMIN (has 'ADMIN' in roles array)
+   * 2. User is host (userId === room.userId) - Note: backend uses 'userId' field for host
+   * 3. Room is not already DELETED or EXPIRED
+   */
+  const canDeleteRoom = useMemo(() => {
+    // Must have both roomInfo and loggedInUser with userId
+    if (!roomInfo || !roomInfo.userId || !loggedInUser || !loggedInUser.userId) {
+      return false;
+    }
+
+    // Cannot delete if room is already DELETED or EXPIRED
+    if (roomInfo.status === 'DELETED' || roomInfo.status === 'EXPIRED') {
+      return false;
+    }
+
+    // Check if user is ADMIN
+    const isAdmin = loggedInUser.roles?.includes('ADMIN') || 
+                    loggedInUser.role === 'ADMIN' ||
+                    MyUser?.my_user?.roles?.includes('ADMIN') ||
+                    MyUser?.roles?.includes('ADMIN');
+
+    // Check if user is host (backend uses 'userId' field for room owner/host)
+    const currentUserId = String(loggedInUser.userId);
+    const roomHostId = String(roomInfo.userId); // Backend field name is 'userId', not 'hostUserId'
+    const isHost = currentUserId === roomHostId;
+
+    return isAdmin || isHost;
+  }, [roomInfo, loggedInUser, MyUser]);
+
+  /**
    * Reconnecting banner
    */
   const renderReconnectingBanner = () => {
@@ -288,6 +379,29 @@ export const WatchRoomPage = () => {
       }}
     >
       <div className="watch-room-page">
+        {/* Room Deleted/Expired Dialog - Blocking */}
+        {showRoomDeletedDialog && (
+          <div className="room-deleted-overlay">
+            <div className="room-deleted-dialog">
+              <div className="room-deleted-icon">
+                <i className="fa-solid fa-circle-exclamation"></i>
+              </div>
+              <h2>Phòng đã đóng</h2>
+              <p>Phòng này {roomDeletedReason}.</p>
+              <p className="info-text">
+                Tất cả dữ liệu đã bị xóa (tin nhắn, thành viên, lịch sử).
+              </p>
+              <p className="redirect-text">Bạn sẽ được chuyển về danh sách phòng sau 3 giây...</p>
+              <button 
+                onClick={() => navigate('/watch-together')} 
+                className="btn-redirect-now"
+              >
+                Quay về ngay
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Reconnecting banner */}
         {isReconnecting && (
           <div className="watch-room-reconnecting-banner">
@@ -307,17 +421,46 @@ export const WatchRoomPage = () => {
               <i className="fa-solid fa-arrow-left"></i>
             </button>
             <div className="header-info">
-              <h1 className="watch-room-title">Watch Together</h1>
+              <h1 className="watch-room-title">
+                {roomInfo?.roomName || 'Watch Together'}
+              </h1>
               <div className="connection-status">
                 <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
                 <span className="status-text">
                   {isConnected ? 'Đã kết nối' : 'Mất kết nối'}
+                </span>
+                {/* Viewer count */}
+                <span className="viewer-count">
+                  <i className="fa-solid fa-eye"></i>
+                  <span>{state.members.length}</span>
                 </span>
               </div>
             </div>
           </div>
 
           <div className="watch-room-header-right">
+            {/* Delete Room Button - Only for ADMIN or Host */}
+            {roomInfo && loggedInUser && canDeleteRoom && (
+              <DeleteRoomButton
+                roomId={roomId}
+                viewerCount={state.members.length}
+                canDelete={canDeleteRoom}
+                currentUserId={loggedInUser?.userId}
+                isAdmin={loggedInUser?.roles?.includes('ADMIN')}
+                onDeleteSuccess={() => {
+                  // Disconnect WebSocket to stop all events
+                  if (disconnectRef.current) {
+                    disconnectRef.current();
+                  }
+                  
+                  // Clear player ref to prevent accessing null player
+                  if (playerRef.current) {
+                    playerRef.current = null;
+                  }
+                }}
+              />
+            )}
+
             <button
               onClick={handleCopyInviteLink}
               className="btn-header btn-invite"

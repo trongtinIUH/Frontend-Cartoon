@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "../css/RoomsListPage.css";
 import avatar_default from "../image/default_avatar.jpg";
 import WatchRoomService from "../services/WatchRoomService";
@@ -23,9 +24,14 @@ const deriveStatus = (startAt) => {
 
 export default function RoomsListPage() {
   const navigate = useNavigate();
+  const { MyUser } = useAuth();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [, forceTick] = useState(0);
+  
+  // Check if user is logged in
+  const isLoggedIn = MyUser?.my_user?.userId;
+
   useEffect(() => {
     const t = setInterval(() => forceTick((n) => n + 1), 1000);
     return () => clearInterval(t);
@@ -46,8 +52,16 @@ export default function RoomsListPage() {
   }, []);
 
   const list = useMemo(() => {
+    const now = Date.now();
+    
     const mapped = rooms.map((r) => {
       const _status = deriveStatus(r.startAt);
+      
+      // Calculate time to expiry (ttl is epoch seconds)
+      const ttlMs = r.ttl ? r.ttl * 1000 : null;
+      const timeToExpiryMs = ttlMs ? ttlMs - now : null;
+      const timeToExpiryMinutes = timeToExpiryMs ? Math.floor(timeToExpiryMs / 60000) : null;
+      
       return {
         ...r,
         _status,
@@ -59,11 +73,29 @@ export default function RoomsListPage() {
         _avatar: r.avatarUrl || avatar_default,
         _privacy: r.isPrivate ? "Riêng tư" : "Công khai",
         _movieShort: r.movieId ? String(r.movieId).slice(0, 8) : "",
+        _timeToExpiryMs: timeToExpiryMs,
+        _timeToExpiryMinutes: timeToExpiryMinutes,
+        _isExpiringSoon: timeToExpiryMinutes !== null && timeToExpiryMinutes < 10 && timeToExpiryMinutes >= 0,
       };
     });
 
+    // ✅ Filter: Only show ACTIVE/SCHEDULED rooms with valid TTL
+    const filtered = mapped.filter((r) => {
+      // Filter out DELETED/EXPIRED status
+      if (r.status === 'DELETED' || r.status === 'EXPIRED') {
+        return false;
+      }
+      
+      // Filter out rooms with expired TTL
+      if (r._timeToExpiryMs !== null && r._timeToExpiryMs <= 0) {
+        return false;
+      }
+      
+      return true;
+    });
+
     // Ưu tiên: SCHEDULED (sắp chiếu) -> ACTIVE
-    mapped.sort((a, b) => {
+    filtered.sort((a, b) => {
       const rank = (s) => (s === "SCHEDULED" ? 0 : 1);
       const ra = rank(a._status);
       const rb = rank(b._status);
@@ -75,8 +107,17 @@ export default function RoomsListPage() {
       return 0;
     });
 
-    return mapped;
+    return filtered;
   }, [rooms]);
+
+  // Handle room click - check login first
+  const handleRoomClick = (roomId) => {
+    if (!isLoggedIn) {
+      alert('⚠️ Bạn cần phải đăng nhập để sử dụng chức năng này!');
+      return;
+    }
+    navigate(`/watch-together/${encodeURIComponent(roomId)}`);
+  };
 
   if (loading) return <div className="container text-white py-4">Đang tải…</div>;
 
@@ -93,7 +134,7 @@ export default function RoomsListPage() {
               <div
                 key={room.roomId}
                 className="room-card"
-                onClick={() => navigate(`/watch-together/${encodeURIComponent(room.roomId)}`)}
+                onClick={() => handleRoomClick(room.roomId)}
               >
                 <div className="room-wrap">
                   <img
@@ -108,10 +149,15 @@ export default function RoomsListPage() {
                   />
 
                   {/* Badge trạng thái */}
-                  {room._status === "ACTIVE" && (
+                  {room._status === "ACTIVE" && !room._isExpiringSoon && (
                     <span className="room-badge live-badge">
                       <span className="dot" />
                       LIVE
+                    </span>
+                  )}
+                  {room._isExpiringSoon && (
+                    <span className="room-badge expiring-badge">
+                      ⏳ Sắp hết hạn ({room._timeToExpiryMinutes}p)
                     </span>
                   )}
                   {room._status === "SCHEDULED" && room._countdownText && (
@@ -120,8 +166,9 @@ export default function RoomsListPage() {
                     </span>
                   )}
 
+                  {/* Viewer count - Real-time from backend */}
                   <div className="room-viewers">
-                    <i className="fas fa-eye" /> {room._privacy}
+                    <i className="fas fa-eye" /> {room.viewerCount ?? 0}
                   </div>
                 </div>
 

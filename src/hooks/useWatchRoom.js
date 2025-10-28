@@ -10,6 +10,9 @@ import { watchRoomApi } from '../api/watchRoomApi';
 import { WS_TYPES, WATCH_CONFIG, MESSAGE_TYPES } from '../types/watch';
 import dayjs from 'dayjs';
 
+// Debug logging (set to false to disable verbose logs)
+const DEBUG_ENABLED = false;
+
 /**
  * @typedef {import('../types/watch').WatchState} WatchState
  * @typedef {import('../types/watch').WsEvent} WsEvent
@@ -25,6 +28,7 @@ import dayjs from 'dayjs';
  * @param {string} [options.inviteCode]
  * @param {boolean} [options.forceHost] - Force user to be host (from URL param)
  * @param {Function} [options.onControlEvent]
+ * @param {Function} [options.onRoomDeleted] - Callback when room is deleted/expired
  */
 export function useWatchRoom({
   roomId,
@@ -34,6 +38,7 @@ export function useWatchRoom({
   inviteCode,
   forceHost = false,
   onControlEvent,
+  onRoomDeleted,
 }) {
   const stompRef = useRef(null);
   const unsubscribeRef = useRef(null);
@@ -66,22 +71,22 @@ export function useWatchRoom({
   const handleEvent = useCallback(
     /** @param {WsEvent} event */
     (event) => {
-      console.log('[useWatchRoom] Received event', event);
+      DEBUG_ENABLED && console.log('[useWatchRoom] Received event', event);
 
       switch (event.type) {
         case WS_TYPES.JOIN: {
-          console.log('[useWatchRoom] JOIN event - senderId:', event.senderId, 'currentUserId:', userId);
+          DEBUG_ENABLED && console.log('[useWatchRoom] JOIN event - senderId:', event.senderId, 'currentUserId:', userId);
           
           // Add member to list
           setState((prev) => {
             // Check if member already exists
             const exists = prev.members.find((m) => m.userId === event.senderId);
             
-            console.log('[useWatchRoom] JOIN - Member exists?', exists, 'Current members:', prev.members.length);
+            DEBUG_ENABLED && console.log('[useWatchRoom] JOIN - Member exists?', exists, 'Current members:', prev.members.length);
             
             // If exists, update lastSeenAt
             if (exists) {
-              console.log('[useWatchRoom] JOIN - Updating existing member');
+              DEBUG_ENABLED && console.log('[useWatchRoom] JOIN - Updating existing member');
               return {
                 ...prev,
                 members: prev.members.map((m) =>
@@ -101,8 +106,8 @@ export function useWatchRoom({
               lastSeenAt: event.createdAt,
             };
 
-            console.log('[useWatchRoom] JOIN - Adding new member:', newMember);
-            console.log('[useWatchRoom] JOIN - New member count will be:', prev.members.length + 1);
+            DEBUG_ENABLED && console.log('[useWatchRoom] JOIN - Adding new member:', newMember);
+            DEBUG_ENABLED && console.log('[useWatchRoom] JOIN - New member count will be:', prev.members.length + 1);
 
             return {
               ...prev,
@@ -144,15 +149,15 @@ export function useWatchRoom({
           // Backend sends full member list (usually after JOIN)
           const members = event.payload?.members || [];
           
-          console.log('[useWatchRoom] ===== MEMBER_LIST EVENT =====');
-          console.log('[useWatchRoom] MEMBER_LIST - Current userId:', userId);
-          console.log('[useWatchRoom] MEMBER_LIST - Members count:', members.length);
-          console.log('[useWatchRoom] MEMBER_LIST - Members:', JSON.stringify(members, null, 2));
-          console.log('[useWatchRoom] ================================');
+          DEBUG_ENABLED && console.log('[useWatchRoom] ===== MEMBER_LIST EVENT =====');
+          DEBUG_ENABLED && console.log('[useWatchRoom] MEMBER_LIST - Current userId:', userId);
+          DEBUG_ENABLED && console.log('[useWatchRoom] MEMBER_LIST - Members count:', members.length);
+          DEBUG_ENABLED && console.log('[useWatchRoom] MEMBER_LIST - Members:', JSON.stringify(members, null, 2));
+          DEBUG_ENABLED && console.log('[useWatchRoom] ================================');
 
           setState((prev) => {
-            console.log('[useWatchRoom] MEMBER_LIST - Previous members count:', prev.members.length);
-            console.log('[useWatchRoom] MEMBER_LIST - Setting new members count:', members.length);
+            DEBUG_ENABLED && console.log('[useWatchRoom] MEMBER_LIST - Previous members count:', prev.members.length);
+            DEBUG_ENABLED && console.log('[useWatchRoom] MEMBER_LIST - Setting new members count:', members.length);
             
             return {
               ...prev,
@@ -192,7 +197,7 @@ export function useWatchRoom({
           const { playing, positionMs, playbackRate, serverTimeMs } =
             event.payload || {};
 
-          console.log('[useWatchRoom] SYNC_STATE received', {
+          DEBUG_ENABLED && console.log('[useWatchRoom] SYNC_STATE received', {
             playing,
             positionMs,
             playbackRate,
@@ -265,11 +270,37 @@ export function useWatchRoom({
           break;
         }
 
+        case 'ROOM_DELETED': {
+          // Handle room deleted/expired event
+          const reason = event.payload?.reason || 'UNKNOWN';
+          const reasonText = reason === 'EXPIRED' ? 'đã hết hạn' : 'đã bị xóa';
+          
+          // Show system message
+          setState((prev) => ({
+            ...prev,
+            messages: [
+              ...prev.messages,
+              {
+                type: MESSAGE_TYPES.SYSTEM,
+                content: `⚠️ Phòng ${reasonText}. Kết nối sẽ bị đóng.`,
+                createdAt: event.createdAt || new Date().toISOString(),
+              },
+            ],
+          }));
+
+          // Call callback if provided
+          if (onRoomDeleted) {
+            onRoomDeleted({ reason, reasonText });
+          }
+
+          break;
+        }
+
         default:
           console.warn('[useWatchRoom] Unknown event type', event.type);
       }
     },
-    [onControlEvent]
+    [onControlEvent, onRoomDeleted]
   );
 
   /**
@@ -322,14 +353,14 @@ export function useWatchRoom({
       // Try to fetch members from API (if backend supports REST API)
       const membersResponse = await watchRoomApi.getMembers(roomId);
       
-      console.log('[useWatchRoom] Fetched initial members from API:', membersResponse);
+      DEBUG_ENABLED && console.log('[useWatchRoom] Fetched initial members from API:', membersResponse);
       
       // Backend returns {members: Array, count: number, roomId: string}
       const members = Array.isArray(membersResponse) 
         ? membersResponse 
         : (membersResponse?.members || []);
       
-      console.log('[useWatchRoom] Extracted members array:', members);
+      DEBUG_ENABLED && console.log('[useWatchRoom] Extracted members array:', members);
       
       // Fetch recent messages
       const { messages, nextCursor } = await watchRoomApi.searchMessages(
@@ -345,7 +376,7 @@ export function useWatchRoom({
       setState((prev) => {
         // Replace members entirely from API (this is initial load)
         // API should return all members including Host
-        console.log('[useWatchRoom] Setting initial members from API:', members.length);
+        DEBUG_ENABLED && console.log('[useWatchRoom] Setting initial members from API:', members.length);
         
         return {
           ...prev,
@@ -380,14 +411,14 @@ export function useWatchRoom({
    * Connect to room
    */
   const connect = useCallback(() => {
-    console.log('[useWatchRoom] Connecting to room', roomId);
+    DEBUG_ENABLED && console.log('[useWatchRoom] Connecting to room', roomId);
 
     const stomp = getStompClient();
     stompRef.current = stomp;
 
     stomp.connect({
       onConnect: async () => {
-        console.log('[useWatchRoom] Connected');
+        DEBUG_ENABLED && console.log('[useWatchRoom] Connected');
         setIsConnected(true);
         setIsReconnecting(false);
 
@@ -417,14 +448,14 @@ export function useWatchRoom({
         // Request sync state after a brief delay (backend should send automatically)
         // This is a fallback in case backend doesn't send SYNC_STATE after JOIN
         setTimeout(() => {
-          console.log('[useWatchRoom] Requesting initial sync state...');
+          DEBUG_ENABLED && console.log('[useWatchRoom] Requesting initial sync state...');
           // Backend should have already sent SYNC_STATE via personal queue
           // If not received within 1 second, we might need to implement a request mechanism
         }, 1000);
       },
 
       onDisconnect: () => {
-        console.log('[useWatchRoom] Disconnected');
+        DEBUG_ENABLED && console.log('[useWatchRoom] Disconnected');
         setIsConnected(false);
         stopHeartbeat();
       },

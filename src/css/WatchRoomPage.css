@@ -7,6 +7,12 @@ body:has(.watch-room-page) {
   scroll-behavior: auto !important;
 }
 
+/* Support fullscreen mode */
+html:fullscreen,
+body:fullscreen {
+  overflow: hidden !important;
+}
+
 .watch-room-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
@@ -17,6 +23,12 @@ body:has(.watch-room-page) {
   overflow: hidden;
   position: relative;
   scroll-behavior: auto !important;
+}
+
+/* Hide page elements when in fullscreen */
+.watch-room-page:has(.vjs-fullscreen) .watch-room-header,
+.watch-room-page:has(.vjs-fullscreen) .watch-room-sidebar {
+  display: none !important;
 }
 
 /* Prevent auto-scrolling */
@@ -136,6 +148,26 @@ body:has(.watch-room-page) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.status-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.viewer-count {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.viewer-count i {
   font-size: 0.875rem;
 }
 
@@ -262,6 +294,8 @@ body:has(.watch-room-page) {
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   align-self: flex-start; /* Prevent player from stretching */
+  position: relative;
+  /* z-index removed - let it use default stacking */
 }
 
 .watch-room-sidebar {
@@ -449,6 +483,104 @@ body:has(.watch-room-page) {
   }
 }
 
+/* Room Deleted/Expired Dialog */
+.room-deleted-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+  animation: fadeIn 0.3s ease;
+}
+
+.room-deleted-dialog {
+  position: relative !important;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  border-radius: 1rem !important;
+  padding: 2rem;
+  max-width: 450px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6) !important;
+  animation: slideUp 0.4s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1000000 !important;
+}
+
+.room-deleted-icon {
+  font-size: 4rem;
+  color: #fbbf24;
+  margin-bottom: 1rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.room-deleted-dialog h2 {
+  margin: 0 0 1rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.room-deleted-dialog p {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.info-text {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-style: italic;
+  margin-bottom: 1rem !important;
+}
+
+.redirect-text {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem !important;
+}
+
+.btn-redirect-now {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-redirect-now:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-redirect-now:active {
+  transform: translateY(0);
+}
+
 /* Full screen support */
 @media (max-width: 576px) and (orientation: landscape) {
   .watch-room-main {
@@ -462,5 +594,18 @@ body:has(.watch-room-page) {
   .watch-room-sidebar {
     height: auto;
     width: 300px;
+  }
+
+  .room-deleted-dialog {
+    max-width: 90%;
+    padding: 1.5rem;
+  }
+
+  .room-deleted-icon {
+    font-size: 3rem;
+  }
+
+  .room-deleted-dialog h2 {
+    font-size: 1.5rem;
   }
 }

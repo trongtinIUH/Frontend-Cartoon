@@ -13,6 +13,20 @@ axiosInstance.interceptors.request.use((config) => {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
 
+  // ✅ Add X-User-Id header for backend authorization
+  try {
+    const myUserStr = localStorage.getItem("my_user");
+    if (myUserStr) {
+      const myUser = JSON.parse(myUserStr);
+      const userId = myUser?.my_user?.userId || myUser?.userId;
+      if (userId) {
+        config.headers["X-User-Id"] = userId;
+      }
+    }
+  } catch (error) {
+    console.error("Error extracting userId for X-User-Id header:", error);
+  }
+
   // ❗ Chỉ set Content-Type nếu KHÔNG phải FormData
   if (!(config.data instanceof FormData)) {
     config.headers["Content-Type"] = "application/json";
