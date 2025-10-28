@@ -59,7 +59,7 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
       // Call API to create room in database
       await WatchRoomService.createWatchRoom(roomData);
 
-      toast.success('✅ Tạo phòng thành công! Đang chuyển đến phòng...');
+      toast.success('Tạo phòng thành công! Đang chuyển đến phòng...');
 
       // Close modal
       onClose();

@@ -99,7 +99,7 @@ const ProfilePage = () => {
                   className="form-control bg-secondary text-white border-0"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled
+                  // disabled
                 />
               </div>
 

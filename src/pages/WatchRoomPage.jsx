@@ -1,9 +1,3 @@
-/**
- * WatchRoomPage - Main page for Watch Together feature
- * @author Senior FE Developer
- * @version 2.0 - Redesigned UI
- */
-
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { WatchPlayer } from '../components/WatchPlayer';
@@ -110,6 +104,18 @@ export const WatchRoomPage = () => {
         
         // Fetch room info from API
         console.log('[WatchRoomPage] Fetching room info from API...');
+        console.log('[WatchRoomPage] Current URL params:', {
+          roomId,
+          inviteCode,
+          isHostFromUrl,
+          searchParams: Object.fromEntries(searchParams.entries())
+        });
+        console.log('[WatchRoomPage] Current user info:', {
+          userId,
+          loggedInUserId: loggedInUser?.userId,
+          urlUserId: searchParams.get('userId')
+        });
+        
         const roomData = await WatchRoomService.getWatchRoomById(roomId);
         
         if (!roomData) {
@@ -119,15 +125,37 @@ export const WatchRoomPage = () => {
           return;
         }
 
+        console.log('[WatchRoomPage] Room data received:', roomData);
         setRoomInfo(roomData);
 
-        // Check if room is private and requires invite code
-        if (roomData.isPrivate) {
-          console.log('[WatchRoomPage] Room is private, checking invite code...');
+        // SIMPLIFIED ACCESS CHECK:
+        // 1. If URL has ?host=1 → Creator mode, always allow
+        // 2. If room is public → Always allow
+        // 3. If room is private → Need invite code (unless creator)
+        
+        const isCreatorByUrl = isHostFromUrl; // ?host=1 in URL
+        const isPublicRoom = !roomData.isPrivate;
+        
+        console.log('[WatchRoomPage] Access check:', {
+          isCreatorByUrl,
+          isPublicRoom,
+          roomIsPrivate: roomData.isPrivate,
+          hasInviteCodeInUrl: !!inviteCode
+        });
+
+        // Allow access if creator or public room
+        if (isCreatorByUrl || isPublicRoom) {
+          console.log('[WatchRoomPage] ✅ Access granted - Creator mode or public room');
+          // Continue to load video below
+        } else {
+          // Private room and not creator - need invite code
+          console.log('[WatchRoomPage] 🔒 Private room - checking invite code...');
+          // Private room and not creator - need invite code
+          console.log('[WatchRoomPage] 🔒 Private room - checking invite code...');
           
           // If no invite code in URL, show modal
           if (!inviteCode) {
-            console.log('[WatchRoomPage] No invite code provided, showing modal');
+            console.log('[WatchRoomPage] ❌ No invite code provided, showing modal');
             setShowInviteModal(true);
             setIsVerifyingAccess(false);
             return;
@@ -135,18 +163,19 @@ export const WatchRoomPage = () => {
 
           // Verify invite code
           try {
+            console.log('[WatchRoomPage] Verifying invite code...');
             const verifyResponse = await WatchRoomService.verifyInviteCode(roomId, inviteCode);
             
             if (!verifyResponse || !verifyResponse.valid) {
-              console.log('[WatchRoomPage] Invalid invite code');
+              console.log('[WatchRoomPage] ❌ Invalid invite code');
               setShowInviteModal(true);
               setIsVerifyingAccess(false);
               return;
             }
             
-            console.log('[WatchRoomPage] Invite code verified successfully');
+            console.log('[WatchRoomPage] ✅ Invite code verified successfully');
           } catch (error) {
-            console.error('[WatchRoomPage] Error verifying invite code:', error);
+            console.error('[WatchRoomPage] ❌ Error verifying invite code:', error);
             setShowInviteModal(true);
             setIsVerifyingAccess(false);
             return;
