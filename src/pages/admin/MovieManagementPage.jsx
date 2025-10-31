@@ -519,12 +519,12 @@ const resetAll = useCallback((reload = false) => {
                         <div className="btn-group">
                           <button className="btn btn-sm btn-outline-primary"
                                   onClick={()=>setEditTarget(m)}>
-                            <FaEdit className="me-1"/> Sửa
+                            <FaEdit /> Sửa
                           </button>
                           <button className="btn btn-sm btn-outline-success"
                                   onClick={()=>setOpenEpisodesFor(m)}
                                   title="Quản lý tập phim (bao gồm phần)">
-                            <FaListUl className="me-1"/> Tập
+                            <FaListUl /> Tập
                           </button>
                           <IssueReportButton
                             movieId={id}

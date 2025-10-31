@@ -6,9 +6,9 @@ import { FaExclamationTriangle, FaClock, FaCheckCircle, FaTimesCircle } from 're
  * Priority: OPEN > IN_PROGRESS > RESOLVED > INVALID
  */
 export const IssueStatusIcon = ({ issueStatuses, count = 0 }) => {
-  // Nếu không có báo lỗi
+  // Nếu không có báo lỗi → hiển thị icon mặc định
   if (!issueStatuses || issueStatuses.length === 0 || count === 0) {
-    return <FaExclamationTriangle className="me-1 text-secondary" />;
+    return <FaExclamationTriangle className="text-secondary" />;
   }
 
   // Định nghĩa priority của trạng thái (số càng cao = priority cao)
@@ -24,28 +24,28 @@ export const IssueStatusIcon = ({ issueStatuses, count = 0 }) => {
     const currentPriority = statusPriority[current] || 0;
     const highestPriority = statusPriority[highest] || 0;
     return currentPriority > highestPriority ? current : highest;
-  }, 'RESOLVED'); // Mặc định là RESOLVED thay vì OPEN
+  }, 'RESOLVED');
 
   // Mapping icon và màu sắc cho từng trạng thái
   const statusConfig = {
     'OPEN': {
       icon: FaExclamationTriangle,
-      className: 'me-1 text-danger',
+      className: 'text-danger',
       label: 'Có lỗi mới'
     },
     'IN_PROGRESS': {
       icon: FaClock,
-      className: 'me-1 text-warning',
+      className: 'text-warning',
       label: 'Đang xử lý'
     },
     'RESOLVED': {
       icon: FaCheckCircle,
-      className: 'me-1 text-success',
+      className: 'text-success',
       label: 'Đã giải quyết'
     },
     'INVALID': {
       icon: FaTimesCircle,
-      className: 'me-1 text-muted',
+      className: 'text-muted',
       label: 'Không hợp lệ'
     }
   };
@@ -85,8 +85,7 @@ export const IssueReportButton = ({ movieId, issueData, onClick, issueCounts }) 
       Báo lỗi
       {count > 0 && (
         <span 
-          className={`position-absolute top-0 start-100 translate-middle badge rounded-pill ${badgeColor}`}
-          style={{fontSize: '0.6rem', zIndex: 1}}
+          className={`issue-badge badge rounded-pill ${badgeColor}`}
         >
           {count}
           <span className="visually-hidden">

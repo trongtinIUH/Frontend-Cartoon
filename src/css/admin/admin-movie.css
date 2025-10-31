@@ -13,25 +13,63 @@
 }
 .btn-gradient:hover{ opacity:.92; }
 
-/* Issue Badge Styling */
+/* ===== BUTTON GROUP & ISSUE BADGE FIXES ===== */
+
+/* Giữ lại overflow cho nút Báo lỗi */
 .btn-outline-warning.position-relative {
-  overflow: visible;
+  overflow: visible !important;
 }
 
-.btn-outline-warning .badge {
-  font-size: 0.6rem !important;
-  padding: 0.2em 0.4em;
-  line-height: 1;
-  min-width: 1.2em;
-  height: 1.2em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Badge RIÊNG cho nút Báo lỗi – tuyệt đối => không chiếm layout */
+.issue-badge {
+  position: absolute !important;
+  top: -6px !important;
+  right: -6px !important;
+  font-size: .6rem !important;
+  line-height: 1 !important;
+  min-width: 1.2em !important;
+  height: 1.2em !important;
+  padding: .15rem .35rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: none !important;
+  z-index: 10 !important;
   animation: pulse-red 2s infinite;
 }
 
+/* Chuẩn hoá NÚT trong ô Thao tác: cùng chiều cao, không đội dòng */
+.table .btn-group .btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.5 !important;         /* Bootstrap default line-height */
+  white-space: nowrap !important;      /* không xuống dòng trong nút */
+  height: 31px !important;             /* FIX CỨNG chiều cao */
+  padding: 0.25rem 0.5rem !important;  /* Bootstrap btn-sm default */
+  font-size: 0.875rem !important;      /* Bootstrap btn-sm default */
+  box-sizing: border-box !important;
+}
+
+/* Icon trong nút - margin chuẩn */
+.table .btn-group .btn svg {
+  margin-right: 0.25rem !important;
+}
+
+/* Nút chỉ có icon (Delete) - không margin */
+.table .btn-group .btn svg:only-child {
+  margin-right: 0 !important;
+}
+
+/* Tránh wrap cả nhóm khiến cao/ấp khung */
+.table .btn-group { 
+  display: inline-flex !important; 
+  align-items: stretch !important;
+  gap: 0.25rem !important;
+}
+
 @keyframes pulse-red {
-  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, .7); }
   70% { box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
   100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
 }
@@ -60,5 +98,28 @@
 /* icon refresh xoay khi đang làm mới */
 .spin { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== NÚT THÊM MỚI - NHỎ GỌN ===== */
+.btn-primary {
+  white-space: nowrap !important;      /* ← Không xuống dòng */
+  font-size: 0.8rem !important;        /* ← Font nhỏ hơn */
+  padding: 0.35rem 0.75rem !important; /* ← Padding nhỏ hơn */
+}
+
+.btn-primary svg {
+  font-size: 0.75rem !important;       /* ← Icon nhỏ hơn */
+}
+
+/* Nút outline-secondary (Làm mới) cũng nhỏ */
+.btn-outline-secondary {
+  white-space: nowrap !important;
+  font-size: 0.8rem !important;
+  padding: 0.35rem 0.75rem !important;
+}
+
+.btn-outline-secondary svg {
+  font-size: 0.75rem !important;
+}
+
 
 
