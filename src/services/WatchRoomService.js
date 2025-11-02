@@ -26,13 +26,13 @@ const WatchRoomService = {
     // Lấy thông tin phòng xem theo ID
     getWatchRoomById: async (roomId) => {
         try {
-            console.log(`[WatchRoomService] Fetching room ${roomId}...`);
+            // console.log(`[WatchRoomService] Fetching room ${roomId}...`);
             const startTime = Date.now();
             
             const response = await axiosInstance.get(`${API_BASE_URL}/${encodeURIComponent(roomId)}`);
             
             const duration = Date.now() - startTime;
-            console.log(`[WatchRoomService] ✅ Room fetched in ${duration}ms`);
+            // console.log(`[WatchRoomService] ✅ Room fetched in ${duration}ms`);
             
             return response.data;
         } catch (error) {

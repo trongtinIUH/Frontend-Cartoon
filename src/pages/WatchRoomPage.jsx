@@ -57,8 +57,8 @@ export const WatchRoomPage = () => {
    * Handle room deleted/expired from WebSocket
    */
   const handleRoomDeleted = useCallback(({ reason, reasonText }) => {
-    console.log('[WatchRoomPage] Room deleted/expired:', reason);
-    console.log('[WatchRoomPage] Backend cascade deleted: messages + members');
+    // console.log('[WatchRoomPage] Room deleted/expired:', reason);
+    // console.log('[WatchRoomPage] Backend cascade deleted: messages + members');
     
     // Show toast notification
     toast.error(`⚠️ Phòng ${reasonText}. Đang chuyển về danh sách...`, {
@@ -162,34 +162,34 @@ export const WatchRoomPage = () => {
         const fetchStartTime = Date.now();
         
         // Fetch room info from API
-        console.log('[WatchRoomPage] 🔄 Fetching room info from API...');
-        console.log('[WatchRoomPage] Current URL params:', {
-          roomId,
-          inviteCode,
-          isHostFromUrl,
-          searchParams: Object.fromEntries(searchParams.entries())
-        });
-        console.log('[WatchRoomPage] Current user info:', {
-          userId,
-          loggedInUserId: loggedInUser?.userId,
-          urlUserId: searchParams.get('userId')
-        });
+        // console.log('[WatchRoomPage] 🔄 Fetching room info from API...');
+        // console.log('[WatchRoomPage] Current URL params:', {
+        //   roomId,
+        //   inviteCode,
+        //   isHostFromUrl,
+        //   searchParams: Object.fromEntries(searchParams.entries())
+        // });
+        // console.log('[WatchRoomPage] Current user info:', {
+        //   userId,
+        //   loggedInUserId: loggedInUser?.userId,
+        //   urlUserId: searchParams.get('userId')
+        // });
         
         const roomData = await WatchRoomService.getWatchRoomById(roomId);
         
         if (!isMounted) return; // Exit if unmounted during fetch
         
         const fetchDuration = Date.now() - fetchStartTime;
-        console.log(`[WatchRoomPage] ⏱️ Room data fetched in ${fetchDuration}ms`);
+        // console.log(`[WatchRoomPage] ⏱️ Room data fetched in ${fetchDuration}ms`);
         
         if (!roomData) {
-          console.warn('[WatchRoomPage] No room info found');
+          // console.warn('[WatchRoomPage] No room info found');
           setAccessDenied(true);
           setIsVerifyingAccess(false);
           return;
         }
 
-        console.log('[WatchRoomPage] Room data received:', roomData);
+        // console.log('[WatchRoomPage] Room data received:', roomData);
         setRoomInfo(roomData);
 
         // SIMPLIFIED ACCESS CHECK:
@@ -200,26 +200,26 @@ export const WatchRoomPage = () => {
         const isCreatorByUrl = isHostFromUrl; // ?host=1 in URL
         const isPublicRoom = !roomData.isPrivate;
         
-        console.log('[WatchRoomPage] Access check:', {
-          isCreatorByUrl,
-          isPublicRoom,
-          roomIsPrivate: roomData.isPrivate,
-          hasInviteCodeInUrl: !!inviteCode
-        });
+        // console.log('[WatchRoomPage] Access check:', {
+        //   isCreatorByUrl,
+        //   isPublicRoom,
+        //   roomIsPrivate: roomData.isPrivate,
+        //   hasInviteCodeInUrl: !!inviteCode
+        // });
 
         // Allow access if creator or public room
         if (isCreatorByUrl || isPublicRoom) {
-          console.log('[WatchRoomPage] ✅ Access granted - Creator mode or public room');
+          // console.log('[WatchRoomPage] ✅ Access granted - Creator mode or public room');
           // Continue to load video below
         } else {
           // Private room and not creator - need invite code
-          console.log('[WatchRoomPage] 🔒 Private room - checking invite code...');
+          // console.log('[WatchRoomPage] 🔒 Private room - checking invite code...');
           // Private room and not creator - need invite code
-          console.log('[WatchRoomPage] 🔒 Private room - checking invite code...');
+          // console.log('[WatchRoomPage] 🔒 Private room - checking invite code...');
           
           // If no invite code in URL, show modal
           if (!inviteCode) {
-            console.log('[WatchRoomPage] ❌ No invite code provided, showing modal');
+            // console.log('[WatchRoomPage] ❌ No invite code provided, showing modal');
             setShowInviteModal(true);
             setIsVerifyingAccess(false);
             return;
@@ -227,19 +227,19 @@ export const WatchRoomPage = () => {
 
           // Verify invite code
           try {
-            console.log('[WatchRoomPage] Verifying invite code...');
+            // console.log('[WatchRoomPage] Verifying invite code...');
             const verifyResponse = await WatchRoomService.verifyInviteCode(roomId, inviteCode);
             
             if (!isMounted) return; // Exit if unmounted during verify
             
             if (!verifyResponse || !verifyResponse.valid) {
-              console.log('[WatchRoomPage] ❌ Invalid invite code');
+              // console.log('[WatchRoomPage] ❌ Invalid invite code');
               setShowInviteModal(true);
               setIsVerifyingAccess(false);
               return;
             }
             
-            console.log('[WatchRoomPage] ✅ Invite code verified successfully');
+            // console.log('[WatchRoomPage] ✅ Invite code verified successfully');
           } catch (error) {
             if (!isMounted) return; // Exit if unmounted during error
             
@@ -256,16 +256,16 @@ export const WatchRoomPage = () => {
         if (videoFromParams) {
           setVideoUrl(videoFromParams);
         } else if (roomData.videoUrl) {
-          console.log('[WatchRoomPage] Fetched video URL from API:', roomData.videoUrl);
+          // console.log('[WatchRoomPage] Fetched video URL from API:', roomData.videoUrl);
           setVideoUrl(roomData.videoUrl);
         } else {
-          console.warn('[WatchRoomPage] No video URL, using demo');
+          // console.warn('[WatchRoomPage] No video URL, using demo');
           setVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
         }
         
         // Set initial video state (for persistence)
         if (roomData.videoState) {
-          console.log('[WatchRoomPage] Fetched video state from API:', roomData.videoState);
+          // console.log('[WatchRoomPage] Fetched video state from API:', roomData.videoState);
           setInitialVideoState(roomData.videoState);
         }
 

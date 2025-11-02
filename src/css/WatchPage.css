@@ -1257,6 +1257,7 @@ background-color: inherit;
   pointer-events: auto !important;
   will-change: transform, opacity; /* smooth layout */
   transform-origin: right bottom;
+  max-height: calc(100vh - 120px); /* Giới hạn chiều cao tổng thể */
 }
 
 /* ✅ Specific styling when inside .video-js */
@@ -1267,6 +1268,11 @@ background-color: inherit;
   z-index: 1400;
 }
 
+/* ✅ Khi fullscreen, đảm bảo settings menu không bị che */
+.video-js.vjs-fullscreen .video-settings-container {
+  bottom: 70px; /* Cao hơn một chút khi fullscreen */
+}
+
 .settings-menu {
   background: rgba(28, 32, 40, 0.95);
   backdrop-filter: blur(20px);
@@ -1274,7 +1280,9 @@ background-color: inherit;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   min-width: 280px;
-  overflow: hidden;
+  max-height: inherit; /* Kế thừa từ container */
+  overflow-y: auto; /* Scroll khi nội dung quá dài */
+  overflow-x: hidden;
   animation: settingsSlideUp 0.2s ease-out;
 }
 
@@ -1399,6 +1407,7 @@ background-color: inherit;
   padding: 0;
   max-height: 320px;
   overflow-y: auto;
+  overflow-y: auto;
 }
 
 .speed-option,
@@ -1508,14 +1517,17 @@ background-color: inherit;
 @media (max-width: 768px) {
   .video-settings-container {
     right: 12px;
-    bottom: 72px !important; /* ensure it sits above mobile controls */
+    bottom: 65px !important; /* ensure it sits above mobile controls */
     left: auto;
     transform: none;
+    max-height: calc(100vh - 140px);
   }
   
   .settings-menu {
     min-width: 260px;
     max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
   }
   
   .settings-item,
@@ -1529,16 +1541,29 @@ background-color: inherit;
 @media (max-width: 480px) {
   .video-settings-container {
     position: absolute;
-    right: 4px !important;
-    top: 100px !important; /* Tăng từ 85px lên 110px */
+    right: 8px !important;
+    bottom: 60px !important; /* Luôn đặt phía trên control bar */
     left: auto !important;
+    top: auto !important;
     transform: none !important;
-    min-width: 280px;
+    max-height: calc(100vh - 140px); /* Giới hạn chiều cao để không tràn */
   }
   
   .settings-menu {
-    min-width: 240px;
-    max-width: calc(100vw - 16px);
+    min-width: 260px;
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 140px); /* Giới hạn chiều cao */
+    overflow-y: auto;
+  }
+  
+  /* Khi fullscreen trên mobile */
+  .video-js.vjs-fullscreen .video-settings-container {
+    bottom: 70px !important; /* Cao hơn một chút khi fullscreen */
+    right: 12px !important;
+  }
+  
+  .video-js.vjs-fullscreen .settings-menu {
+    max-height: calc(100vh - 160px);
   }
 }
 

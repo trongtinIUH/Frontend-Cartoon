@@ -25,18 +25,18 @@ export const createSlug = (text) => {
 // Tạo URL xem phim với slug (updated)
 export const createWatchUrl = (movie, episode) => {
   if (!movie?.title || !episode?.episodeNumber) {
-    console.warn("Missing data for clean URL, falling back to ID format");
+    // console.warn("Missing data for clean URL, falling back to ID format");
     return `/watch/${movie?.movieId}/${episode?.episodeId}`;
   }
   
   const movieSlug = createSlug(movie.title);
   const episodeSlug = `tap-${episode.episodeNumber}`;
   
-  console.log("Clean URL components:", { movieSlug, episodeSlug });
+  // console.log("Clean URL components:", { movieSlug, episodeSlug });
   
   // If slug is empty or too short, fallback to ID
   if (movieSlug.length < 3) {
-    console.warn("Slug too short, falling back to ID format");
+    // console.warn("Slug too short, falling back to ID format");
     return `/watch/${movie.movieId}/${episode.episodeId}`;
   }
   

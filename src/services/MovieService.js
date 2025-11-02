@@ -239,7 +239,7 @@ const MovieService = {
           // ✅ BE trả 200 nếu được, 403/404 nếu không.
         canWatch: async (movieId, userId) => {
             try {
-            console.log("Making VIP check with:", { movieId, userId }); // Debug log
+            // console.log("Making VIP check with:", { movieId, userId }); // Debug log
             
             // Headers: chỉ gửi userId nếu có (FREE movies không cần)
             const headers = {};
@@ -248,14 +248,14 @@ const MovieService = {
             }
             
             const res = await axiosInstance.get(`${API_BASE_URL}/${movieId}/watch`, { headers });
-            console.log("VIP check success:", res.data); // Debug log
+            // console.log("VIP check success:", res.data); // Debug log
             
             return { 
                 allowed: res.data.allowed || true, 
                 data: res.data 
             };
             } catch (err) {
-            console.log("VIP check error:", err.response); // Debug log
+            // console.log("VIP check error:", err.response); // Debug log
             const status = err?.response?.status;
             
             // BE trả JSON error: { message: "...", status: 403, ... }

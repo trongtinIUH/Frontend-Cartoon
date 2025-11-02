@@ -11,7 +11,7 @@ import { WS_TYPES, WATCH_CONFIG, MESSAGE_TYPES } from '../types/watch';
 import dayjs from 'dayjs';
 
 // Debug logging (set to false to disable verbose logs)
-const DEBUG_ENABLED = false;
+const DEBUG_ENABLED = false; // ✅ Already disabled for production
 
 /**
  * @typedef {import('../types/watch').WatchState} WatchState
@@ -464,14 +464,14 @@ export function useWatchRoom({
    * Connect to room
    */
   const connect = useCallback(() => {
-    DEBUG_ENABLED && console.log('[useWatchRoom] Connecting to room', roomId);
+    // DEBUG_ENABLED && console.log('[useWatchRoom] Connecting to room', roomId);
 
     const stomp = getStompClient();
     stompRef.current = stomp;
 
     stomp.connect({
       onConnect: async () => {
-        DEBUG_ENABLED && console.log('[useWatchRoom] Connected');
+        // DEBUG_ENABLED && console.log('[useWatchRoom] Connected');
         setIsConnected(true);
         setIsReconnecting(false);
 
@@ -483,9 +483,9 @@ export function useWatchRoom({
 
         // ✅ Prevent duplicate JOIN (especially on reconnect)
         if (hasJoinedRef.current) {
-          console.warn('[useWatchRoom] ⚠️ Already joined room, skipping JOIN event');
+          // console.warn('[useWatchRoom] ⚠️ Already joined room, skipping JOIN event');
           // Just request sync state instead
-          DEBUG_ENABLED && console.log('[useWatchRoom] Requesting sync state after reconnect...');
+          // DEBUG_ENABLED && console.log('[useWatchRoom] Requesting sync state after reconnect...');
           stomp.send(`/app/rooms/${roomId}/sync`, {
             senderId: userId,
           });
@@ -497,7 +497,7 @@ export function useWatchRoom({
         await fetchInitialData();
 
         // Send JOIN event AFTER fetching data (first time only)
-        console.log('[useWatchRoom] 🔵 Sending JOIN event to room:', roomId);
+        // console.log('[useWatchRoom] 🔵 Sending JOIN event to room:', roomId);
         stomp.send(`/app/rooms/${roomId}/join`, {
           senderId: userId,
           senderName: userName,
@@ -516,14 +516,14 @@ export function useWatchRoom({
         // Request sync state after a brief delay (backend should send automatically)
         // This is a fallback in case backend doesn't send SYNC_STATE after JOIN
         setTimeout(() => {
-          DEBUG_ENABLED && console.log('[useWatchRoom] Requesting initial sync state...');
+          // DEBUG_ENABLED && console.log('[useWatchRoom] Requesting initial sync state...');
           // Backend should have already sent SYNC_STATE via personal queue
           // If not received within 1 second, we might need to implement a request mechanism
         }, 1000);
       },
 
       onDisconnect: () => {
-        DEBUG_ENABLED && console.log('[useWatchRoom] Disconnected');
+        // DEBUG_ENABLED && console.log('[useWatchRoom] Disconnected');
         setIsConnected(false);
         stopHeartbeat();
       },
@@ -549,7 +549,7 @@ export function useWatchRoom({
    * Disconnect from room
    */
   const disconnect = useCallback(() => {
-    console.log('[useWatchRoom] Disconnecting from room');
+    // console.log('[useWatchRoom] Disconnecting from room');
 
     // Send LEAVE event
     if (stompRef.current?.connected) {
@@ -558,7 +558,7 @@ export function useWatchRoom({
           senderId: userId,
           senderName: userName,
         });
-        console.log('[useWatchRoom] LEAVE event sent');
+        // console.log('[useWatchRoom] LEAVE event sent');
       } catch (error) {
         console.error('[useWatchRoom] Failed to send LEAVE:', error);
         
@@ -577,7 +577,7 @@ export function useWatchRoom({
             `${process.env.REACT_APP_API_BASE || 'http://localhost:8080'}/watchrooms/${roomId}/leave`,
             new Blob([leavePayload], { type: 'application/json' })
           );
-          console.log('[useWatchRoom] LEAVE sent via Beacon API');
+          // console.log('[useWatchRoom] LEAVE sent via Beacon API');
         } catch (beaconError) {
           console.error('[useWatchRoom] Beacon API failed:', beaconError);
         }

@@ -164,11 +164,11 @@ const MovieDetailPage = () => {
   const checkAndGoWatch = async (ep) => {
     if (!movie) return;
 
-    console.log("=== VIP CHECK DEBUG ===");
-    console.log("Movie:", movie.title);
-    console.log("Required VIP Level:", movie.minVipLevel);
-    console.log("User ID:", userId);
-    console.log("User Info:", MyUser?.my_user);
+    // console.log("=== VIP CHECK DEBUG ===");
+    // console.log("Movie:", movie.title);
+    // console.log("Required VIP Level:", movie.minVipLevel);
+    // console.log("User ID:", userId);
+    // console.log("User Info:", MyUser?.my_user);
 
     // Trailer thì cho xem luôn
     if (movie.status === "UPCOMING") {
@@ -182,15 +182,15 @@ const MovieDetailPage = () => {
 
     // Phim FREE thì ai cũng được xem
     const required = movie.minVipLevel || "FREE";
-    console.log("Required level:", required);
+    // console.log("Required level:", required);
     
     // ✅ Kiểm tra quyền với BE
     try {
       const res = await MovieService.canWatch(movie.movieId, userId);
-      console.log("=== BACKEND RESPONSE ===", res);
+      // console.log("=== BACKEND RESPONSE ===", res);
       
       if (!res.allowed) {
-        console.log("❌ Not allowed. Status:", res.status, "Message:", res.message);
+        // console.log("❌ Not allowed. Status:", res.status, "Message:", res.message);
         
         // ✅ Phim FREE mà không được phép thì chặn hoàn toàn
         if (required === "FREE") {
