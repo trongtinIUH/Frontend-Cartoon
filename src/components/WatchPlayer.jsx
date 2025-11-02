@@ -8,6 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import { useVideoSync } from '../hooks/useVideoSync';
+import { initAntiCapture } from '../utils/antiCapture';
 import '../css/WatchPlayer.css';
 
 // Debug logging (set to false to disable verbose logs)
@@ -111,8 +112,28 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
       }
     });
 
+    // ✅ Initialize anti-capture protection
+    let cleanupAntiCapture = null;
+    try {
+      cleanupAntiCapture = initAntiCapture(player);
+      DEBUG_ENABLED && console.log('[WatchPlayer] Anti-capture protection initialized');
+    } catch (error) {
+      console.error('[WatchPlayer] Failed to init anti-capture:', error);
+    }
+
     // Cleanup
     return () => {
+      // Cleanup anti-capture first
+      if (cleanupAntiCapture) {
+        try {
+          cleanupAntiCapture();
+          DEBUG_ENABLED && console.log('[WatchPlayer] Anti-capture cleanup done');
+        } catch (error) {
+          console.error('[WatchPlayer] Failed to cleanup anti-capture:', error);
+        }
+      }
+      
+      // Then dispose player
       if (playerRef.current) {
         playerRef.current.dispose();
         playerRef.current = null;
