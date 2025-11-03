@@ -46,7 +46,7 @@ const FavoritesPage = () => {
   };
 
   return (
-    <div className="container-fluid bg-dark text-white min-vh-100 py-5 px-3 profile-page">
+    <div className="container-fluid bg-dark text-white min-vh-100 py-5 profile-page">
       <div className="row">
         {/* Sidebar */}
         <div className="col-12 col-lg-3 mb-4">
@@ -55,8 +55,8 @@ const FavoritesPage = () => {
 
         {/* Content */}
         <div className="col-12 col-lg-9">
-          <h5 className="mb-4 fw-bold">Yêu thích</h5>
-          <p className="mb-4">Danh sách phim yêu thích của bạn</p>
+          <h5 className="mb-3 mb-md-4 fw-bold">Yêu thích</h5>
+          <p className="mb-3 mb-md-4 text-muted">Danh sách phim yêu thích của bạn</p>
 
           <div className="wishlist-grid">
             {wishlist?.length > 0 ? (
