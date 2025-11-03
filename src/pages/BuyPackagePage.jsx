@@ -18,6 +18,8 @@ const BuyPackagePage = () => {
   const { MyUser } = useAuth();
   const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchPackages = async () => {
@@ -25,8 +27,14 @@ const BuyPackagePage = () => {
         navigate('/');
         return;
       }
+      
+      setLoading(true);
+      setError(null);
+      const startTime = Date.now();
+      
       try {
         const data = await SubscriptionPackageService.getAllPackages();
+        const fetchTime = Date.now() - startTime;
 
         // Nhóm theo loại VIP, chọn gói có thời hạn ngắn nhất cho mỗi loại
         const grouped = {};
@@ -42,12 +50,15 @@ const BuyPackagePage = () => {
 
         setPackages(sorted);
       } catch (error) {
-        console.error('Lỗi khi lấy gói:', error);
+        console.error('[BuyPackage] ❌ Error fetching packages:', error);
+        setError('Không thể tải danh sách gói. Vui lòng thử lại sau.');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchPackages();
-  }, []);
+  }, [MyUser, navigate]);
 
   const handleSelectPackage = (pkg) => {
     setSelectedPackage(pkg);
@@ -57,9 +68,33 @@ const BuyPackagePage = () => {
   return (
     <div className="buy-package-page">
       <div className="container">
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Đang tải...</span>
+            </div>
+            <p className="mt-3 text-white">Đang tải danh sách gói...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="alert alert-danger text-center" role="alert">
+            {error}
+            <button 
+              className="btn btn-primary ms-3" 
+              onClick={() => window.location.reload()}
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
+
         {/* Package Selection */}
-        <div className="mb-5">
-          <div className="table-responsive mt-5">
+        {!loading && !error && (
+          <div className="mb-5">
+            <div className="table-responsive mt-5">
             <table className="table table-dark buy-package-table">
               <thead className="p-0 m-0">
                 <tr className="bg-secondary">
@@ -123,6 +158,7 @@ const BuyPackagePage = () => {
             </table>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

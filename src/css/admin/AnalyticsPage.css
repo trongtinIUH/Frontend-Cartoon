@@ -304,9 +304,9 @@ tbody tr:not(.table-active):not(.table-warning):not(.table-danger):nth-child(4n+
 }
 
 /* Tổng quan box */
-.table tbody tr:first-child td {
+/* .table tbody tr:first-child td {
   padding: 10px 12px;
-}
+} */
 
 /* Print-friendly styling */
 @media print {

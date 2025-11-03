@@ -2,6 +2,12 @@ import axios from "axios";
 import axiosInstance from "../api/axiosInstance";
 
 const API_BASE_URL = 'http://localhost:8080/subscription-packages';
+
+// ⚠️ Cache để tránh gọi API nhiều lần
+let packagesCache = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 phút
+
 const SubscriptionPackageService = {
 
     // get all packages
@@ -20,15 +26,46 @@ const SubscriptionPackageService = {
     //get all packages vs promotions
     getAllPackages: async () => {
         try {
-            const response = await axiosInstance.get(`${API_BASE_URL}/all`);
+            // ✅ Check cache first
+            const now = Date.now();
+            if (packagesCache && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION)) {
+                console.log('[SubscriptionPackageService] ✅ Using cached packages');
+                return packagesCache;
+            }
+
+            console.log('[SubscriptionPackageService] 🔄 Fetching packages from API...');
+            const startTime = Date.now();
+            
+            const response = await axiosInstance.get(`${API_BASE_URL}/all`, {
+                timeout: 10000, // 10s timeout
+            });
+            
+            const fetchTime = Date.now() - startTime;
+            console.log(`[SubscriptionPackageService] ✅ API responded in ${fetchTime}ms`);
+            
             if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            response.data.sort((a, b) => a.price - b.price);
-            return response.data;
+            
+            // Sort by price
+            const sortedData = response.data.sort((a, b) => (a.amount || 0) - (b.amount || 0));
+            
+            // ✅ Cache the result
+            packagesCache = sortedData;
+            cacheTimestamp = now;
+            
+            return sortedData;
         } catch (error) {
+            console.error('[SubscriptionPackageService] ❌ Error:', error);
             throw error.response ? error.response.data : error;
         }
+    },
+
+    // Clear cache manually (call after create/update/delete)
+    clearCache: () => {
+        console.log('[SubscriptionPackageService] 🧹 Clearing cache');
+        packagesCache = null;
+        cacheTimestamp = null;
     },
 
     //get package by id
@@ -55,6 +92,10 @@ const SubscriptionPackageService = {
         const res = await axiosInstance.post(`${API_BASE_URL}`, fd, {
             headers: { "Content-Type": "multipart/form-data" }, // có thể bỏ, axios tự set boundary
         });
+        
+        // Clear cache after create
+        SubscriptionPackageService.clearCache();
+        
         return res.data;
     },
     //update package
@@ -71,12 +112,20 @@ const SubscriptionPackageService = {
         const res = await axiosInstance.put(`${API_BASE_URL}/${packageId}`, fd, {
             headers: { "Content-Type": "multipart/form-data" },
         });
+        
+        // Clear cache after update
+        SubscriptionPackageService.clearCache();
+        
         return res.data;
     },
     //delete package
     deletePackage: async (id) => {
         try {
             const response = await axiosInstance.delete(`${API_BASE_URL}/${id}`);
+            
+            // Clear cache after delete
+            SubscriptionPackageService.clearCache();
+            
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;

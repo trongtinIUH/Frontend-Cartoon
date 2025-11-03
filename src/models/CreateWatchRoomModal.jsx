@@ -136,9 +136,9 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
         </div>
 
         <div className="modal-footer">
-          <button className="btn-cancel" onClick={onClose} disabled={isCreating}>
+          {/* <button className="btn-cancel" onClick={onClose} disabled={isCreating}>
             Hủy
-          </button>
+          </button> */}
           <button 
             className="btn-create" 
             onClick={handleCreate}
