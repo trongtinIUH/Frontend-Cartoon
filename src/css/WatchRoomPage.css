@@ -343,6 +343,12 @@ body:fullscreen {
   /* z-index removed - let it use default stacking */
 }
 
+/* Ensure video container doesn't stretch unnecessarily */
+.watch-room-player-container > div[data-vjs-player] {
+  flex: 1;
+  min-height: 0;
+}
+
 .watch-room-sidebar {
   width: 380px;
   display: flex;
@@ -432,17 +438,34 @@ body:fullscreen {
 @media (max-width: 992px) {
   .watch-room-main {
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
   }
 
   .watch-room-sidebar {
     width: 100%;
-    height: 400px;
+    height: calc(100vh - 300px); /* Fill remaining space */
+    min-height: 400px;
+    max-height: 600px;
     flex-shrink: 0;
   }
 
   .watch-room-player-container {
-    height: 60vh;
-    min-height: 300px;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    position: relative;
+    min-height: unset;
+    flex: none; /* Don't grow */
+    background: #000;
+  }
+
+  .watch-room-player-container > div[data-vjs-player] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .btn-text {
@@ -457,10 +480,11 @@ body:fullscreen {
 @media (max-width: 768px) {
   .watch-room-header {
     padding: 0.75rem 1rem;
+    margin-top: 56px;
   }
 
   .watch-room-title {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
 
   .connection-status {
@@ -470,24 +494,38 @@ body:fullscreen {
   .watch-room-main {
     padding: 0.75rem;
     gap: 0.75rem;
+    flex: 1;
+    min-height: 0;
   }
 
   .watch-room-sidebar {
-    height: 350px;
+    height: calc(100vh - 320px); /* Fill more space on smaller screens */
+    min-height: 350px;
+    max-height: 550px;
+    border-radius: 8px;
   }
 
   .watch-room-player-container {
     border-radius: 8px;
+    padding-bottom: 56.25%;
+    height: 0;
+    flex: none; /* Don't stretch */
+    background: #000;
   }
 
-  .watch-room-sidebar {
-    border-radius: 8px;
+  .watch-room-player-container > div[data-vjs-player] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
   }
 }
 
 @media (max-width: 576px) {
   .watch-room-header {
     padding: 0.5rem 0.75rem;
+    margin-top: 56px;
   }
 
   .btn-back {
@@ -501,16 +539,20 @@ body:fullscreen {
   }
 
   .watch-room-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    line-height: 1.3;
   }
 
   .btn-header {
     font-size: 0.875rem;
+    padding: 0.6rem 0.75rem;
   }
 
   .watch-room-main {
     padding: 0.5rem;
     gap: 0.5rem;
+    flex: 1;
+    min-height: 0;
   }
 
   .watch-room-tab {
@@ -519,12 +561,35 @@ body:fullscreen {
   }
 
   .watch-room-sidebar {
-    height: 300px;
+    height: calc(100vh - 340px); /* Maximize sidebar height on mobile */
+    min-height: 320px;
+    max-height: 500px;
   }
 
   .watch-room-player-container {
-    height: 50vh;
-    min-height: 250px;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    position: relative;
+    min-height: unset;
+    flex: none; /* Don't grow or shrink */
+    background: #000;
+  }
+
+  .watch-room-player-container > div[data-vjs-player] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .watch-room-player-container .video-js {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
   }
 }
 

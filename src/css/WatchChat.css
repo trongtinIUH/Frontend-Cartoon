@@ -382,3 +382,149 @@
 .chat-send-btn:hover:not(:disabled) .chat-send-icon {
   transform: translateX(2px);
 }
+
+/* ===== MOBILE RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+  .chat-messages {
+    padding: 16px;
+    gap: 14px;
+    max-height: none; /* Remove max-height on mobile */
+  }
+
+  .chat-message-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .chat-message-avatar-placeholder {
+    font-size: 14px;
+  }
+
+  .chat-message-content {
+    max-width: 70%;
+  }
+
+  .chat-message-bubble {
+    padding: 10px 14px;
+  }
+
+  .chat-message-text {
+    font-size: 13px;
+  }
+
+  .chat-input-container {
+    padding: 14px 16px;
+  }
+
+  .chat-input {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .chat-send-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .chat-send-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (max-width: 576px) {
+  .chat-messages {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .chat-empty {
+    padding: 40px 16px;
+  }
+
+  .chat-empty-icon {
+    font-size: 48px;
+  }
+
+  .chat-empty-text {
+    font-size: 16px;
+  }
+
+  .chat-empty-hint {
+    font-size: 13px;
+  }
+
+  .chat-message-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .chat-message-avatar-placeholder {
+    font-size: 13px;
+  }
+
+  .chat-message-content {
+    max-width: 75%;
+    gap: 4px;
+  }
+
+  .chat-message-sender {
+    font-size: 11px;
+    padding: 0 12px;
+  }
+
+  .chat-message-bubble {
+    padding: 9px 12px;
+    border-radius: 14px;
+  }
+
+  .chat-message-text {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .chat-message-time {
+    font-size: 10px;
+  }
+
+  .chat-message-system {
+    padding: 6px 12px;
+    margin: 6px 0;
+  }
+
+  .chat-message-system-text {
+    font-size: 12px;
+  }
+
+  .chat-input-container {
+    padding: 12px;
+    border-top: 1px solid rgba(59, 130, 246, 0.15);
+  }
+
+  .chat-input-form {
+    gap: 8px;
+  }
+
+  .chat-input {
+    padding: 11px 14px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  .chat-send-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+  }
+
+  .chat-send-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .chat-load-more-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}
