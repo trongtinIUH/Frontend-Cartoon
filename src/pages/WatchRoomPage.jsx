@@ -4,7 +4,6 @@ import { toast } from 'react-toastify';
 import { WatchPlayer } from '../components/WatchPlayer';
 import { WatchChat } from '../components/WatchChat';
 import { MemberList } from '../components/MemberList';
-import { SyncDebug } from '../components/SyncDebug';
 import { DeleteRoomButton } from '../components/DeleteRoomButton';
 import { useWatchRoom } from '../hooks/useWatchRoom';
 import { WatchRoomProvider } from '../context/WatchRoomContext';
@@ -25,7 +24,6 @@ export const WatchRoomPage = () => {
   const userId = loggedInUser?.userId || searchParams.get('userId') || 'user_' + Date.now();
   const userName = loggedInUser?.userName || loggedInUser?.fullname || loggedInUser?.username || searchParams.get('name') || 'User';
   const avatarUrl = loggedInUser?.avatarUrl || loggedInUser?.avatar || searchParams.get('avatar') || undefined;
-  const inviteCode = searchParams.get('invite') || undefined;
   const isHostFromUrl = searchParams.get('host') === '1'; // Force host mode from URL
 
   const [videoUrl, setVideoUrl] = useState('');
@@ -40,11 +38,16 @@ export const WatchRoomPage = () => {
   const prevMessagesLengthRef = useRef(0);
   const playerRef = useRef(null); // Reference to player for stopping on delete
   const disconnectRef = useRef(null); // Store disconnect function
+  const hasConnectedRef = useRef(false); // ⚠️ Track if connected with ref (survives re-renders)
   
   // States for invite code verification
   const [isVerifyingAccess, setIsVerifyingAccess] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [hasConnected, setHasConnected] = useState(false); // ⚠️ Track if already connected
+  
+  // ⚠️ CRITICAL: Use state for inviteCode to allow dynamic update from API
+  const [actualInviteCode, setActualInviteCode] = useState(searchParams.get('invite') || undefined);
 
   /**
    * Handle control events from WS to forward to player
@@ -114,7 +117,7 @@ export const WatchRoomPage = () => {
     userId,
     userName,
     avatarUrl,
-    inviteCode,
+    inviteCode: actualInviteCode, // ⚠️ Use state instead of URL param
     forceHost: isHostFromUrl,
     onControlEvent: handleControlEvent,
     onRoomDeleted: handleRoomDeleted,
@@ -162,64 +165,84 @@ export const WatchRoomPage = () => {
         const fetchStartTime = Date.now();
         
         // Fetch room info from API
-        // console.log('[WatchRoomPage] 🔄 Fetching room info from API...');
-        // console.log('[WatchRoomPage] Current URL params:', {
-        //   roomId,
-        //   inviteCode,
-        //   isHostFromUrl,
-        //   searchParams: Object.fromEntries(searchParams.entries())
-        // });
-        // console.log('[WatchRoomPage] Current user info:', {
-        //   userId,
-        //   loggedInUserId: loggedInUser?.userId,
-        //   urlUserId: searchParams.get('userId')
-        // });
+        console.log('[WatchRoomPage] 🔄 Fetching room info from API...');
+        console.log('[WatchRoomPage] Current URL params:', {
+          roomId,
+          inviteCode: actualInviteCode, // ⚠️ Use state
+          isHostFromUrl,
+          searchParams: Object.fromEntries(searchParams.entries())
+        });
+        console.log('[WatchRoomPage] Current user info:', {
+          userId,
+          loggedInUserId: loggedInUser?.userId,
+          urlUserId: searchParams.get('userId')
+        });
         
         const roomData = await WatchRoomService.getWatchRoomById(roomId);
         
         if (!isMounted) return; // Exit if unmounted during fetch
         
         const fetchDuration = Date.now() - fetchStartTime;
-        // console.log(`[WatchRoomPage] ⏱️ Room data fetched in ${fetchDuration}ms`);
         
         if (!roomData) {
-          // console.warn('[WatchRoomPage] No room info found');
           setAccessDenied(true);
           setIsVerifyingAccess(false);
           return;
         }
 
-        // console.log('[WatchRoomPage] Room data received:', roomData);
         setRoomInfo(roomData);
 
-        // SIMPLIFIED ACCESS CHECK:
-        // 1. If URL has ?host=1 → Creator mode, always allow
-        // 2. If room is public → Always allow
-        // 3. If room is private → Need invite code (unless creator)
-        
+
         const isCreatorByUrl = isHostFromUrl; // ?host=1 in URL
         const isPublicRoom = !roomData.isPrivate;
         
-        // console.log('[WatchRoomPage] Access check:', {
-        //   isCreatorByUrl,
-        //   isPublicRoom,
-        //   roomIsPrivate: roomData.isPrivate,
-        //   hasInviteCodeInUrl: !!inviteCode
-        // });
+        // Check if user is ADMIN
+        const isAdmin = loggedInUser?.roles?.includes('ADMIN') || 
+                       loggedInUser?.role === 'ADMIN' ||
+                       MyUser?.my_user?.roles?.includes('ADMIN') ||
+                       MyUser?.roles?.includes('ADMIN');
+        
+        // Check if user is room owner (compare userId)
+        const currentUserId = loggedInUser?.userId ? String(loggedInUser.userId) : null;
+        const roomOwnerId = roomData.userId ? String(roomData.userId) : null;
+        const isRoomOwner = currentUserId && roomOwnerId && currentUserId === roomOwnerId;
+        
+        console.log('[WatchRoomPage] Access check:', {
+          isCreatorByUrl,
+          isAdmin,
+          isRoomOwner,
+          isPublicRoom,
+          roomIsPrivate: roomData.isPrivate,
+          hasInviteCodeInUrl: !!actualInviteCode,
+          currentUserId,
+          roomOwnerId
+        });
 
-        // Allow access if creator or public room
-        if (isCreatorByUrl || isPublicRoom) {
-          // console.log('[WatchRoomPage] ✅ Access granted - Creator mode or public room');
+        // Allow access if: creator URL param OR admin OR room owner OR public room
+        if (isCreatorByUrl || isAdmin || isRoomOwner || isPublicRoom) {
+          const accessReason = isCreatorByUrl ? 'Creator URL param (?host=1)' :
+                              isAdmin ? 'Admin role' :
+                              isRoomOwner ? 'Room owner' :
+                              'Public room';
+          console.log(`[WatchRoomPage] ✅ Access granted - ${accessReason}`);
+          
+          // ⚠️ CRITICAL FIX: If private room and no invite code, get it from roomData
+          if (roomData.isPrivate && !actualInviteCode && roomData.inviteCode) {
+            console.log(`[WatchRoomPage] 🔑 Private room - Setting invite code from API: ${roomData.inviteCode}`);
+            setActualInviteCode(roomData.inviteCode); // ✅ Update state for WebSocket
+            console.log('[WatchRoomPage] ⏳ Invite code set, will trigger re-render and connect');
+          } else if (roomData.isPrivate && actualInviteCode) {
+            console.log(`[WatchRoomPage] 🔑 Private room - Already have invite code: ${actualInviteCode}`);
+          }
+          
           // Continue to load video below
         } else {
-          // Private room and not creator - need invite code
-          // console.log('[WatchRoomPage] 🔒 Private room - checking invite code...');
-          // Private room and not creator - need invite code
-          // console.log('[WatchRoomPage] 🔒 Private room - checking invite code...');
+          // Private room and not (creator/admin/owner) - need invite code
+          console.log('[WatchRoomPage] 🔒 Private room - checking invite code...');
           
           // If no invite code in URL, show modal
-          if (!inviteCode) {
-            // console.log('[WatchRoomPage] ❌ No invite code provided, showing modal');
+          if (!actualInviteCode) {
+            console.log('[WatchRoomPage] ❌ No invite code provided, showing modal');
             setShowInviteModal(true);
             setIsVerifyingAccess(false);
             return;
@@ -227,8 +250,8 @@ export const WatchRoomPage = () => {
 
           // Verify invite code
           try {
-            // console.log('[WatchRoomPage] Verifying invite code...');
-            const verifyResponse = await WatchRoomService.verifyInviteCode(roomId, inviteCode);
+            console.log('[WatchRoomPage] Verifying invite code...');
+            const verifyResponse = await WatchRoomService.verifyInviteCode(roomId, actualInviteCode);
             
             if (!isMounted) return; // Exit if unmounted during verify
             
@@ -311,7 +334,7 @@ export const WatchRoomPage = () => {
       isMounted = false;
     };
 
-  }, [roomId, searchParams, navigate, inviteCode]);
+  }, [roomId, searchParams, navigate, actualInviteCode]); // ⚠️ Add actualInviteCode to deps
 
   /**
    * Apply initial video state (after fetching from API)
@@ -376,14 +399,66 @@ export const WatchRoomPage = () => {
   }, [showSidebar, activeTab]);
 
   /**
-   * Connect to room on mount
+   * Connect to room ONLY after access verification completed
+   * ⚠️ CRITICAL: Must have actualInviteCode set before connecting (for private rooms)
+   * ⚠️ Use ref to track connection state and prevent duplicate connects
    */
   useEffect(() => {
-    if (!roomId) return;
+    console.log('[WatchRoomPage] 🔍 Connect useEffect triggered:', {
+      hasConnectedRef: hasConnectedRef.current,
+      roomId,
+      isVerifyingAccess,
+      accessDenied,
+      isPrivate: roomInfo?.isPrivate,
+      actualInviteCode: actualInviteCode ? '✅ Has code' : '❌ No code',
+    });
 
+    // Skip if no roomId
+    if (!roomId) {
+      console.log('[WatchRoomPage] ❌ No roomId, skipping');
+      return;
+    }
+
+    // Already connected, don't reconnect (use ref to survive re-renders)
+    if (hasConnectedRef.current) {
+      console.log('[WatchRoomPage] ✅ Already connected (ref), no action needed');
+      return;
+    }
+
+    // Wait until access verification is complete
+    if (isVerifyingAccess) {
+      console.log('[WatchRoomPage] ⏳ Still verifying access...');
+      return;
+    }
+
+    // Don't connect if access denied
+    if (accessDenied) {
+      console.log('[WatchRoomPage] ❌ Access denied, not connecting');
+      return;
+    }
+
+    // ⚠️ CRITICAL: For private rooms, wait until actualInviteCode is set
+    if (roomInfo?.isPrivate && !actualInviteCode) {
+      console.log('[WatchRoomPage] ⏳ Private room - waiting for invite code from API...');
+      return;
+    }
+
+    // All conditions met - connect!
+    console.log('[WatchRoomPage] ✅ All checks passed, connecting with inviteCode:', actualInviteCode);
+    console.log('[WatchRoomPage] Room info:', { isPrivate: roomInfo?.isPrivate, roomOwnerId: roomInfo?.userId });
+    
     connect();
+    hasConnectedRef.current = true; // ✅ Mark as connected in ref
+    setHasConnected(true); // Also update state for UI
 
-    // Handle page close/refresh - send LEAVE before unload
+    // ⚠️ NO cleanup disconnect here! Only disconnect on unmount below
+  }, [roomId, isVerifyingAccess, accessDenied, roomInfo, actualInviteCode, connect]);
+  // Include dependencies but NO cleanup disconnect
+
+  /**
+   * Handle page close/refresh - send LEAVE before unload
+   */
+  useEffect(() => {
     const handleBeforeUnload = () => {
       console.log('[WatchRoomPage] Page closing - sending LEAVE');
       disconnect();
@@ -392,32 +467,43 @@ export const WatchRoomPage = () => {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      console.log('[WatchRoomPage] 🧹 Cleanup: Removing beforeunload listener');
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      disconnect();
     };
-  }, [roomId, connect, disconnect]);
+  }, [disconnect]);
+
+  /**
+   * Disconnect ONLY on unmount (when leaving page)
+   */
+  useEffect(() => {
+    return () => {
+      console.log('[WatchRoomPage] 🚪 Component unmounting - disconnecting');
+      disconnect();
+      hasConnectedRef.current = false; // Reset ref for next mount
+      setHasConnected(false); // Reset state
+    };
+  }, [disconnect]);
 
   /**
    * Copy invite code
    */
   const handleCopyInviteCode = () => {
-    // Get invite code from roomInfo or URL
-    const code = roomInfo?.inviteCode || inviteCode;
+    // Get invite code from roomInfo or state
+    const code = roomInfo?.inviteCode || actualInviteCode; 
     
     if (!code) {
-      alert('❌ Phòng này không có mã mời');
+      toast.error('Không có mã mời để sao chép.');
       return;
     }
 
     // Copy invite code to clipboard
     navigator.clipboard.writeText(code)
       .then(() => {
-        alert(`✓ Đã sao chép mã mời: ${code}`);
+        toast.success("Đã sao chép mã mời");
       })
       .catch((err) => {
-        console.error('Failed to copy:', err);
-        // Fallback: show alert with code
-        alert(`Mã mời: ${code}\n\n(Vui lòng copy thủ công)`);
+        console.error('Failed to copy invite code:', err);
+        toast.error('Sao chép mã mời thất bại');
       });
   };
 
@@ -735,13 +821,7 @@ export const WatchRoomPage = () => {
           )}
         </div>
 
-        {/* Debug Panel */}
-        <SyncDebug
-          latencyMs={state.latencyMs}
-          syncState={state.sync}
-          isConnected={isConnected}
-          isReconnecting={isReconnecting}
-        />
+       
       </div>
     </WatchRoomProvider>
   );

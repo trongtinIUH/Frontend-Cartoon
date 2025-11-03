@@ -31,6 +31,13 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
       return;
     }
 
+    // ✅ Kiểm tra gói COMBO_PREMIUM_MEGA_PLUS
+    const userPackage = MyUser?.my_user?.packageType;
+    if (userPackage !== 'COMBO_PREMIUM_MEGA_PLUS') {
+      toast.error('🔒 Chỉ người dùng gói COMBO PREMIUM mới có thể tạo phòng xem chung!');
+      return;
+    }
+
     setIsCreating(true);
 
     try {
@@ -94,6 +101,26 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
         </div>
 
         <div className="modal-body">
+          {/* ✅ Thông báo gói COMBO PREMIUM */}
+          {MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' && (
+            <div className="premium-notice" style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              padding: '15px',
+              borderRadius: '8px',
+              marginBottom: '15px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>👑</div>
+              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                Tính năng dành riêng cho gói COMBO PREMIUM
+              </div>
+              <div style={{ fontSize: '14px', opacity: '0.9' }}>
+                Nâng cấp để tạo phòng xem chung với bạn bè!
+              </div>
+            </div>
+          )}
+
           <div className="movie-info">
             <img 
               src={movie?.poster || movie?.thumbnailUrl} 
@@ -136,19 +163,25 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
         </div>
 
         <div className="modal-footer">
-          <button className="btn-cancel" onClick={onClose} disabled={isCreating}>
+          {/* <button className="btn-cancel" onClick={onClose} disabled={isCreating}>
             Hủy
-          </button>
+          </button> */}
           <button 
             className="btn-create" 
             onClick={handleCreate}
-            disabled={isCreating}
+            disabled={isCreating || MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS'}
+            style={{
+              opacity: (MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' && !isCreating) ? 0.5 : 1,
+              cursor: (MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' && !isCreating) ? 'not-allowed' : 'pointer'
+            }}
           >
             {isCreating ? (
               <>
                 <span className="spinner"></span>
                 <span>Đang tạo...</span>
               </>
+            ) : MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' ? (
+              '🔒 Cần gói COMBO PREMIUM'
             ) : (
               'Tạo phòng ngay'
             )}

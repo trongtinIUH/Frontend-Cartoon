@@ -1860,8 +1860,31 @@ export default function WatchPage() {
               <button
                 className="at-item"
                 onClick={() => setShowCreateRoomModal(true)}
+                title={MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' 
+                  ? 'Tính năng dành cho gói COMBO PREMIUM' 
+                  : 'Tạo phòng xem chung với bạn bè'}
+                style={{
+                  position: 'relative',
+                  opacity: MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' ? 0.7 : 1
+                }}
               >
-                <i className="fa-brands fa-forumbee"></i> <span>Xem chung</span>
+                <i className="fa-brands fa-forumbee"></i> 
+                <span>Xem chung</span>
+                {MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-5px',
+                    right: '-5px',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    fontSize: '10px',
+                    padding: '2px 5px',
+                    borderRadius: '4px',
+                    fontWeight: 'bold'
+                  }}>
+                    👑
+                  </span>
+                )}
               </button>
               {MyUser && (
                 <button className="at-item danger" onClick={() => setShowReportModal(true)}>

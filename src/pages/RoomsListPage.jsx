@@ -119,27 +119,47 @@ export default function RoomsListPage() {
    * Handle room card click
    */
   const handleRoomClick = (room) => {
-    //user không đăng nhập không vào được
-     if (!isLoggedIn) {
+    // User không đăng nhập không vào được
+    if (!isLoggedIn) {
       alert('⚠️ Bạn cần phải đăng nhập để sử dụng chức năng này!');
       return;
     }
     
-    //admin or chủ phòng có quyền vào luôn (bypass invite code check)
-    // if (MyUser?.my_user?.role === 'ADMIN' || MyUser?.my_user?.userId === room.userId) {
-    //   // Add ?host=1 for room creator to enable host controls
-    //   const isHost = MyUser?.my_user?.userId === room.userId;
-    //   const hostParam = isHost ? '?host=1' : '';
-    //   navigate(`/watch-together/${encodeURIComponent(room.roomId)}${hostParam}`);
-    //   return; // ✅ IMPORTANT: Stop here, don't check isPrivate
-    // }
+    // Check if user is ADMIN
+    const isAdmin = MyUser?.my_user?.roles?.includes('ADMIN') || 
+                   MyUser?.my_user?.role === 'ADMIN' ||
+                   MyUser?.roles?.includes('ADMIN');
+    
+    // Check if user is room owner
+    const currentUserId = MyUser?.my_user?.userId ? String(MyUser.my_user.userId) : null;
+    const roomOwnerId = room.userId ? String(room.userId) : null;
+    const isRoomOwner = currentUserId && roomOwnerId && currentUserId === roomOwnerId;
+    
+    console.log('[RoomsListPage] Room click - Access check:', {
+      isAdmin,
+      isRoomOwner,
+      currentUserId,
+      roomOwnerId,
+      isPrivate: room.isPrivate
+    });
+    
+    // Admin or chủ phòng có quyền vào luôn (bypass invite code check)
+    if (isAdmin || isRoomOwner) {
+      // Add ?host=1 for room creator to enable host controls
+      const hostParam = isRoomOwner ? '?host=1' : '';
+      console.log(`[RoomsListPage] ✅ Bypassing invite check - ${isAdmin ? 'Admin' : 'Room owner'}`);
+      navigate(`/watch-together/${encodeURIComponent(room.roomId)}${hostParam}`);
+      return; // ✅ IMPORTANT: Stop here, don't check isPrivate
+    }
     
     // Nếu phòng private, hiển thị modal nhập invite code
     if (room.isPrivate) {
+      console.log('[RoomsListPage] 🔒 Private room - showing invite modal');
       setSelectedRoom(room);
       setShowInviteModal(true);
     } else {
       // Phòng public, vào trực tiếp
+      console.log('[RoomsListPage] ✅ Public room - navigating directly');
       navigate(`/watch-together/${encodeURIComponent(room.roomId)}`);
     }
   };
@@ -225,8 +245,8 @@ export default function RoomsListPage() {
 
                   {/* Viewer count - Real-time from backend */}
                   <div className="room-viewers">
-                    <i className="fas fa-eye" /> {room.viewerCount ?? 0}
-                    <i className={`fas ${room.isPrivate ? 'fa-lock' : 'fa-eye'}`} /> {room._privacy}
+                    <i className="fas fa-eye" /> {room.viewerCount ?? 0} <br />
+                    <i className={`fas ${room.isPrivate ? 'fa-lock' : 'fa-users'}`} /> {room._privacy}
                   </div>
                 </div>
 

@@ -131,14 +131,14 @@ export const DeleteRoomButton = ({
                 <i className="fa-solid fa-triangle-exclamation"></i>
                 Xác nhận xóa phòng
               </h3>
-              <button 
+              <span 
                 onClick={handleCloseModal} 
                 className="close-btn"
                 disabled={isDeleting}
                 aria-label="Đóng"
               >
                 <i className="fa-solid fa-xmark"></i>
-              </button>
+              </span>
             </div>
 
             {/* Body */}
