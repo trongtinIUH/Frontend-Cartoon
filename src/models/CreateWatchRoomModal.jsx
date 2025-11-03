@@ -2,7 +2,7 @@
  * CreateWatchRoomModal - Modal to create watch together room
  */
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import WatchRoomService from '../services/WatchRoomService';
 import { toast } from 'react-toastify';
@@ -14,10 +14,85 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
   const [roomName, setRoomName] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [vipStatus, setVipStatus] = useState(null);
+  const [isCheckingVip, setIsCheckingVip] = useState(true);
+  const [canCreateRoom, setCanCreateRoom] = useState(false);
+  const [vipMessage, setVipMessage] = useState('');
+
+  // ✅ Check VIP status when modal opens
+  React.useEffect(() => {
+    if (show && MyUser?.my_user?.userId) {
+      checkVipStatus();
+    }
+  }, [show, MyUser]);
+
+  const checkVipStatus = async () => {
+    const userId = MyUser.my_user.userId;
+    setIsCheckingVip(true);
+
+    try {
+      const response = await fetch(`http://localhost:8080/users/${userId}/vip-status`);
+      
+      if (!response.ok) {
+        setCanCreateRoom(false);
+        setVipMessage('⚠️ Không thể xác minh gói dịch vụ');
+        setIsCheckingVip(false);
+        return;
+      }
+      
+      const data = await response.json();
+      setVipStatus(data);
+      
+      // Check all 3 conditions
+      const hasCombo = data.packageType === 'COMBO_PREMIUM_MEGA_PLUS';
+      const isActive = data.status === 'ACTIVE';
+      
+      let notExpired = true;
+      if (data.endDate && data.endDate !== '') {
+        const endDate = new Date(data.endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        notExpired = endDate >= today;
+      }
+      
+      // Set can create room and message
+      if (hasCombo && isActive && notExpired) {
+        setCanCreateRoom(true);
+        setVipMessage(`✅ Gói COMBO PREMIUM của bạn còn hiệu lực đến ${new Date(data.endDate).toLocaleDateString('vi-VN')}`);
+      } else {
+        setCanCreateRoom(false);
+        
+        if (data.status === 'NONE') {
+          setVipMessage('🔒 Chức năng này chỉ dành cho người dùng có gói COMBO PREMIUM');
+        } else if (!notExpired) {
+          setVipMessage(`🔒 Gói COMBO PREMIUM đã hết hạn vào ${new Date(data.endDate).toLocaleDateString('vi-VN')}`);
+        } else if (!isActive) {
+          setVipMessage(`🔒 Gói ${data.packageType} không còn hoạt động`);
+        } else if (!hasCombo) {
+          setVipMessage('🔒 Chỉ gói COMBO PREMIUM mới có thể tạo phòng xem chung');
+        }
+      }
+      
+      console.log('📊 VIP Check Result:', { hasCombo, isActive, notExpired, canCreate: hasCombo && isActive && notExpired });
+      
+    } catch (error) {
+      console.error('Error checking VIP status:', error);
+      setCanCreateRoom(false);
+      setVipMessage('⚠️ Lỗi khi kiểm tra gói dịch vụ. Vui lòng thử lại!');
+    } finally {
+      setIsCheckingVip(false);
+    }
+  };
 
   if (!show) return null;
 
   const handleCreate = async () => {
+    // Double check - should not happen if button is disabled
+    if (!canCreateRoom) {
+      toast.error(vipMessage);
+      return;
+    }
+
     // Ưu tiên dùng currentVideoUrl (URL đang phát), fallback về episode.videoUrl
     const videoUrl = currentVideoUrl || episode?.videoUrl;
     
@@ -31,17 +106,10 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
       return;
     }
 
-    // ✅ Kiểm tra gói COMBO_PREMIUM_MEGA_PLUS
-    const userPackage = MyUser?.my_user?.packageType;
-    if (userPackage !== 'COMBO_PREMIUM_MEGA_PLUS') {
-      toast.error('🔒 Chỉ người dùng gói COMBO PREMIUM mới có thể tạo phòng xem chung!');
-      return;
-    }
-
     setIsCreating(true);
 
     try {
-      console.log('Creating watch room with video:', videoUrl);
+      console.log('✅ Creating watch room with verified VIP status');
 
       // Generate room ID
       const roomId = 'room_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -101,26 +169,6 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
         </div>
 
         <div className="modal-body">
-          {/* ✅ Thông báo gói COMBO PREMIUM */}
-          {MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' && (
-            <div className="premium-notice" style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              padding: '15px',
-              borderRadius: '8px',
-              marginBottom: '15px',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '24px', marginBottom: '8px' }}>👑</div>
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
-                Tính năng dành riêng cho gói COMBO PREMIUM
-              </div>
-              <div style={{ fontSize: '14px', opacity: '0.9' }}>
-                Nâng cấp để tạo phòng xem chung với bạn bè!
-              </div>
-            </div>
-          )}
-
           <div className="movie-info">
             <img 
               src={movie?.poster || movie?.thumbnailUrl} 
@@ -160,30 +208,42 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
             <p>ℹ️ Bạn sẽ là <strong>Host</strong> và có thể điều khiển video</p>
             <p>Chia sẻ link để bạn bè cùng xem!</p>
           </div>
+
+          {/* ✅ VIP Status Message */}
+          {isCheckingVip ? (
+            <div className="vip-status-box checking">
+              <span className="spinner-small"></span>
+              <span>Đang kiểm tra gói dịch vụ...</span>
+            </div>
+          ) : (
+            <div className={`vip-status-box ${canCreateRoom ? 'success' : 'warning'}`}>
+              <p>{vipMessage}</p>
+              {!canCreateRoom && (
+                <Link to="/buy-package" className="upgrade-link">
+                  Nâng cấp gói COMBO PREMIUM →
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="modal-footer">
-          {/* <button className="btn-cancel" onClick={onClose} disabled={isCreating}>
-            Hủy
-          </button> */}
           <button 
             className="btn-create" 
             onClick={handleCreate}
-            disabled={isCreating || MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS'}
-            style={{
-              opacity: (MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' && !isCreating) ? 0.5 : 1,
-              cursor: (MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' && !isCreating) ? 'not-allowed' : 'pointer'
-            }}
+            disabled={isCreating || isCheckingVip || !canCreateRoom}
           >
             {isCreating ? (
               <>
                 <span className="spinner"></span>
                 <span>Đang tạo...</span>
               </>
-            ) : MyUser?.my_user?.packageType !== 'COMBO_PREMIUM_MEGA_PLUS' ? (
-              '🔒 Cần gói COMBO PREMIUM'
+            ) : isCheckingVip ? (
+              'Đang kiểm tra...'
+            ) : !canCreateRoom ? (
+              '🔒 Tạo phòng (Cần gói COMBO)'
             ) : (
-              'Tạo phòng ngay'
+              '✅ Tạo phòng ngay'
             )}
           </button>
         </div>
