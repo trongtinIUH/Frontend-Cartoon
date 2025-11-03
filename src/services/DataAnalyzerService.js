@@ -200,7 +200,9 @@ const DataAnalyzerService = {
   },
 
   // ======= CUSTOMERS ANALYTICS =======
-  // Doanh số khách hàng theo khoảng ngày
+  // ✅ FIX: Doanh số khách hàng theo khoảng ngày
+  // Backend đã fix bug map key types trong DataAnalyzerServiceImpl.getCustomerSalesByRange()
+  // Endpoint verified: /customers/sales
   getCustomerSales: (startDate, endDate) => {
     return axiosInstance.get(`${API_BASE_URL}/customers/sales`, {
       params: { startDate, endDate }

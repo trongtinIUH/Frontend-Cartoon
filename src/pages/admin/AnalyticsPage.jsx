@@ -152,7 +152,28 @@ const AnalyticsPage = () => {
   // ======= CUSTOMERS fetch =======
   useEffect(() => {
     if (mode !== "CUSTOMERS") return;
-    DataAnalyzerService.getCustomerSales(startDate, endDate).then((r) => setCustomerSales(r.data));
+    DataAnalyzerService.getCustomerSales(startDate, endDate)
+      .then((r) => {
+        // ✅ Transform BE response structure to match FE expectations
+        // BE returns: { totalTx, totalOriginal, totalDiscount, totalFinal, rows: [...] }
+        // FE expects: { totals: {...}, rows: [...] }
+        const beData = r.data || {};
+        const transformed = {
+          totals: {
+            totalTx: beData.totalTx || 0,
+            totalOriginal: beData.totalOriginal || 0,
+            totalDiscount: beData.totalDiscount || 0,
+            totalFinal: beData.totalFinal || 0
+          },
+          rows: beData.rows || []
+        };
+        setCustomerSales(transformed);
+      })
+      .catch((error) => {
+        console.error("❌ Customer Sales API Error:", error);
+        // Set empty data on error
+        setCustomerSales({ totals: {}, rows: [] });
+      });
   }, [mode, startDate, endDate]);
 
   // ======= Charts config =======
