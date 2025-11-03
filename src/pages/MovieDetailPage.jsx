@@ -735,6 +735,49 @@ const handleWatch = (episode) => {
                   </div>
                 </div>
               </div>
+
+              {/* Action Bar cho Mobile - chỉ hiện trên mobile */}
+              <div className="d-lg-none mt-4 mb-4">
+                <div className="movie-action-bar-mobile glassmorphism-action rounded-4 p-3">
+                  {/* Main buttons row: Xem Ngay + Đánh giá ngang nhau */}
+                  <div className="main-buttons-row-mobile d-flex gap-2 mb-3">
+                    <button
+                      className="btn btn-watch-mobile d-flex align-items-center justify-content-center gap-2 fw-bold"
+                      onClick={handleWatchFirst}
+                    >
+                      <FontAwesomeIcon icon={faPlay} />
+                      Xem Ngay
+                    </button>
+                    <button
+                      className="btn btn-rate-mobile d-flex flex-column align-items-center justify-content-center fw-bold"
+                      onClick={handleOpenRatingModal}
+                    >
+                      <span className="rating-score">{avgRating.toFixed(1)}</span>
+                      <span className="rating-label">Đánh giá</span>
+                    </button>
+                  </div>
+
+                  {/* Action icons row */}
+                  <div className="action-icons-mobile d-flex justify-content-around">
+                    <div className="action-item text-center"
+                      onClick={handleToggleWishlist}
+                      style={{ color: isInWishlist ? "#4bc1fa" : "" }}
+                    >
+                      <FontAwesomeIcon icon={faHeart} className="mb-1" />
+                      <div className="action-label small">Yêu thích</div>
+                    </div>
+                    <div className="action-item text-center">
+                      <FontAwesomeIcon icon={faPlus} className="mb-1" />
+                      <div className="action-label small">Thêm vào</div>
+                    </div>
+                    <div className="action-item text-center" onClick={() => setShowShareModal(true)}>
+                      <FontAwesomeIcon icon={faShare} className="mb-1" />
+                      <div className="action-label small">Chia sẻ</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="mt-4">
                 <h5 className="mb-3 text-warning">
                   <i className="bi bi-fire me-2" /> Top phim tuần này
@@ -812,8 +855,8 @@ const handleWatch = (episode) => {
               )}
 
               <div className="top-movies-week glassmorphism p-4 rounded-4 shadow">
-                {/* Thanh hành động */}
-                <div className="movie-action-bar d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 mt-2 px-3 py-2 glassmorphism-action">
+                {/* Thanh hành động - chỉ hiện trên desktop/tablet */}
+                <div className="movie-action-bar d-none d-lg-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 mt-2 px-3 py-2 glassmorphism-action">
                   <div
                     className="d-flex align-items-center gap-4"
                     style={{ background: "rgba(38, 38, 48, 0.88)" }}
