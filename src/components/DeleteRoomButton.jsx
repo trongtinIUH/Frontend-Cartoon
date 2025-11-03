@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { watchRoomApi } from '../api/watchRoomApi';
 import '../css/componentsCSS/DeleteRoomButton.css';
 
@@ -77,11 +78,34 @@ export const DeleteRoomButton = ({
       // Close modal first
       setShowModal(false);
 
-      // Show success message with info about cascade delete
-      alert('✓ Phòng đã được xóa thành công\n\n' +
-            '• Tất cả tin nhắn đã bị xóa\n' +
-            '• Tất cả thành viên đã bị xóa\n' +
-            '• Dữ liệu sẽ được dọn dẹp hoàn toàn');
+      // Show beautiful toast notification
+      toast.success(
+        <div>
+          <strong>✓ Phòng đã được xóa thành công</strong>
+          <div style={{ fontSize: '0.9em', marginTop: '8px', opacity: 0.9 }}>
+            • Tất cả tin nhắn đã bị xóa<br/>
+            • Tất cả thành viên đã bị xóa<br/>
+            • Dữ liệu đã được dọn dẹp hoàn toàn
+          </div>
+        </div>,
+        {
+          position: 'top-center',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          style: {
+            background: '#10b981',
+            color: 'white',
+            borderRadius: '8px',
+            padding: '16px',
+          },
+          progressStyle: {
+            background: 'rgba(255, 255, 255, 0.5)',
+          },
+        }
+      );
 
       // Call callback if provided (this should cleanup player)
       if (onDeleteSuccess) {
