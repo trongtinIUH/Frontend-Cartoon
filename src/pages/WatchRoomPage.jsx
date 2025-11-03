@@ -499,22 +499,21 @@ export const WatchRoomPage = () => {
    */
   const handleCopyInviteCode = () => {
     // Get invite code from roomInfo or state
-    const code = roomInfo?.inviteCode || actualInviteCode; // ⚠️ Use state
+    const code = roomInfo?.inviteCode || actualInviteCode; 
     
     if (!code) {
-      alert('❌ Phòng này không có mã mời');
+      toast.error('Không có mã mời để sao chép.');
       return;
     }
 
     // Copy invite code to clipboard
     navigator.clipboard.writeText(code)
       .then(() => {
-        alert(`✓ Đã sao chép mã mời: ${code}`);
+        toast.success("Đã sao chép mã mời");
       })
       .catch((err) => {
-        console.error('Failed to copy:', err);
-        // Fallback: show alert with code
-        alert(`Mã mời: ${code}\n\n(Vui lòng copy thủ công)`);
+        console.error('Failed to copy invite code:', err);
+        toast.error('Sao chép mã mời thất bại');
       });
   };
 
