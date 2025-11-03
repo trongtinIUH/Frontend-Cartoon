@@ -552,12 +552,7 @@
     width: 100%;
   }
 
-  .mobile-menu-toggle {
-    display: block;
-    font-size: 24px;
-    cursor: pointer;
-    color: white;
-  }
+  /* mobile-menu-toggle được định nghĩa ở dưới line 1034 */
 
   .genre-menu-wrapper:hover .genres-dropdown {
     position: static;
@@ -628,10 +623,11 @@
 
 @media (max-width: 768px) {
   .header-container {
-    padding: 0 4px;
+    padding: 0 0 0 0 !important;
   }
   .header-left {
-    gap: 10px;
+    gap: 0 !important;
+    padding-left: 0 !important;
   }
   .logo {
     height: 36px;
@@ -682,16 +678,8 @@
   .genres-dropdown li, .topics-dropdown li, .countries-dropdown li {
     padding: 6px 12px;
   }
-  .mobile-menu-toggle {
-    display: block;
-    font-size: 26px;
-    background: transparent !important;
-    border: none;
-    margin-left: 8px;
-    color: white;
-    cursor: pointer;
-    outline: none;
-  }
+  /* .mobile-menu-toggle sẽ được định nghĩa lại ở dưới với position absolute */
+  
   .header-right {
     gap: 12px;
   }
@@ -896,4 +884,324 @@
 .buy-package-btn:hover {
   background: linear-gradient(to right, #ff7f50, #ff5f6d);
   color: #fff;
+}
+
+/* ========================================
+   MOBILE MENU REDESIGN (RoPhim Style)
+   ======================================== */
+
+/* Ẩn mobile-only elements trên desktop */
+.mobile-user-section,
+.mobile-movie-types {
+  display: none;
+}
+
+/* Hiển thị desktop nav items trên desktop */
+.desktop-nav-item {
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  /* Ẩn desktop nav items trên mobile */
+  .desktop-nav-item {
+    display: none !important;
+  }
+
+  /* Cải thiện background của mobile menu */
+  .nav-links.open {
+    background: linear-gradient(135deg, #4a5f8f 0%, #3d4e73 50%, #2d3e5c 100%);
+    padding: 20px 16px;
+  }
+
+  /* User Section ở đầu (RoPhim style) */
+  .mobile-user-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+
+  .mobile-user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .mobile-user-info {
+    flex: 1;
+  }
+
+  .mobile-user-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+
+  .mobile-user-role {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  /* Grid 2 cột cho Phim Lẻ/Phim Bộ */
+  .mobile-movie-types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .mobile-type-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.2s;
+    margin: 0 !important;
+  }
+
+  .mobile-type-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* Các link và menu items khác */
+  .nav-links.open a:not(.mobile-type-btn),
+  .nav-links.open .mobile-menu-item {
+    padding: 12px;
+    border-radius: 6px;
+    transition: background 0.2s;
+    width: 100%;
+    display: block;
+  }
+
+  .nav-links.open a:not(.mobile-type-btn):hover,
+  .nav-links.open .mobile-menu-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Style cho span bên trong menu-item */
+  .nav-links.open .mobile-menu-item > span {
+    display: block;
+    width: 100%;
+    color: #e9ecef;
+  }
+}
+
+/* ========================================
+   MOBILE HEADER LAYOUT (RoPhim Style)
+   ======================================== */
+
+/* Ẩn search icon trên desktop */
+.mobile-search-toggle {
+  display: none;
+}
+
+/* Desktop search - hiển thị bình thường */
+.desktop-search {
+  display: flex;
+}
+
+@media (max-width: 768px) {
+  /* Header container mobile */
+  .header-left {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Hamburger - sát góc trái */
+  .mobile-menu-toggle {
+    position: relative !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 12px 8px 12px 4px !important;
+    margin: 0 !important;
+    font-size: 26px !important;
+    color: white !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+  }
+
+  /* Logo - giữa */
+  .logo-wrap {
+    position: relative;
+    z-index: 9;
+    margin: 0 auto;
+  }
+
+  /* Ẩn desktop search trên mobile */
+  .desktop-search {
+    display: none !important;
+  }
+
+  /* Hiện search icon - phải */
+  .mobile-search-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 8px;
+  }
+
+  .mobile-search-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+
+  /* Header right - user menu và search icon */
+  .header-right {
+    gap: 8px;
+  }
+}
+
+/* Mobile Search Overlay */
+.mobile-search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1300;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 60px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mobile-search-content {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.mobile-search-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  padding: 8px;
+  background: transparent;
+  color: #333;
+}
+
+.mobile-search-input::placeholder {
+  color: #999;
+}
+
+.mobile-search-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.mobile-search-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Mobile Search Results */
+.mobile-search-results {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0 0;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.mobile-search-item {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.mobile-search-item:last-child {
+  border-bottom: none;
+}
+
+.mobile-search-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  text-decoration: none;
+  color: #333;
+  transition: background 0.2s;
+}
+
+.mobile-search-link:hover {
+  background: #f8f9fa;
+}
+
+.mobile-search-img {
+  width: 60px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.mobile-search-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
 }

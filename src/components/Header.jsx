@@ -46,6 +46,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
 
   //set cho mobie 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
 
   const debouncedSearch = debounce(async (value) => {
@@ -150,6 +151,15 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
         <div className="header-container">
           {/* --- LEFT: Logo + Menu + Search + Nav --- */}
           <div className="header-left">
+            {/* Hamburger - mobile only, left side */}
+            <button
+              className="mobile-menu-toggle"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              ☰
+            </button>
+
+            {/* Logo - center on mobile, left on desktop */}
             <Link to="/main" className="logo-wrap" onClick={reloadMainPage}>
               <img
                 src={`${process.env.PUBLIC_URL}/image/cartoonToo.png`}
@@ -158,16 +168,8 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
               />
             </Link>
 
-            {/* Hamburger only on mobile */}
-            <button
-              className="mobile-menu-toggle"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              ☰
-            </button>
-
-            {/* Search */}
-            <div className="search-container">
+            {/* Search - desktop only (full input) */}
+            <div className="search-container desktop-search">
               <input
                 type="text"
                 placeholder="Tìm kiếm phim..."
@@ -217,20 +219,48 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
             {/* Main Nav */}
             <nav className={`nav-links ${isMobileMenuOpen ? "open" : ""}`}>
               
-              <Link to="/danh-muc/type/SINGLE" onClick={() => setIsMobileMenuOpen(false)}>
+              {/* User Section ở đầu menu - CHỈ HIỆN TRÊN MOBILE */}
+              <div className="mobile-user-section">
+                <img 
+                  src={avatarPreview || default_avatar} 
+                  alt="avatar" 
+                  className="mobile-user-avatar"
+                />
+                <div className="mobile-user-info">
+                  <div className="mobile-user-name">
+                    {isLoggedIn ? user.userName || "Thành viên" : "Khách"}
+                  </div>
+                  <div className="mobile-user-role">
+                    CartoonToo
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid 2 cột cho Phim Lẻ/Phim Bộ - CHỈ TRÊN MOBILE */}
+              <div className="mobile-movie-types">
+                <Link to="/danh-muc/type/SINGLE" onClick={() => setIsMobileMenuOpen(false)} className="mobile-type-btn">
+                  Phim Lẻ
+                </Link>
+                <Link to="/danh-muc/type/SERIES" onClick={() => setIsMobileMenuOpen(false)} className="mobile-type-btn">
+                  Phim Bộ
+                </Link>
+              </div>
+
+              {/* Desktop nav items */}
+              <Link to="/danh-muc/type/SINGLE" onClick={() => setIsMobileMenuOpen(false)} className="desktop-nav-item">
                 Phim lẻ
               </Link>
-              <Link to="/danh-muc/type/SERIES" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link to="/danh-muc/type/SERIES" onClick={() => setIsMobileMenuOpen(false)} className="desktop-nav-item">
                 Phim bộ
               </Link>
-              <Link to="/rooms" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link to="/rooms" onClick={() => setIsMobileMenuOpen(false)} className="mobile-menu-item">
                 Xem chung
               </Link>
 
 
               {/* CHỦ ĐỀ dropdown (PC hover, mobile click) */}
               <div
-                className="topic-menu-wrapper"
+                className="topic-menu-wrapper mobile-menu-item"
                 onMouseEnter={() => !isMobileMenuOpen && setShowTopics(true)}
                 onMouseLeave={() => !isMobileMenuOpen && setShowTopics(false)}
                 onClick={() => isMobileMenuOpen && setShowTopics((prev) => !prev)}
@@ -252,7 +282,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
               </div>
              {/* QUỐC GIA dropdown (PC hover, mobile click) */}
               <div
-                className="country-menu-wrapper"
+                className="country-menu-wrapper mobile-menu-item"
                 onMouseEnter={() => !isMobileMenuOpen && setShowCountries(true)}
                 onMouseLeave={() => !isMobileMenuOpen && setShowCountries(false)}
                 onClick={() => isMobileMenuOpen && setShowCountries(prev => !prev)}
@@ -280,7 +310,7 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
               </div>
               {/* Thể loại dropdown (PC hover, mobile click) */}
               <div
-                className="genre-menu-wrapper"
+                className="genre-menu-wrapper mobile-menu-item"
                 onMouseEnter={() => !isMobileMenuOpen && setShowGenres(true)}
                 onMouseLeave={() => !isMobileMenuOpen && setShowGenres(false)}
                 onClick={() => isMobileMenuOpen && setShowGenres((prev) => !prev)}
@@ -309,7 +339,13 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
 
           {/* --- RIGHT: Filter + Buy + User --- */}
           <div className="header-right">
-            {/* Lọc phim (sau dùng nơi khác, giữ nút để mở modal) */}
+            {/* Search Icon cho mobile */}
+            <button 
+              className="mobile-search-toggle"
+              onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+            >
+              🔍
+            </button>
 
             {/* Mua Gói */}
             <Link to="/buy-package" className="buy-package-btn">
@@ -487,6 +523,62 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
                 Lọc
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Search Overlay */}
+      {isMobileSearchOpen && (
+        <div className="mobile-search-overlay" onClick={() => setIsMobileSearchOpen(false)}>
+          <div className="mobile-search-content" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-search-header">
+              <input
+                type="text"
+                placeholder="Tìm kiếm phim..."
+                value={searchText}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchText(value);
+                  debouncedSearch?.(value);
+                  if (value.trim() === "") {
+                    setSuggestions?.([]);
+                    setShowSuggestions?.(false);
+                  }
+                }}
+                className="mobile-search-input"
+                autoFocus
+              />
+              <button 
+                className="mobile-search-close"
+                onClick={() => setIsMobileSearchOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            
+            {suggestions?.length > 0 && (
+              <ul className="mobile-search-results">
+                {suggestions.slice(0, 6).map((movie) => (
+                  <li key={movie.movieId} className="mobile-search-item">
+                    <Link
+                      to={`/movie/${movie.movieId}`}
+                      className="mobile-search-link"
+                      onClick={() => {
+                        setIsMobileSearchOpen(false);
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      <img
+                        src={movie.thumbnailUrl}
+                        alt={movie.title}
+                        className="mobile-search-img"
+                      />
+                      <span className="mobile-search-title">{movie.title}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}
