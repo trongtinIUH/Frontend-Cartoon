@@ -1,0 +1,74 @@
+/* ===== Generic modal polish (Bootstrap 5) ===== */
+.modal-backdrop.show { background: rgba(0,0,0,.45); }
+
+.modal-dialog { max-width: 720px; }
+.modal-content { border-radius: 14px; }
+
+.modal-header { padding: .85rem 1rem; }
+.modal-title  { font-weight: 700; }
+.modal-body   { padding: 1rem; }
+
+/* Giới hạn chiều cao modal để tránh tràn ở mobile, phần body cuộn mượt */
+@media (min-width: 576px){
+  .modal-body {
+    max-height: calc(100vh - 11rem);
+    overflow: auto;
+  }
+}
+
+/* Nhất quán text input (vì code đang add class text-black) */
+.modal .form-control.text-black,
+.modal .form-select.text-black {
+  color: #111;
+  background: #fff;
+}
+
+/* Nhãn & lỗi gọn gàng */
+.modal .form-label { font-weight: 600; margin-bottom: .35rem; }
+.modal .invalid-feedback { margin-top: .25rem; }
+
+/* Nút chính */
+.modal-footer { padding: .85rem 1rem; }
+
+/* ===== Date fields spacing ===== */
+.modal input[type="date"] {
+  min-height: 38px;
+}
+
+/* ===== Two-column rows → stack on mobile ===== */
+.modal .row.g-3 > [class*="col-"] { /* desktop giữ nguyên */
+  min-width: 0;
+}
+
+/* Tablet & down */
+@media (max-width: 992px){
+  .modal-dialog { max-width: 720px; margin: 1rem auto; }
+}
+
+/* Mobile */
+@media (max-width: 768px){
+  .modal-dialog { max-width: 100%; margin: .75rem; }
+  .modal-body   { padding: .75rem; }
+  .modal-header, .modal-footer { padding: .75rem; }
+
+  /* Hàng 2 cột chuyển thành 1 cột */
+  .modal .row.g-3 > [class*="col-"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* Nút submit full width */
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* Textarea/inputs dễ bấm */
+  .modal textarea { min-height: 96px; }
+}
+
+/* Rất nhỏ (xs) */
+@media (max-width: 420px){
+  .modal-title { font-size: 1rem; }
+  .modal .form-label { font-size: .92rem; }
+}
+

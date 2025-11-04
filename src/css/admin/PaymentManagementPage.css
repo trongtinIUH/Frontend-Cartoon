@@ -1,0 +1,88 @@
+/* ========== Layout & variables ========== */
+:root { --sidebar-w: 250px; background: #fff; }
+
+.admin-shell { display: flex; min-height: 100vh; background: #fff; }
+.admin-main  { flex: 1; margin-left: var(--sidebar-w); padding: 1.5rem; background: #fff; }
+.ms-250      { margin-left: var(--sidebar-w) !important; }
+
+/* ========== Tools bar (search, tabs, buttons) ========== */
+.admin-tools { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+.admin-tools .search-wrap { width: 100%; max-width: 800px; }
+.admin-tools .btn-create { white-space: nowrap; }
+
+/* ========== Payment table ========== */
+/* thêm class 'payment-table' vào table */
+.payment-table th,
+.payment-table td { vertical-align: middle; }
+
+/* định danh cột có text dài để cắt gọn khi cần */
+.pay-user, .pay-package, .pay-provider {
+  max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* badge màu thống nhất */
+.badge-success, .badge.bg-success { background-color: #16a34a !important; }
+.badge-secondary, .badge.bg-secondary { background-color: #6b7280 !important; }
+.badge-info, .badge.bg-info { background-color: #0ea5e9 !important; }
+.badge-danger, .badge.bg-danger { background-color: #dc2626 !important; }
+
+.table .btn.btn-sm { padding: .25rem .5rem; border-radius: .5rem; }
+
+/* ========== Pagination ========== */
+.pagination .page-link { min-width: 36px; text-align: center; }
+
+/* ========== Tablet ========== */
+@media (max-width: 992px) {
+  .admin-main, .ms-250 { margin-left: 0 !important; }
+  .admin-tools .search-wrap { max-width: 100%; }
+  .pay-user, .pay-package, .pay-provider { max-width: 200px; }
+}
+
+/* ========== Mobile ========== */
+@media (max-width: 768px) {
+  .card-header, .card-body { padding: .75rem 1rem; background: #fff; }
+
+  .admin-tools { flex-direction: column; align-items: stretch; }
+  .admin-table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Ẩn cột phụ */
+  .payment-table .pay-user,
+  .payment-table .pay-package,
+  .payment-table .pay-provider,
+  .payment-table .pay-created,
+  .payment-table .pay-paid {
+    display: none !important;
+  }
+
+  /* Ép hiển thị 4 cột chính (thead + tbody) */
+  .payment-table thead .pay-code,
+  .payment-table thead .pay-amount,
+  .payment-table thead .pay-status,
+  .payment-table thead .pay-actions,
+  .payment-table .pay-code,
+  .payment-table .pay-amount,
+  .payment-table .pay-status,
+  .payment-table .pay-actions {
+    display: table-cell !important;
+  }
+
+  /* Fallback: nếu lỡ quên class, vẫn hiện cột cuối là Hành động */
+  .payment-table th:last-child,
+  .payment-table td:last-child {
+    display: table-cell !important;
+  }
+
+  /* Kích thước 4 cột */
+  .payment-table .pay-code    { width: 28%; }
+  .payment-table .pay-amount  { width: 22%; white-space: nowrap; }
+  .payment-table .pay-status  { width: 20%; text-align: center; }
+  .payment-table .pay-actions { width: 30%; min-width: 160px; }
+
+  /* Nút hành động xếp dọc cho dễ bấm */
+  .payment-table .pay-actions .btn {
+    display: block; width: 100%; margin-bottom: .25rem;
+  }
+  .payment-table .pay-actions .btn:last-child { margin-bottom: 0; }
+}
+
+

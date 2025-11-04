@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import SubscriptionPackageService from "../../services/SubscriptionPackageService";
 import CreateSubscriptionPackageModal from "../../models/CreateSubscriptionPackageModal";
+import "../../css/admin/SubscriptionPackageManagementPage.css";
 
 const SubscriptionPackageManagementPage = () => {
     const [subscriptionPackages, setSubscriptionPackages] = useState([]);
@@ -59,9 +60,9 @@ const SubscriptionPackageManagementPage = () => {
     };
 
     return (
-        <div className="d-flex bg-white min-vh-100">
+        <div className="admin-shell">
             <Sidebar />
-            <div className="flex-grow-1 ms-250 p-4" style={{ marginLeft: '250px' }}>
+            <div className="admin-main">
                 <h2 className="mb-4 fw-bold">QUẢN LÝ GÓI</h2>
                 <div className="card">
                     {/* Card header with search and add button */}
@@ -97,41 +98,47 @@ const SubscriptionPackageManagementPage = () => {
                     </div>
                     { /* Card body with movie list table */}
                     <div className="card-body">
-                        <table className="table table-striped table-bordered table-hover">
-                            <thead className="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Tên gói đăng ký</th>
-                                    <th>Loại gói</th>
-                                    <th>Thời gian</th>
-                                    <th>Đặc điểm</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {subscriptionPackages.map((pkg) => (
-                                    <tr key={pkg.packageId}>
-                                        <td>{pkg.packageId}</td>
-                                        <td>{pkg.packageName}</td>
-                                        <td>{pkg.applicablePackageType}</td>
-                                        <td>{pkg.durationInDays} ngày</td>
-                                        <td>{pkg.features.join(", ")}</td>
-                                        <td style={{ minWidth: '200px' }}>
-                                            <span className="btn btn-sm btn-outline-primary"
-                                                style={{
-                                                    borderRadius: 10, padding: "5px 10px", fontSize: "14px"
-                                                }}
-                                                onClick={() => handleEditModalOpen(pkg)}><i className="fa-solid fa-pen-to-square"></i> Chỉnh sửa</span>
-                                            <span className="btn btn-sm btn-outline-danger ms-2"
-                                                style={{
-                                                    borderRadius: 10, padding: "5px 10px", fontSize: "14px"
-                                                }}
-                                                onClick={() => handleDelete(pkg.packageId)}><i className="fa-solid fa-trash"></i> Xóa</span>
-                                        </td>
+                        <div className="admin-table-responsive">
+                            <table className="table table-striped table-bordered table-hover align-middle pkg-table">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th className="pkg-id">ID</th>
+                                        <th className="pkg-name">Tên gói đăng ký</th>
+                                        <th className="pkg-type">Loại gói</th>
+                                        <th className="pkg-duration">Thời gian</th>
+                                        <th className="pkg-features">Đặc điểm</th>
+                                        <th className="pkg-actions">Hành động</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {subscriptionPackages.map((pkg) => (
+                                        <tr key={pkg.packageId}>
+                                            <td className="pkg-id">{pkg.packageId}</td>
+                                            <td className="pkg-name">{pkg.packageName}</td>
+                                            <td className="pkg-type">{pkg.applicablePackageType}</td>
+                                            <td className="pkg-duration">{pkg.durationInDays} ngày</td>
+                                            <td className="pkg-features">{(pkg.features || []).join(", ")}</td>
+                                            <td className="pkg-actions" style={{ minWidth: 200 }}>
+                                                <span
+                                                    className="btn btn-sm btn-outline-primary"
+                                                    style={{ borderRadius: 10, padding: "5px 10px", fontSize: 14 }}
+                                                    onClick={() => handleEditModalOpen(pkg)}
+                                                >
+                                                    <i className="fa-solid fa-pen-to-square"></i> Chỉnh sửa
+                                                </span>
+                                                <span
+                                                    className="btn btn-sm btn-outline-danger ms-2"
+                                                    style={{ borderRadius: 10, padding: "5px 10px", fontSize: 14 }}
+                                                    onClick={() => handleDelete(pkg.packageId)}
+                                                >
+                                                    <i className="fa-solid fa-trash"></i> Xóa
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
 
                         {totalPages > 1 && (
                             <nav>
