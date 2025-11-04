@@ -1,0 +1,72 @@
+/* ========== Layout & variables ========== */
+:root { --sidebar-w: 250px; background:#fff; }
+
+.admin-shell { display:flex; min-height:100vh; background:#fff; }
+.admin-main  { flex:1; margin-left:var(--sidebar-w); padding:1.5rem; background:#fff; }
+.ms-250      { margin-left:var(--sidebar-w) !important; }
+
+/* ========== Tools (search + button) ========== */
+.admin-tools{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; }
+.admin-tools .search-wrap{ width:100%; max-width:420px; }
+.admin-tools .btn-create{ white-space:nowrap; }
+
+/* ========== Package table ========== */
+.pkg-table th,
+.pkg-table td { vertical-align:middle; }
+
+/* Cột dài cần cắt gọn */
+.pkg-name, .pkg-features{
+  max-width:420px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Badge / Button nhỏ trong bảng */
+.table .btn.btn-sm{ padding:.25rem .5rem; border-radius:.5rem; }
+
+/* ========== Pagination ========== */
+.pagination .page-link{ min-width:36px; text-align:center; }
+
+/* ========== Tablet ========== */
+@media (max-width: 992px){
+  .admin-main, .ms-250{ margin-left:0 !important; }
+  .admin-tools .search-wrap{ max-width:100%; }
+  .pkg-name{ max-width:300px; }
+}
+
+/* ========== Mobile ========== */
+@media (max-width: 768px){
+  .card-header, .card-body{ padding:.75rem 1rem; background:#fff; }
+
+  .admin-tools{ flex-direction:column; align-items:stretch; }
+  .admin-table-responsive{ width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+  /* Mobile: giữ các cột Tên, Loại, Thời gian, Hành động
+     Ẩn: ID + Đặc điểm để gọn giao diện */
+  .pkg-table .pkg-id,
+  .pkg-table .pkg-features { display:none !important; }
+
+  /* Đảm bảo 4 cột chính luôn hiển thị cả thead */
+  .pkg-table thead .pkg-name,
+  .pkg-table thead .pkg-type,
+  .pkg-table thead .pkg-duration,
+  .pkg-table thead .pkg-actions,
+  .pkg-table .pkg-name,
+  .pkg-table .pkg-type,
+  .pkg-table .pkg-duration,
+  .pkg-table .pkg-actions { display:table-cell !important; }
+
+  /* Fallback: nếu quên class thì cột cuối (Hành động) vẫn hiện */
+  .pkg-table th:last-child,
+  .pkg-table td:last-child{ display:table-cell !important; }
+
+  /* Width hợp lý trên mobile */
+  .pkg-table .pkg-name{ width:42%; max-width:240px; }
+  .pkg-table .pkg-type{ width:18%; white-space:nowrap; }
+  .pkg-table .pkg-duration{ width:15%; white-space:nowrap; text-align:center; }
+  .pkg-table .pkg-actions{ width:25%; min-width:140px; }
+
+  /* Nút hành động xếp dọc */
+  .pkg-table .pkg-actions .btn{
+    display:block; width:100%; margin-bottom:.25rem;
+  }
+  .pkg-table .pkg-actions .btn:last-child{ margin-bottom:0; }
+}

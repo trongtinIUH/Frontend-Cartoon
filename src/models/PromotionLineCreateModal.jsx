@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PromotionLineService from "../services/PromotionLineService";
 import { addDays, diffDays, maxIso } from "../utils/date";
-
+import "../css/admin/AdminPromotionModals.css";
 const initialForm = {
   promotionLineId: "",
   promotionLineName: "",
