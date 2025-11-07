@@ -7,6 +7,7 @@ import GENRES from "../constants/genres";
 import TOPICS from "../constants/topics";
 import ModelAddMovie from "../models/ModelAddMovie";
 import MovieService from "../services/MovieService";
+import { trackSignal, getCurrentUserId } from "../services/personalizationService";
 import { debounce } from "lodash";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -51,6 +52,17 @@ const Header = ({ fetchMovies, setFilteredMovies }) => {
 
   const debouncedSearch = debounce(async (value) => {
     if (!value.trim()) return;
+    
+    // 🎯 Track search query
+    const userId = getCurrentUserId();
+    if (userId) {
+      trackSignal(userId, 'search_query', null, {
+        query: value,
+        source: 'header_search',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
     try {
       const res = await MovieService.searchMovies(value);
       setSuggestions(res);

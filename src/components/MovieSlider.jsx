@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import Carousel from 'react-bootstrap/Carousel';
 import WishlistService from "../services/WishlistService";
 import MovieService from '../services/MovieService';
+import { trackSignal, getCurrentUserId } from '../services/personalizationService';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faHeart } from "@fortawesome/free-solid-svg-icons";
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -73,10 +74,27 @@ const MovieSlider = () => {
             ...prev,
             [movieId]: true
           }));
+          
+          // 🎯 Track add_wishlist event
+          trackSignal(userId, 'add_wishlist', movieId, {
+            source: 'slider',
+            timestamp: new Date().toISOString()
+          });
         }
       } catch (error) {
         console.error("Lỗi thao tác wishlist:", error);
         toast.error("Thao tác thất bại");
+      }
+    };
+    
+    // 🎯 Track movie click
+    const handleMovieClick = (movieId) => {
+      const userId = getCurrentUserId();
+      if (userId && movieId) {
+        trackSignal(userId, 'click_movie', movieId, {
+          source: 'slider',
+          timestamp: new Date().toISOString()
+        });
       }
     };
   
@@ -144,6 +162,7 @@ const MovieSlider = () => {
                     <h3 className="media-alias-title"
                         style={{ fontSize: 12, fontWeight: 500, marginBottom: 10, letterSpacing: 1 }}>
                       <Link to={`/movie/${movie.movieId}`}
+                            onClick={() => handleMovieClick(movie.movieId)}
                             style={{color: '#fff', textDecoration: 'none', textShadow: '1px 1px 5px #000'}}>
                         {movie.originalTitle || movie.title}
                       </Link>
@@ -206,6 +225,7 @@ const MovieSlider = () => {
                     {/* Buttons */}
                     <div className="touch" style={{display: 'flex', alignItems: 'center', gap: 24}}>
                       <Link className="button-play" to={`/movie/${movie.movieId}`}
+                            onClick={() => handleMovieClick(movie.movieId)}
                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
                                      width: 54, height: 54, fontSize: 28, backgroundColor: '#4bc1fa',
                                      borderRadius: '50%', color: 'white', boxShadow: '0 4px 18px #000a',

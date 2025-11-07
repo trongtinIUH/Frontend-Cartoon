@@ -9,6 +9,7 @@ import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import { useVideoSync } from '../hooks/useVideoSync';
 import { initAntiCapture } from '../utils/antiCapture';
+import { trackSignal, getCurrentUserId } from '../services/personalizationService';
 import '../css/WatchPlayer.css';
 
 // Debug logging (set to false to disable verbose logs)
@@ -18,12 +19,16 @@ const DEBUG_ENABLED = false;
  * @typedef {import('../types/watch').WsEvent} WsEvent
  */
 
-export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, autoplay = false }) {
+export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, autoplay = false, movieId = null }) {
   const videoRef = useRef(null);
   const playerRef = useRef(null);
   const [isReady, setIsReady] = useState(false);
   const [showAutoplayWarning, setShowAutoplayWarning] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  
+  // Personalization tracking state
+  const tracked30sRef = useRef(false);
+  const viewStartTrackedRef = useRef(false);
 
   /**
    * Initialize video.js player
@@ -65,6 +70,20 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
     player.on('play', () => {
       DEBUG_ENABLED && console.log('[WatchPlayer] Video playing');
       setIsPlaying(true);
+      
+      // 🎯 Track view_start (only once per video load)
+      if (!viewStartTrackedRef.current && movieId) {
+        const userId = getCurrentUserId();
+        if (userId) {
+          trackSignal(userId, 'view_start', movieId, {
+            source: 'watch_room',
+            isHost: String(isHost),
+            timestamp: new Date().toISOString()
+          });
+          viewStartTrackedRef.current = true;
+          DEBUG_ENABLED && console.log('[WatchPlayer] 🎯 Tracked view_start');
+        }
+      }
     });
 
     player.on('pause', () => {
@@ -92,6 +111,44 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
 
     player.on('canplaythrough', () => {
       DEBUG_ENABLED && console.log('[WatchPlayer] Can play through');
+    });
+
+    // 🎯 Track view_engaged (after 30 seconds of viewing)
+    player.on('timeupdate', () => {
+      const currentTime = player.currentTime();
+      
+      if (currentTime > 30 && !tracked30sRef.current && movieId) {
+        const userId = getCurrentUserId();
+        if (userId) {
+          const duration = player.duration();
+          trackSignal(userId, 'view_engaged', movieId, {
+            progressSeconds: String(Math.floor(currentTime)),
+            totalDuration: String(Math.floor(duration)),
+            source: 'watch_room',
+            isHost: String(isHost)
+          });
+          tracked30sRef.current = true;
+          DEBUG_ENABLED && console.log('[WatchPlayer] 🎯 Tracked view_engaged (30s)');
+        }
+      }
+    });
+
+    // 🎯 Track view_end (when video completes)
+    player.on('ended', () => {
+      DEBUG_ENABLED && console.log('[WatchPlayer] Video ended');
+      
+      if (movieId) {
+        const userId = getCurrentUserId();
+        if (userId) {
+          trackSignal(userId, 'view_end', movieId, {
+            completed: 'true',
+            source: 'watch_room',
+            isHost: String(isHost),
+            timestamp: new Date().toISOString()
+          });
+          DEBUG_ENABLED && console.log('[WatchPlayer] 🎯 Tracked view_end');
+        }
+      }
     });
 
     // Track errors
@@ -146,6 +203,10 @@ export function WatchPlayer({ videoUrl, isHost, onLocalControl, controlEvent, au
    */
   useEffect(() => {
     if (!playerRef.current || !videoUrl) return;
+
+    // Reset tracking flags when video source changes
+    tracked30sRef.current = false;
+    viewStartTrackedRef.current = false;
 
     DEBUG_ENABLED && console.log('[WatchPlayer] Setting video source', videoUrl);
 

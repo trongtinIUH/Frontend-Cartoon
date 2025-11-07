@@ -7,6 +7,9 @@ import TopicSection from "../components/TopicSection";
 import CountriesBlock from "../components/CountriesBlock";
 import Top10MoviesSection from "../components/Top10MoviesSection";
 import HotFavoriteCharts from "../components/HotFavoriteCharts";
+import PersonalizedRecommendations from "../components/PersonalizedRecommendations";
+import RecentlyWatchedSection from "../components/RecentlyWatchedSection";
+import { trackSignal, getCurrentUserId } from "../services/personalizationService";
 
 const MOVIES_PER_PAGE = 20;
 
@@ -39,10 +42,32 @@ const MainPage = () => {
   const startIdx = (currentPage - 1) * MOVIES_PER_PAGE;
   const currentMovies = filteredMovies.slice(startIdx, startIdx + MOVIES_PER_PAGE);
 
+  // 🎯 Track movie click from main page
+  const handleMovieClick = (movieId) => {
+    const userId = getCurrentUserId();
+    if (userId && movieId) {
+      trackSignal(userId, 'click_movie', movieId, {
+        source: 'main_page',
+        timestamp: new Date().toISOString()
+      });
+    }
+    MovieService.incrementViewCount(movieId);
+  };
+
   return (
     <div className="main-page-wrapper">
       <MovieSlider />
       <TopicSection />
+
+      {/* 🎯 AI-Powered Personalized Recommendations */}
+      <div className="container-xl">
+        <PersonalizedRecommendations limit={6} />
+      </div>
+
+      {/* 🎯 Recently Watched Movies */}
+      <div className="container-xl">
+        <RecentlyWatchedSection limit={10} />
+      </div>
 
        {/* ---- KHỐI NỀN LỚN GỘP 3 QUỐC GIA ---- */}
       <CountriesBlock />
@@ -83,7 +108,7 @@ const MainPage = () => {
               <Link
                 key={movie.movieId}
                 to={`/movie/${movie.movieId}`}
-                onClick={() => MovieService.incrementViewCount(movie.movieId)}
+                onClick={() => handleMovieClick(movie.movieId)}
                 className="poster-card"
               >
                 <div className="poster-wrap">
