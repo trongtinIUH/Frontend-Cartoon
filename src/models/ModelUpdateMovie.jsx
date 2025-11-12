@@ -17,7 +17,6 @@ export default function ModelUpdateMovie({ movieId, onClose, onSuccess }) {
     minVipLevel: "FREE", status: "UPCOMING", releaseYear: "", duration: "",
     thumbnail: null, banner: null, trailerUrl: "",
     trailerVideo: null,     // dùng khi chuyển sang UPCOMING
-    contentVideo: null,     // dùng khi chuyển sang COMPLETED
     authorIds: [], slug: ""
   });
   const [thumbnailPreview, setThumbnailPreview] = useState("");
@@ -57,11 +56,8 @@ function validateMovie(values, trailerInputType, initialStatus) {
   if (values.duration?.trim() && !RE_DURATION.test(values.duration.trim()))
     e.duration = "Thời lượng dạng 120p hoặc 120 phút.";
 
-  // Khi đổi trạng thái, nhắc bắt buộc file tương ứng (FE enforce để UX mượt)
-  const switchingToCompleted = initialStatus !== "COMPLETED" && values.status === "COMPLETED";
+  // Khi đổi trạng thái sang UPCOMING, nhắc bắt buộc trailer (FE enforce để UX mượt)
   const switchingToUpcoming  = initialStatus !== "UPCOMING"  && values.status === "UPCOMING";
-  if (switchingToCompleted && !values.contentVideo)
-    e.contentVideo = "Chọn video Tập 1 khi chuyển sang COMPLETED.";
   if (switchingToUpcoming && !(values.trailerVideo || values.trailerUrl))
     e.trailerVideo = "UPCOMING yêu cầu trailer (file hoặc URL).";
 
@@ -71,7 +67,6 @@ function validateMovie(values, trailerInputType, initialStatus) {
   if (values.thumbnail && !IMG_TYPES.includes(values.thumbnail.type)) e.thumbnail = "Ảnh thumbnail không hợp lệ.";
   if (values.banner && !IMG_TYPES.includes(values.banner.type))       e.banner = "Ảnh banner không hợp lệ.";
   if (values.trailerVideo && !VIDEO_TYPES.includes(values.trailerVideo.type)) e.trailerVideo = "Trailer phải là video hợp lệ.";
-  if (values.contentVideo && !VIDEO_TYPES.includes(values.contentVideo.type)) e.contentVideo = "Video tập 1 phải là video hợp lệ.";
 
   return e;
 }
@@ -104,7 +99,7 @@ function validateMovie(values, trailerInputType, initialStatus) {
           releaseYear: m.releaseYear || "", duration: m.duration || "",
           movieType: m.movieType || "SINGLE", slug: m.slug || "",
           authorIds: m.authorIds || [], trailerUrl: m.trailerUrl || "",
-          thumbnail: null, banner: null, trailerVideo: null, contentVideo: null
+          thumbnail: null, banner: null, trailerVideo: null
         }));
         setThumbnailPreview(m.thumbnailUrl || "");
         setBannerPreview(m.bannerUrl || "");
@@ -146,8 +141,6 @@ function validateMovie(values, trailerInputType, initialStatus) {
         setForm(f => ({ ...f, banner: file })); setBannerPreview(URL.createObjectURL(file));
       } else if (name === "trailerVideo") {
         setForm(f => ({ ...f, trailerVideo: file }));
-      } else if (name === "contentVideo") {
-        setForm(f => ({ ...f, contentVideo: file }));
       }
       return;
     }
@@ -179,17 +172,12 @@ function validateMovie(values, trailerInputType, initialStatus) {
       }
       setErrors({});
 
-    const switchingToCompleted = initialStatus !== "COMPLETED" && form.status === "COMPLETED";
     const switchingToUpcoming  = initialStatus !== "UPCOMING"  && form.status === "UPCOMING";
 
-    // Gợi ý: nếu chuyển sang COMPLETED mà chưa chọn ep1 → cảnh báo (BE sẽ enforce)
-    if (switchingToCompleted && !form.contentVideo) {
-      return toast.error("Hãy chọn file video Tập 1 khi chuyển sang COMPLETED");
-    }
     if (switchingToUpcoming && !form.trailerVideo && !form.trailerUrl) {
       // Nếu DB chưa có trailerUrl và bạn không up file mới
       // BE cũng sẽ báo lỗi — FE nhắc trước cho mượt
-      return toast.error("UPCOMING yêu cầu trailer (file)");
+      return toast.error("UPCOMING yêu cầu trailer (file hoặc URL)");
     }
 
     setLoading(true);
@@ -229,11 +217,10 @@ function validateMovie(values, trailerInputType, initialStatus) {
       // Không gửi trailerVideo ở bước update — để gửi trong publish khi cần
       await MovieService.updateMovie(movieId, fd);
 
-      // 3) Nếu đổi trạng thái → gọi publish (BE sẽ tạo ep1/validate trailer)
+      // 3) Nếu đổi trạng thái → gọi publish (BE sẽ validate trailer)
       if (initialStatus !== form.status) {
         await MovieService.publish(movieId, form.status, {
           trailerVideo: (form.status === "UPCOMING" && trailerInputType === "file") ? form.trailerVideo : null,
-          episode1Video: form.status === "COMPLETED" ? form.contentVideo : null,
         });
         setInitialStatus(form.status);
       }
@@ -501,14 +488,6 @@ function validateMovie(values, trailerInputType, initialStatus) {
               </div>
             )}
           </div>
-
-          {form.status === "COMPLETED" && (
-            <div className="mb-3">
-              <label className="form-label"><FaVideo /> Tập 1 (khi chuyển sang COMPLETED)</label>
-              <input type="file" className="form-control" name="contentVideo" accept="video/*" onChange={handleChange}/>
-              <div className="form-text">Nếu phim đã có season/tập, BE sẽ bỏ qua và giữ nguyên số tập hiện có.</div>
-            </div>
-          )}
 
           {/* Actions */}
           <div className="modal-actions">

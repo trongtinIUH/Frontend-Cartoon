@@ -261,6 +261,13 @@ const ModelManageEpisodes = ({ isOpen, onClose, movieId, movieTitle, movieType }
       toast.error("Vui lòng chọn phần phim trước");
       return;
     }
+    
+    // Kiểm tra: phim lẻ chỉ được có 1 tập
+    if (movieType === "SINGLE" && episodes.length > 0) {
+      toast.error("Phim lẻ chỉ có 1 tập duy nhất. Không thể thêm tập mới.");
+      return;
+    }
+    
     setEpisodeForm({
       title: "",
       episodeNumber: nextEpisodeNumber.toString(),
@@ -291,6 +298,12 @@ const ModelManageEpisodes = ({ isOpen, onClose, movieId, movieTitle, movieType }
     
     if (!selectedSeasonId) {
       toast.error("Vui lòng chọn phần phim");
+      return;
+    }
+    
+    // Kiểm tra: không cho thêm tập mới nếu là phim lẻ và đã có tập
+    if (!editingEpisode && movieType === "SINGLE" && episodes.length > 0) {
+      toast.error("Phim lẻ chỉ có 1 tập duy nhất. Không thể thêm tập mới.");
       return;
     }
     
@@ -581,21 +594,37 @@ const ModelManageEpisodes = ({ isOpen, onClose, movieId, movieTitle, movieType }
                   </Alert>
                 ) : (
                   <>
+                    {/* Thông báo đặc biệt cho phim lẻ đã có tập */}
+                    {movieType === "SINGLE" && episodes.length > 0 && (
+                      <Alert variant="info" className="mb-3">
+                        <small>
+                          <FaFilm className="me-1" />
+                          <strong>Phim lẻ:</strong> Chỉ có 1 tập duy nhất. Không thể thêm tập mới.
+                        </small>
+                      </Alert>
+                    )}
+
                     {/* Episode Actions */}
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <span className="small text-muted">
                         {episodes.length} tập phim
                       </span>
-                      <Button 
-                        variant="success" 
-                        size="sm" 
-                        className="btn-icon-only"
-                        onClick={handleAddEpisode}
-                        disabled={showAddEpisodeForm}
-                        title="Thêm tập mới"
-                      >
-                        <FaPlus />
-                      </Button>
+                      {/* Phim lẻ: chỉ cho thêm tập khi chưa có tập nào (episodes.length === 0) */}
+                      {/* Phim bộ: luôn cho phép thêm tập */}
+                      {(movieType === "SERIES" || (movieType === "SINGLE" && episodes.length === 0)) && (
+                        <Button 
+                          variant="success" 
+                          size="sm" 
+                          className="btn-icon-only"
+                          onClick={handleAddEpisode}
+                          disabled={showAddEpisodeForm}
+                          title={movieType === "SINGLE" && episodes.length === 0 
+                            ? "Thêm tập duy nhất cho phim lẻ" 
+                            : "Thêm tập mới"}
+                        >
+                          <FaPlus />
+                        </Button>
+                      )}
                     </div>
 
                     {/* Add/Edit Episode Form */}
