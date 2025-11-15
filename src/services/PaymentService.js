@@ -101,7 +101,15 @@ const PaymentService = {
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
-    }
+    },
+    rejectRefund: async (paymentCode) => {
+        try {
+            const response = await axiosInstance.put(`${API_BASE_URL}/refund/${paymentCode}/reject`);
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    },
 };
 
 export default PaymentService;

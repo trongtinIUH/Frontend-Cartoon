@@ -7,8 +7,8 @@ import SubscriptionPackageService from '../services/SubscriptionPackageService';
 const featureTitles = [
   "Phim bộ châu Á mới nhất, chiếu song song",
   "Phim lẻ, anime, thiếu nhi, show đặc sắc",
-  "Xem phim chất lượng 4K",
-  "Xem phim trên nhiều thiết bị",
+  "Xem phim chất lượng Full HD",
+  "Tạo phòng xem cùng bạn bè",
   "Không giới hạn lượt xem",
   "Không quảng cáo trong VOD"
 ];
