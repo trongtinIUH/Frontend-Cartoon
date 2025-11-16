@@ -185,24 +185,23 @@
   transform: scale(1.05);
 }
 
-/* Score Badge - Simplified: Only emoji + percentage */
+/* Score Badge - Text-based: Phù hợp percentage */
 .personalized-section .score-badge {
   position: absolute;
   top: 8px;
   right: 8px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 9px;
+  padding: 6px 10px;
   border-radius: 20px;
   backdrop-filter: blur(10px);
-  background: rgba(0, 0, 0, 0.75);
-  font-size: 13px;
+  background: rgba(0, 0, 0, 0.85);
+  font-size: 12px;
   font-weight: 700;
   z-index: 2;
   animation: personalized-fadeInScale 0.5s ease-out;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(75, 193, 250, 0.4);
 }
 
 @keyframes personalized-fadeInScale {
@@ -216,16 +215,12 @@
   }
 }
 
-.personalized-section .badge-emoji {
-  font-size: 15px;
-  line-height: 1;
-}
-
-.personalized-section .badge-score {
+.personalized-section .badge-text {
   font-weight: 700;
   letter-spacing: 0.3px;
-  color: #fff;
+  color: #4bc1fa;
   font-size: 12px;
+  white-space: nowrap;
 }
 
 /* Mobile badge adjustments */
@@ -233,15 +228,10 @@
   .personalized-section .score-badge {
     top: 6px;
     right: 6px;
-    padding: 4px 8px;
-    gap: 4px;
+    padding: 5px 8px;
   }
   
-  .personalized-section .badge-emoji {
-    font-size: 13px;
-  }
-  
-  .personalized-section .badge-score {
+  .personalized-section .badge-text {
     font-size: 11px;
   }
 }
@@ -250,16 +240,11 @@
   .personalized-section .score-badge {
     top: 5px;
     right: 5px;
-    padding: 3px 7px;
-    gap: 3px;
-    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    padding: 4px 7px;
+    border: 1.5px solid rgba(75, 193, 250, 0.3);
   }
   
-  .personalized-section .badge-emoji {
-    font-size: 12px;
-  }
-  
-  .personalized-section .badge-score {
+  .personalized-section .badge-text {
     font-size: 10px;
   }
 }

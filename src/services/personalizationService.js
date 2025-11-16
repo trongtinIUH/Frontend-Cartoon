@@ -49,8 +49,6 @@ export async function getRecommendations(userId, limit = 20) {
       `${API_BASE}/recommendations/${userId}`,
       { params: { limit } }
     );
-    
-    console.log(`✅ Fetched ${response.data.length} recommendations for user ${userId}`);
     return response.data;
   } catch (error) {
     console.error('❌ Failed to fetch recommendations:', error);
@@ -70,8 +68,6 @@ export async function getRecentlyWatched(userId, limit = 10) {
       `${API_BASE}/history/recent/${userId}`,
       { params: { limit } }
     );
-    
-    console.log(`✅ Fetched ${response.data.length} recently watched movies for user ${userId}`);
     return response.data;
   } catch (error) {
     console.error('❌ Failed to fetch recently watched:', error);
@@ -87,14 +83,23 @@ export async function getRecentlyWatched(userId, limit = 10) {
 export function getScoreBadge(score) {
   if (!score || score === null) return null;
   
-  // Convert to percentage (0-100)
-  const percentage = Math.round(score * 100);
+  // Convert to percentage and cap at 100%
+  let percentage = Math.round(score * 100);
+  if (percentage > 100) {
+    percentage = 100;
+  }
+  if (percentage < 0) {
+    percentage = 0;
+  }
   
-  // Return emoji based on score range
+  // Normalize score for emoji selection (0-1 range)
+  const normalizedScore = percentage / 100;
+  
+  // Return emoji based on normalized score range
   let emoji = '👍';
-  if (score > 0.85) {
+  if (normalizedScore > 0.85) {
     emoji = '🔥';
-  } else if (score > 0.7) {
+  } else if (normalizedScore > 0.7) {
     emoji = '✨';
   }
   

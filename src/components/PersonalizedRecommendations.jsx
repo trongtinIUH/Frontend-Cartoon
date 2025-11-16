@@ -129,11 +129,10 @@ const PersonalizedRecommendations = ({ limit = 20 }) => {
                   loading="lazy"
                 />
                 
-                {/* Score Badge - Emoji + Percentage */}
+                {/* Score Badge - Phù hợp percentage */}
                 {badge && (
                   <div className="score-badge">
-                    <span className="badge-emoji">{badge.emoji}</span>
-                    <span className="badge-score">{badge.percentage}%</span>
+                    <span className="badge-text">Phù hợp: {badge.percentage}%</span>
                   </div>
                 )}
 
@@ -160,11 +159,6 @@ const PersonalizedRecommendations = ({ limit = 20 }) => {
               {/* Movie info below poster */}
               <div className="movie-info">
                 <h4 className="movie-title-main">{movie.title}</h4>
-                {movie.score && (
-                  <div className="movie-match">
-                    {Math.round(movie.score * 100)}%
-                  </div>
-                )}
               </div>
             </Link>
           );
