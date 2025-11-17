@@ -31,7 +31,7 @@ const CreateWatchRoomModal = ({ show, onClose, movie, episode, currentVideoUrl }
     setIsCheckingVip(true);
 
     try {
-      const response = await fetch(`http://localhost:8080/users/${userId}/vip-status`);
+      const response = await fetch(`${process.env.REACT_APP_API_BASE}/users/${userId}/vip-status`);
       
       if (!response.ok) {
         setCanCreateRoom(false);
