@@ -73,6 +73,35 @@ const PaymentManagementPage = () => {
         setPage(1); // đổi tab thì về trang 1
     };
 
+    const handleConfirmRefundClick = async (payment) => {
+        try {
+            const ok = window.confirm(
+                `Bạn chắc chắn muốn hoàn tiền cho đơn hàng ${payment.paymentCode} không?`
+            );
+
+            if (!ok) {
+                try {
+                    await PaymentService.rejectRefund(payment.paymentCode);
+                    toast.info("Đã hủy yêu cầu hoàn tiền");
+                    loadPayments();
+                } catch (err) {
+                    console.error("Lỗi hủy yêu cầu hoàn tiền:", err);
+                    toast.error("Không thể hủy yêu cầu hoàn tiền");
+                }
+                return;
+            }
+
+            // Người dùng xác nhận hoàn
+            await PaymentService.approveRefund(payment.paymentCode);
+            toast.success("Đã xác nhận hoàn tiền thành công");
+            loadPayments();
+        } catch (err) {
+            console.error("Lỗi xác nhận hoàn tiền:", err);
+            toast.error("Lỗi xác nhận hoàn tiền");
+        }
+    };
+
+
     return (
         <div className="admin-shell">
             <Sidebar />
@@ -225,8 +254,9 @@ const PaymentManagementPage = () => {
                                                         {String(payment.status).toUpperCase() === "SUCCESS" &&
                                                             payment.refundRequested === true && (
                                                                 <span
-                                                                    className="btn btn-sm btn-outline-danger mt-2"
-                                                                    onClick={async () => { /* ...giữ nguyên logic... */ }}
+                                                                    className="btn btn-sm btn-outline-danger ms-2"
+                                                                    onClick={() => handleConfirmRefundClick(payment)}
+                                                                    
                                                                 >
                                                                     <i className="fa fa-undo" /> Xác nhận hoàn tiền
                                                                 </span>
@@ -283,8 +313,8 @@ const PaymentManagementPage = () => {
                     onClose={() => setSelectedPayment(null)}
                     paymentId={selectedPayment}
                 />
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
 
