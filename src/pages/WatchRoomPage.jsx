@@ -62,17 +62,7 @@ export const WatchRoomPage = () => {
   const handleRoomDeleted = useCallback(({ reason, reasonText }) => {
     // console.log('[WatchRoomPage] Room deleted/expired:', reason);
     // console.log('[WatchRoomPage] Backend cascade deleted: messages + members');
-    
-    // Show toast notification
-    toast.error(`⚠️ Phòng ${reasonText}. Đang chuyển về danh sách...`, {
-      position: 'top-center',
-      autoClose: 4000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    });
-    
+        
     // Show blocking dialog
     setRoomDeletedReason(reasonText);
     setShowRoomDeletedDialog(true);
