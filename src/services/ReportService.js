@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Tạo instance riêng cho report API với baseURL khác
 const reportApiClient = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: process.env.REACT_APP_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },

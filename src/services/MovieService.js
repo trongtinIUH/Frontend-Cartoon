@@ -1,9 +1,9 @@
 import axios from "axios";
 import axiosInstance from "../api/axiosInstance";
 import { get } from "lodash";
-const API_BASE_URL = 'http://localhost:8080/movies';
+// const API_BASE_URL = 'http://localhost:8080/movies';
 
-
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL + '/movies';
 
 const MovieService = {
 

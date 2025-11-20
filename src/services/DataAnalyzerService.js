@@ -1,6 +1,7 @@
 import axiosInstance from "../api/axiosInstance";
 
-const API_BASE_URL = 'http://localhost:8080/data-analyzer';
+// const API_BASE_URL = 'http://localhost:8080/data-analyzer';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL + '/data-analyzer';
 
 const DataAnalyzerService = {
   // ======= REVENUE ANALYTICS =======
@@ -157,7 +158,7 @@ const DataAnalyzerService = {
 
   // Tải Excel báo cáo phim từ backend endpoint
   downloadMoviesExcelRange: (startDate, endDate, groupBy = 'DAY', brand = {}) =>
-    axiosInstance.get(`http://localhost:8080/export/export/movies.xlsx`, {
+    axiosInstance.get(`${process.env.REACT_APP_API_BASE_URL}/export/export/movies.xlsx`, {
       params: { 
         startDate, 
         endDate, 
