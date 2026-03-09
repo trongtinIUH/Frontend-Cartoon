@@ -211,7 +211,7 @@ const RegisterPage = () => {
                 <input
                   className="form-control"
                   type="text"
-                  placeholder="🔢 Nhập mã OTP"
+                  placeholder="🔢 Nhập mã OTP (mã DEMO 123456)"
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
                 />
